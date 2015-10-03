@@ -7,20 +7,26 @@
 int main(void) {
     List list;
     FILE* fileRead = fopen("test.txt", "r");
-    char inputLine[100] = "";
+    char inputLine[10] = ""
+    char command[10] = ""
+    char name[80] = "";
     int i;
+    int tempPosition;
     
     Initialize(&list);
     printf("List is empty; list is not full; list is of size 0:\n");
     
     while (fgets(inputLine, 100, fileRead) != NULL) {
-        char* command = (strtok(inputLine," "));
-        int tempPosition = atoi(strtok(NULL," "));
+        strcpy(command, strtok(inputLine, " "));
+
+        tempPosition = atoi(strtok(NULL," "));
         
         if (strcmp(command,"Insert") == 0) {
             Student tempStudent;
+
+            strcpy(name, strtok(NULL, " "));
             
-            InitializeStudent(strtok(NULL," "), atoi(strtok(NULL," ")), &tempStudent);
+            InitializeStudent(name, atoi(strtok(NULL," ")), &tempStudent);
             Insert(tempStudent, tempPosition, &list);
         }
         else if (strcmp(command,"Remove") == 0) {
