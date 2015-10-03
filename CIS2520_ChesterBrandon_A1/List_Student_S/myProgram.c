@@ -7,8 +7,8 @@
 int main(void) {
     List list;
     FILE* fileRead = fopen("test.txt", "r");
-    char inputLine[10] = ""
-    char command[10] = ""
+    char inputLine[10] = "";
+    char command[10] = "";
     char name[80] = "";
     int i;
     int tempPosition;
