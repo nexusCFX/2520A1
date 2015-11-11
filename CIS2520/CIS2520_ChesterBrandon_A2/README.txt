@@ -1,0 +1,1 @@
+Please note that the lines of numbers in the test.txt file for the stack ADT must be be terminated with a newline character.
