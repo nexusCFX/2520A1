@@ -1,0 +1,11 @@
+type = “book”
+callnumber = “QA76.73.J38S265”
+authors = “Walter Savitch, Kenrich Mock”
+title = “Absolute Java”publisher= “Addison-Wesley”
+year= “2009”
+
+type = “journal”
+callnumber = “P98.C6116”
+title = “Computational Linguistics”
+organization = “Association for Computational Linguistics”
+year = “2008”
