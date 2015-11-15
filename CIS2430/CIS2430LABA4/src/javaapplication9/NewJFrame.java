@@ -5,10 +5,15 @@
  */
 package javaapplication9;
 
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,16 +24,28 @@ import java.util.logging.Logger;
  */
 public class NewJFrame extends javax.swing.JFrame {
 
-    /**
-     * Creates new form NewJFrame
-     */
+    private HashMap<String, ArrayList<Student>> schoolMap = new HashMap<>();
+    private int index;
+
     public NewJFrame() {
         initComponents();
         initSchools();
+
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int newIndex) {
+        index = newIndex;
     }
 
     private void initSchools() {
         universities.setModel(new javax.swing.DefaultComboBoxModel(schools));
+        schoolMap.put("McMaster University", new ArrayList<>());
+        schoolMap.put("University of Guelph", new ArrayList<>());
+        schoolMap.put("University of Toronto", new ArrayList<>());
     }
 
     /**
@@ -85,6 +102,11 @@ public class NewJFrame extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jTextArea1);
 
         jButton1.setText("Add");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         jButton2.setText("Next");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -166,24 +188,58 @@ public class NewJFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void universitiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_universitiesActionPerformed
-        // TODO add your handling code here:
+        setIndex(0);
+        jTextField1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getFirstName());
+        jTextField2.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getLastName());
+        jTextArea1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getAddress());
+
     }//GEN-LAST:event_universitiesActionPerformed
 
     private void BDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BDeleteActionPerformed
-        jTextField1.setText("Yo");
+        if (schoolMap.get(universities.getSelectedItem().toString()).size() > 0) {
+            schoolMap.get(universities.getSelectedItem().toString()).remove(getIndex());
+            jButton2ActionPerformed(null);
+        }
     }//GEN-LAST:event_BDeleteActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
+        if (getIndex() + 1 >= schoolMap.get(universities.getSelectedItem().toString()).size()) {
+            setIndex(0);
+        } else {
+            setIndex(getIndex() + 1);
+        }
+        if (schoolMap.get(universities.getSelectedItem().toString()).size() < 1) {
+            jTextField1.setText("");
+            jTextField2.setText("");
+            jTextArea1.setText("");
+        } else {
+            jTextField1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(getIndex()).getFirstName());
+            jTextField2.setText(schoolMap.get(universities.getSelectedItem().toString()).get(getIndex()).getLastName());
+            jTextArea1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(getIndex()).getAddress());
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField1ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        if (!schoolMap.get(universities.getSelectedItem().toString()).contains(new Student(jTextField1.getText(), jTextField2.getText(), jTextArea1.getText()))) {
+            if (!jTextField1.getText().equals("") && !jTextField2.getText().equals("") && !jTextArea1.getText().equals("")) {
+                String input = jTextField1.getText() + " " + jTextField2.getText() + " " + jTextArea1.getText();
+                addToSchoolMap(input, universities.getSelectedItem().toString());
+            }
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    public void addToSchoolMap(String input, String school) {
+        // System.out.println(input);
+        String[] split = input.split(" ");
+        //  System.out.println(split[2]);
+        Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
+        schoolMap.get(school).add(s);
+    }
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -207,42 +263,27 @@ public class NewJFrame extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(NewJFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        NewJFrame j = new NewJFrame();
+        j.setVisible(true);
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> {
-            new NewJFrame().setVisible(true);
-        });
-
-        HashMap<String, ArrayList<Student>> schools = new HashMap<>();
-        schools.put("McMaster", new ArrayList<>());
-        schools.put("Guelph", new ArrayList<>());
-        schools.put("Toronto", new ArrayList<>());
         Scanner fileIn;
         try {
             fileIn = new Scanner(new FileInputStream("mcmaster.txt"));
             while (fileIn.hasNextLine()) {
-                String input = fileIn.nextLine();
-                String[] split = input.split(" ");
-                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
-                schools.get("McMaster").add(s);
+                j.addToSchoolMap(fileIn.nextLine(), "McMaster University");
             }
             fileIn = new Scanner(new FileInputStream("uguelph.txt"));
             while (fileIn.hasNextLine()) {
-                String input = fileIn.nextLine();
-                String[] split = input.split(" ");
-                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
-                schools.get("Guelph").add(s);
+                j.addToSchoolMap(fileIn.nextLine(), "University of Guelph");
             }
             fileIn = new Scanner(new FileInputStream("utoronto.txt"));
             while (fileIn.hasNextLine()) {
-                String input = fileIn.nextLine();
-                String[] split = input.split(" ");
-                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
-                schools.get("Toronto").add(s);
+                j.addToSchoolMap(fileIn.nextLine(), "University of Toronto");
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(NewJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
+        j.universitiesActionPerformed(null);
 
     }
 
