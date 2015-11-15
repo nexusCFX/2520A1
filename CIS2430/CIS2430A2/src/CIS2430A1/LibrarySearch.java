@@ -169,6 +169,7 @@ public class LibrarySearch {
                     return false;
                 }
             }
+            
             Iterator<Integer> getMatches = firstSet.iterator();
             while (getMatches.hasNext()) {
                 Reference next = referenceList.get(getMatches.next() - 1);

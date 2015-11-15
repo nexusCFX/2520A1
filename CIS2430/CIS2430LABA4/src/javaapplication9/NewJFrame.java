@@ -26,7 +26,7 @@ public class NewJFrame extends javax.swing.JFrame {
         initComponents();
         initSchools();
     }
-    
+
     private void initSchools() {
         universities.setModel(new javax.swing.DefaultComboBoxModel(schools));
     }
@@ -170,7 +170,7 @@ public class NewJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_universitiesActionPerformed
 
     private void BDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BDeleteActionPerformed
-        jTextField1.setText("Tyrone");
+        jTextField1.setText("Yo");
     }//GEN-LAST:event_BDeleteActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -212,43 +212,42 @@ public class NewJFrame extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
             new NewJFrame().setVisible(true);
         });
-        
-       HashMap<String, ArrayList<Student>> schools = new HashMap<>();
-       schools.put("McMaster", new ArrayList<>());
-       schools.put("Guelph", new ArrayList<>());
-       schools.put("Toronto", new ArrayList<>());
-       Scanner fileIn;
+
+        HashMap<String, ArrayList<Student>> schools = new HashMap<>();
+        schools.put("McMaster", new ArrayList<>());
+        schools.put("Guelph", new ArrayList<>());
+        schools.put("Toronto", new ArrayList<>());
+        Scanner fileIn;
         try {
-            fileIn=new Scanner(new FileInputStream("mcmaster.txt"));
-            while(fileIn.hasNextLine()){  
+            fileIn = new Scanner(new FileInputStream("mcmaster.txt"));
+            while (fileIn.hasNextLine()) {
                 String input = fileIn.nextLine();
                 String[] split = input.split(" ");
-                Student s = new Student(split[0],split[1],(split[2] + " " + split[3]));
+                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
                 schools.get("McMaster").add(s);
-            }   
-            fileIn=new Scanner(new FileInputStream("uguelph.txt"));
-            while(fileIn.hasNextLine()){  
+            }
+            fileIn = new Scanner(new FileInputStream("uguelph.txt"));
+            while (fileIn.hasNextLine()) {
                 String input = fileIn.nextLine();
                 String[] split = input.split(" ");
-                Student s = new Student(split[0],split[1],(split[2] + " " + split[3]));
+                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
                 schools.get("Guelph").add(s);
             }
-            fileIn=new Scanner(new FileInputStream("utoronto.txt"));
-            while(fileIn.hasNextLine()){  
+            fileIn = new Scanner(new FileInputStream("utoronto.txt"));
+            while (fileIn.hasNextLine()) {
                 String input = fileIn.nextLine();
                 String[] split = input.split(" ");
-                Student s = new Student(split[0],split[1],(split[2] + " " + split[3]));
+                Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
                 schools.get("Toronto").add(s);
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(NewJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
-    
-    
+
     private final String[] schools = {"McMaster University", "University of Guelph", "University of Toronto"};
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton BDelete;
     private javax.swing.JButton jButton1;
@@ -265,6 +264,5 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField2;
     private javax.swing.JComboBox universities;
     // End of variables declaration//GEN-END:variables
-    
-    
+
 }

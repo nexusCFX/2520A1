@@ -24,8 +24,13 @@ public class CIS2430A1 {
         String organization = "";
         String year;
         LibrarySearch library = new LibrarySearch();
+        if (args.length == 0) {
+            args[0] = "output.txt";
+        }
+        if (args.length > 1) {
+            fileInput(library, args[1]);
+        }
         fileInput(library, args[0]);
-        fileInput(library, args[1]);
         while (!inputStr.equalsIgnoreCase("quit") && !inputStr.equalsIgnoreCase("q")) {
             System.out.println("Please input 'Add' to add an entry, 'Search' to search the library, or 'Quit' to exit.");
             inputStr = in.nextLine().toLowerCase();
@@ -76,7 +81,11 @@ public class CIS2430A1 {
                     }
                     break;
             }
-            library.storeCatalog(args[1]);
+            if (args.length > 1) {
+                fileInput(library, args[1]);
+            } else {
+                library.storeCatalog(args[0]);
+            }
         }
     }
 
@@ -120,6 +129,9 @@ public class CIS2430A1 {
                     continue;
                 }
                 split = inputStr.split(" = \"");
+                if(split[1] == null){
+                     
+                }
                 split[1] = split[1].substring(0, split[1].length() - 1);
                 switch (split[0]) {
                     case "type":

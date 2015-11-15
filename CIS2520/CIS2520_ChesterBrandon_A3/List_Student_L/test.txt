@@ -1,0 +1,8 @@
+Insert 0 John 75
+Insert 0 Mary 80
+Insert 2 Pete 90
+Insert 2 Liz 85
+Remove 0
+Remove 1
+Remove 1
+Remove 0

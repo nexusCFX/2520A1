@@ -1,0 +1,10 @@
+Enqueue John 77
+Enqueue Mary 80
+Dequeue
+Enqueue Pete 90
+Enqueue Liz 85
+Enqueue Bob 60
+Dequeue
+Dequeue
+Dequeue
+Dequeue
