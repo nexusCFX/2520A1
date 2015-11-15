@@ -1,7 +1,5 @@
-package CIS2430A1;
+package CIS2430A2;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
@@ -11,10 +9,12 @@ import java.util.Scanner;
  * @version 1.0
  * @since 2015-10-16
  */
-public class CIS2430A1 {
+public class CIS2430A2 {
 
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
+        String inputFile;
+        String outputFile = "";
         String inputStr = "";
         String type;
         String author = "";
@@ -24,13 +24,17 @@ public class CIS2430A1 {
         String organization = "";
         String year;
         LibrarySearch library = new LibrarySearch();
-        if (args.length == 0) {
-            args[0] = "output.txt";
+        if (args.length < 1) {
+            outputFile = "output.txt";
+        } else if (args.length == 1) {
+            outputFile = args[0];
+            library.fileInput(outputFile);
+        } else if (args.length > 1) {
+            inputFile = args[0];
+            outputFile = args[1];
+            library.fileInput(inputFile);
+            library.fileInput(outputFile);
         }
-        if (args.length > 1) {
-            fileInput(library, args[1]);
-        }
-        fileInput(library, args[0]);
         while (!inputStr.equalsIgnoreCase("quit") && !inputStr.equalsIgnoreCase("q")) {
             System.out.println("Please input 'Add' to add an entry, 'Search' to search the library, or 'Quit' to exit.");
             inputStr = in.nextLine().toLowerCase();
@@ -81,11 +85,9 @@ public class CIS2430A1 {
                     }
                     break;
             }
-            if (args.length > 1) {
-                fileInput(library, args[1]);
-            } else {
-                library.storeCatalog(args[0]);
-            }
+
+            library.storeCatalog(outputFile);
+
         }
     }
 
@@ -108,59 +110,5 @@ public class CIS2430A1 {
             return 404;
         }
     }
-
-    public static void fileInput(LibrarySearch library, String args) {
-        Scanner fileIn;
-        String inputStr;
-        String type = "";
-        String author = "";
-        String callNum = "";
-        String title = "";
-        String publisher = "";
-        String organization = "";
-        String year = "";
-        String[] split;
-        try {
-            fileIn = new Scanner(new FileInputStream(args));
-            while (fileIn.hasNextLine()) {
-                inputStr = fileIn.nextLine();
-                if (inputStr.equals("")) {
-                    library.addReference(author, callNum, title, publisher, organization, type, tryParse(year), false);
-                    continue;
-                }
-                split = inputStr.split(" = \"");
-                if(split[1] == null){
-                     
-                }
-                split[1] = split[1].substring(0, split[1].length() - 1);
-                switch (split[0]) {
-                    case "type":
-                        type = split[1];
-                        break;
-                    case "callnumber":
-                        callNum = split[1];
-                        break;
-                    case "authors":
-                        author = split[1];
-                        break;
-                    case "title":
-                        title = split[1];
-                        break;
-                    case "publisher":
-                        publisher = split[1];
-                        break;
-                    case "organization":
-                        organization = split[1];
-                        break;
-                    case "year":
-                        year = split[1];
-                        break;
-                    default:
-                        break;
-                }
-            }
-            library.addReference(author, callNum, title, publisher, organization, type, tryParse(year), false);
-        } catch (FileNotFoundException ex) {
-        }
-    }
+    
 }

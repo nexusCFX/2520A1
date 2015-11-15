@@ -1,6 +1,8 @@
-package CIS2430A1;
+package CIS2430A2;
 
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,9 +10,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Scanner;
 
 /**
- * A virtual library with addition and Search functions
+ * A virtual library with addition, file IO, and search functions
  *
  * @author Brandon Chester
  * @version 1.0
@@ -23,17 +26,29 @@ public class LibrarySearch {
 
     public LibrarySearch() {
     }
+
     
+    /**
+     * Adds a reference to the library if a matching entry does not already exist
+     * @param author The author, if provided for book entries
+     * @param title The title of the reference
+     * @param callNum The call number of the reference
+     * @param publisher The publisher, if provided for book entries
+     * @param organization The organization, if provided for journal entries
+     * @param type The type of reference being added
+     * @param year The publication year of the reference
+     * @param print Specifies if the function should output error messages
+     */
     public void addReference(String author, String callNum, String title, String publisher, String organization, String type, int year, boolean print) {
         boolean duplicate = Search("", callNum, Integer.toString(year), false);
-        if (!duplicate && checkValidEntry(callNum, title, year)) {
+        if (!duplicate && checkValidEntry(callNum, title, year, print)) {
             if (type.equalsIgnoreCase("book")) {
-                 referenceList.add(new Book(author, callNum, title, publisher, year));
+                referenceList.add(new Book(author, callNum, title, publisher, year));
             } else {
-                 referenceList.add(new Journal(callNum, title, organization, year));
+                referenceList.add(new Journal(callNum, title, organization, year));
             }
             addToTitleMap(title);
-        } else if (print && duplicate && checkValidEntry(callNum, title, year)) {
+        } else if (print && duplicate && checkValidEntry(callNum, title, year, print)) {
             System.out.println("An entry with that call number and year already exists.");
         }
     }
@@ -82,30 +97,99 @@ public class LibrarySearch {
         return true;
     }
 
-    private boolean checkValidEntry(String callNum, String title, int year) {
+    private boolean checkValidEntry(String callNum, String title, int year, boolean needPrint) {
         boolean ret = true;
         if (callNum.equals("")) {
-            System.out.println("New entries must have a call number.");
+            if (needPrint) {
+                System.out.println("New entries must have a call number.");
+            }
             ret = false;
         }
         if (title.equals("")) {
-            System.out.println("New entries must a title.");
+            if (needPrint) {
+                System.out.println("New entries must a title.");
+            }
             ret = false;
         }
         if (year == 404 || year > 9999 || year < 1000) {
-            System.out.println("New entries must have a valid year between the year 1000 and the year 9999.");
+            if (needPrint) {
+                System.out.println("New entries must have a valid year between the year 1000 and the year 9999.");
+            }
             ret = false;
         }
         return ret;
     }
+    
+     /**
+     * Performs the input of references from a text file to the virtual library
+     *
+     *
+     * @param file The file with the entries to be added to the library.
+     */
+    public void fileInput(String file) {
+        Scanner fileIn;
+        String inputStr;
+        String type = "";
+        String author = "";
+        String callNum = "";
+        String title = "";
+        String publisher = "";
+        String organization = "";
+        String year = "";
+        String[] split;
+        try {
+            fileIn = new Scanner(new FileInputStream(file));
+            while (fileIn.hasNextLine()) {
+                inputStr = fileIn.nextLine();
+                if (inputStr.equals("")) {
+                    addReference(author, callNum, title, publisher, organization, type, tryParse(year), false);
+                    continue;
+                }
+                split = inputStr.split(" = \"");
+                if (split[1] == null) {
+                    split[1] = "";
+                } else { 
+                    split[1] = split[1].substring(0, split[1].length() - 1);
+                }
+                switch (split[0]) {
+                    case "type":
+                        type = split[1];
+                        break;
+                    case "callnumber":
+                        callNum = split[1];
+                        break;
+                    case "authors":
+                        author = split[1];
+                        break;
+                    case "title":
+                        title = split[1];
+                        break;
+                    case "publisher":
+                        publisher = split[1];
+                        break;
+                    case "organization":
+                        organization = split[1];
+                        break;
+                    case "year":
+                        year = split[1];
+                        break;
+                    default:
+                        break;
+                }
+            }
+            addReference(author, callNum, title, publisher, organization, type, tryParse(year), false);
+        } catch (FileNotFoundException ex) {
+        }
+    }
 
     /**
      * Searches through the library based on the user's query and outputs all
-     * matches
+     * matches. If a title is provided, searching is done using a HashMap. 
+     * If no title is provided a standard iterative search is performed.
      *
-     * @param title The title of the book/journal
-     * @param callNum The call number of the book/journal
-     * @param year The year range of the book/journal
+     * @param title The title of the reference
+     * @param callNum The call number of the reference
+     * @param year The year range of the reference
      * @param needPrint Specifies if matches should be printed
      * @return true if any matches are found, false if none are found
      */
@@ -169,7 +253,7 @@ public class LibrarySearch {
                     return false;
                 }
             }
-            
+
             Iterator<Integer> getMatches = firstSet.iterator();
             while (getMatches.hasNext()) {
                 Reference next = referenceList.get(getMatches.next() - 1);
@@ -197,13 +281,17 @@ public class LibrarySearch {
         return numOfMatchedEntries != 0;
     }
 
-    public void storeCatalog(String arg) {
-        
+     /**
+     * Outputs the entries of the virtual library to a text file
+     * @param file The text file to be written to. Defaults to "output.txt"
+     */
+    public void storeCatalog(String file) {
+
         PrintWriter catalog;
         try {
-            PrintWriter pw = new PrintWriter(arg);
+            PrintWriter pw = new PrintWriter(file);
             pw.close();
-            catalog = new PrintWriter(new BufferedWriter(new FileWriter(arg, true)));
+            catalog = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
             Iterator<Reference> findBooks = referenceList.iterator();
             while (findBooks.hasNext()) {
                 Reference next = findBooks.next();
@@ -212,7 +300,7 @@ public class LibrarySearch {
             catalog.close();
         } catch (IOException ex) {
         }
-        
+
     }
 
     private Integer tryParse(String yearString) {

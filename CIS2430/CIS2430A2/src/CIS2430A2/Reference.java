@@ -1,7 +1,7 @@
-package CIS2430A1;
+package CIS2430A2;
 
 /**
- * A piece of literature. Subclasses: Book, Journal.
+ * A library reference. Subclasses: Book, Journal.
  * @author Brandon Chester
  * @version 1.0
  * @since 2015-10-16
@@ -16,10 +16,10 @@ public class Reference {
     }
 
     /**
-     * Initializes a piece of literature
-     * @param title The title of the literature
-     * @param callNum The call number of the literature
-     * @param year The publication year of the literature
+     * Initializes a reference
+     * @param title The title of the reference
+     * @param callNum The call number of the reference
+     * @param year The publication year of the reference
      */
     public Reference(String callNum, String title, int year) {
         this.callNum = callNum;
@@ -28,24 +28,24 @@ public class Reference {
     }
 
     /**
-     * Gets a piece of literature's call number
-     * @return The call number of the piece of literature
+     * Gets a reference's call number
+     * @return The call number of the reference
      */
     public String getCallNum() {
         return this.callNum;
     }
 
     /**
-     * Gets a piece of literature's title
-     * @return The title of the piece of literature
+     * Gets a reference's title
+     * @return The title of the reference
      */
     public String getTitle() {
         return this.title;
     }
 
     /**
-     * Gets a piece of literature's year of publication
-     * @return The year of publication of the piece of literature
+     * Gets a reference's year of publication
+     * @return The year of publication of the reference
      */
     public int getYear() {
         return this.year;
