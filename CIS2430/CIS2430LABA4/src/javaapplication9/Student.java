@@ -5,6 +5,8 @@
  */
 package javaapplication9;
 
+import java.util.Objects;
+
 /**
  *
  * @author Brandy
@@ -33,5 +35,33 @@ public class Student {
     
     public String getAddress(){
         return this.address;
+    }
+    
+    @Override
+    public String toString(){
+        return (this.getFirstName() + " " + this.getLastName() + " " + this.getAddress() + System.getProperty("line.separator"));
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        if (!(other instanceof Student)) {
+            return false;
+        }
+        return this.toString().equals(((Student)other).toString());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 31 * hash + Objects.hashCode(this.firstName);
+        hash = 31 * hash + Objects.hashCode(this.lastName);
+        hash = 31 * hash + Objects.hashCode(this.address);
+        return hash;
     }
 }

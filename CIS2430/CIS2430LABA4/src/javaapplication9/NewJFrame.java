@@ -5,15 +5,10 @@
  */
 package javaapplication9;
 
-import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -192,7 +187,7 @@ public class NewJFrame extends javax.swing.JFrame {
         jTextField1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getFirstName());
         jTextField2.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getLastName());
         jTextArea1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(0).getAddress());
-
+        jLabel3.setText("Number of students found:" + schoolMap.get(universities.getSelectedItem().toString()).size());
     }//GEN-LAST:event_universitiesActionPerformed
 
     private void BDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BDeleteActionPerformed
@@ -200,6 +195,7 @@ public class NewJFrame extends javax.swing.JFrame {
             schoolMap.get(universities.getSelectedItem().toString()).remove(getIndex());
             jButton2ActionPerformed(null);
         }
+        jLabel3.setText("Number of students found:" + schoolMap.get(universities.getSelectedItem().toString()).size());
     }//GEN-LAST:event_BDeleteActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -217,27 +213,31 @@ public class NewJFrame extends javax.swing.JFrame {
             jTextField2.setText(schoolMap.get(universities.getSelectedItem().toString()).get(getIndex()).getLastName());
             jTextArea1.setText(schoolMap.get(universities.getSelectedItem().toString()).get(getIndex()).getAddress());
         }
+        jLabel3.setText("Number of students found:" + schoolMap.get(universities.getSelectedItem().toString()).size());
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
-        // TODO add your handling code here:
+        jLabel3.setText("Number of students found:" + schoolMap.get(universities.getSelectedItem().toString()).size());
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if (!schoolMap.get(universities.getSelectedItem().toString()).contains(new Student(jTextField1.getText(), jTextField2.getText(), jTextArea1.getText()))) {
-            if (!jTextField1.getText().equals("") && !jTextField2.getText().equals("") && !jTextArea1.getText().equals("")) {
-                String input = jTextField1.getText() + " " + jTextField2.getText() + " " + jTextArea1.getText();
-                addToSchoolMap(input, universities.getSelectedItem().toString());
-            }
+
+        if (!jTextField1.getText().equals("") && !jTextField2.getText().equals("") && !jTextArea1.getText().equals("")) {
+            String input = jTextField1.getText() + " " + jTextField2.getText() + " " + jTextArea1.getText();
+            addToSchoolMap(input, universities.getSelectedItem().toString());
         }
+
+        jLabel3.setText("Number of students found:" + schoolMap.get(universities.getSelectedItem().toString()).size());
     }//GEN-LAST:event_jButton1ActionPerformed
 
     public void addToSchoolMap(String input, String school) {
         // System.out.println(input);
         String[] split = input.split(" ");
         //  System.out.println(split[2]);
-        Student s = new Student(split[0], split[1], (split[2] + " " + split[3]));
-        schoolMap.get(school).add(s);
+        Student s = new Student(split[0], split[1], (split[2] + " " + split[3] + " " + split[4]));
+        if (!schoolMap.get(universities.getSelectedItem().toString()).contains(s)) {
+            schoolMap.get(school).add(s);
+        }
     }
 
     public static void main(String args[]) {
@@ -284,7 +284,6 @@ public class NewJFrame extends javax.swing.JFrame {
             Logger.getLogger(NewJFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
         j.universitiesActionPerformed(null);
-
     }
 
     private final String[] schools = {"McMaster University", "University of Guelph", "University of Toronto"};
