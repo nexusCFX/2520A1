@@ -1,0 +1,12 @@
+John 75
+Mary 85
+Pete 80
+Liz 55
+Tom 45
+Bob 60
+Ann 70
+Ashley 35 
+Karen 65
+Dave 90
+Adam 45
+
