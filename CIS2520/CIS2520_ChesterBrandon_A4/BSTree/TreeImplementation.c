@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include "TreeInterface.h"
 #include "StudentInterface.h"
-
 void FreeNode(TreeNode* n);
 int findHeight(TreeNode* n);
 void DestroyNodes(TreeNode* n);
 void BalanceTree(Tree* T, TreeNode* n);
+TreeNode* rotateLeft (TreeNode* n, TreeNode* c);
+TreeNode* rotateRight (TreeNode* n, TreeNode* c);
 void InsertNode (Tree* T, TreeNode* n, void* I);
 
 void Initialize (Tree *T, void * (*copyValue) (void *, void *), void (*destroyValue) (void *), int (*compareValues) (void *, void *)) {
@@ -105,7 +106,7 @@ void InsertNode (Tree* T, TreeNode* n, void* I) {
         T->size++;
     } else if (T->compareValues(n->value,I) == -1) {
         if(n->right == NULL) {
-            n->right = NewNode(T->current);
+            n->right = NewNode(n);
             n->right->value = T->copyValue(NULL, I);
             T->size++;
         } else {
@@ -113,7 +114,7 @@ void InsertNode (Tree* T, TreeNode* n, void* I) {
         }
     } else if (T->compareValues(n->value,I) == 1) {
         if(n->left == NULL) {
-            n->left = NewNode(T->current);
+            n->left = NewNode(n);
             n->left->value = T->copyValue(NULL, I);
             T->size++;
         } else {
@@ -123,158 +124,41 @@ void InsertNode (Tree* T, TreeNode* n, void* I) {
     T->root = n;
 }
 
-/*I'm aware that this code is a mess that could be generalized and thus shortened, 
- but I'm terrified that if I change it at all that it will break and never work again*/
-void BalanceTree(Tree* T, TreeNode* n) {
-    int balance;
-    int left;
-    TreeNode* temp;
-    TreeNode* parent;
-    TreeNode* gParent;
-    TreeNode* ggParent;
-    left = 0;
-    
-    if (n->parent == NULL) {
-        T->root = n;
-        
-        return;
-    }
-    parent = n->parent;
-    gParent = parent->parent;
-    if (gParent != NULL) {
-        ggParent = gParent->parent;
-    } else {
-        ggParent = NULL;
-    }
-    if (ggParent && ggParent->left == gParent) {
-        left = 1;
-    }
-    
-    if (gParent != NULL) {
-        balance = findHeight(gParent->left) - findHeight(gParent->right);
-        if (balance < -1) {
-            if (n == parent->right) {
-                temp = parent->left;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                parent->left = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = parent;
-                }
-                gParent->right = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = parent;
-                    } else {
-                        ggParent->right = parent;
-                    }
-                }
-                parent->parent = ggParent;
-                BalanceTree(T, parent);
-            } else if (n == parent->left){
-                temp = n->right;
-                if (temp != NULL) {
-                    temp->parent = parent;
-                }
-                n->right = parent;
-                if (parent != NULL) {
-                    parent->parent = n;
-                }
-                
-                parent->left = temp;
-                temp = n->left;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                
-                n->left = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = n;
-                }
-                
-                gParent->right = temp;
-                
-                if(ggParent){
-                    if (left){
-                        ggParent->left = n;
-                    } else {
-                        ggParent->right = n;
-                    }
-                }
-                
-                n->parent = ggParent;
-                
-                BalanceTree(T, n);
-            }
-        } else if (balance > 1) {
-            if (n == parent->left) {
-                temp = parent->right;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                parent->right = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = parent;
-                }
-                gParent->left = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = parent;
-                    } else {
-                        ggParent->right = parent;
-                    }
-                }
-                parent->parent = ggParent;
-                BalanceTree(T, parent);
-            } else if (n == parent->right){
-                temp = n->left;
-                if (temp != NULL) {
-                    temp->parent = parent;
-                }
-                n->left = parent;
-                if (parent != NULL) {
-                    parent->parent = n;
-                }
-                parent->right = temp;
-                temp = n->right;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                n->right = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = n;
-                }
-                gParent->left = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = n;
-                    } else {
-                        ggParent->right = n;
-                    }
-                }
-                n->parent = ggParent;
-                BalanceTree(T, n);
-            }
-        } else {
-            BalanceTree(T, parent);
-        }
-    }
-}
-
-/*If you're not sure that your leftmost leaf is the lowest value your BST is broken*/
 int Minimum (Tree *T, void *I) {
+    T->current = T->root;
     if (T->size == 0) {
         return 0;
     }
     while (T->current->left != NULL) {
         T->current = T->current->left;
     }
-    I = T->current->value;
+    T->copyValue(I, T->current->value);
     return 1;
 }
 
 int Successor (Tree *T, void *I) {
-    
+    TreeNode* store;
+    TreeNode* oldCurrent;
+    if (T->current->right) {
+        if (T->current->right->left) {
+            T->current = T->current->right->left;
+        } else {
+            T->current = T->current->right;
+        }
+        T->copyValue(I, T->current->value);
+        return 1;
+    }
+    store = T->current;
+    oldCurrent = T->current;
+    T->current = store->parent;
+    while (T->current->left != store) {
+        if (T->current == T->root) {
+            T->current = oldCurrent;
+            return 0;
+        }
+        store = T->current;
+        T->current = store->parent;
+    }
+    T->copyValue(I, T->current->value);
     return 1;
 }

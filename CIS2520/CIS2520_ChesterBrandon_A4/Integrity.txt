@@ -11,7 +11,7 @@ E-MAIL: bchester@mail.uoguelph.ca
 
 COURSE: CIS*2520
 ASSIGNMENT #: 4
-DATE: Nov 22, 2015
+DATE: Nov 26, 2015
 
 ACKNOWLEDGMENTS: 
 (You need not acknowledge the recommended or required textbook, the lecture or lab notes, your instructor or TA.)

@@ -46,13 +46,13 @@ int main(void) {
     return 1;
 }
 
-void printTree(TreeNode* T) {
-    if (T == NULL) {
+void printTree(TreeNode* n) {
+    if (n == NULL) {
         return;
     }
-    printTree(T->left);
-    printValue(T);
-    printTree(T->right);
+    printTree(n->left);
+    printValue(n);
+    printTree(n->right);
 }
     
 void printValue (TreeNode* n) {

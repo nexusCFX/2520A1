@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
         Top(&H, topVals[i]);
         Remove(&H);
         SPtr = (Student*)topVals[i];
-        printf("Name %s grade %d\n",SPtr->name,SPtr->grade);
+        printf("%s %d\n",SPtr->name,SPtr->grade);
     }
     Destroy(&H);
     return 1;
@@ -50,7 +50,7 @@ void * copyValue (void *address, void *value) {
     if (address == NULL) {
         address = malloc(30);
     }
-     
+    
     memcpy(address, value, 30);
     return address;
 }

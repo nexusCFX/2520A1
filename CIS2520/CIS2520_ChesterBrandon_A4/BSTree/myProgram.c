@@ -46,15 +46,15 @@ int main(void) {
     return 1;
 }
 
-void printTree(TreeNode* T) {
-    if (T == NULL) {
+void printTree(TreeNode* n) {
+    if (n == NULL) {
         return;
     }
-    printTree(T->left);
-    printValue(T);
-    printTree(T->right);
+    printTree(n->left);
+    printValue(n);
+    printTree(n->right);
 }
-    
+
 void printValue (TreeNode* n) {
     Student* S;
     int i;
@@ -72,7 +72,7 @@ void * copyValue (void *address, void *value) {
     if (address == NULL) {
         address = malloc(30);
     }
-     
+    
     memcpy(address, value, 30);
     return address;
 }

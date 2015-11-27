@@ -1,3 +1,10 @@
+/*********************************************************************
+ * FILE NAME: HeapInterface.h
+ * PURPOSE: Interface of a generic Binary Heap ADT
+ * AUTHOR: Brandon Chester (CIS2520, Assignment 4)
+ * DATE: 26/11/2015
+ *********************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

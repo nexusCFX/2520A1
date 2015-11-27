@@ -3,11 +3,14 @@
 #include <stdio.h>
 #include "TreeInterface.h"
 #include "StudentInterface.h"
-
 void FreeNode(TreeNode* n);
 int findHeight(TreeNode* n);
 void DestroyNodes(TreeNode* n);
 void BalanceTree(Tree* T, TreeNode* n);
+TreeNode* rotateLeft (TreeNode* n, TreeNode* c);
+TreeNode* rotateRight (TreeNode* n, TreeNode* c);
+void InsertNode (Tree* T, TreeNode* n, void* I);
+
 void Initialize (Tree *T, void * (*copyValue) (void *, void *), void (*destroyValue) (void *), int (*compareValues) (void *, void *)) {
     T->size = 0;
     T->root = NULL;
@@ -93,191 +96,122 @@ int findHeight(TreeNode* n) {
 }
 
 void Insert (Tree *T, void *I) {
-    if (T->root == NULL) {
-        T->root = NewNode(NULL);
-        T->root->value = T->copyValue(NULL, I);
-        T->current = T->root;
-        T->size++;
-    } else if (T->compareValues(T->current->value,I) == -1) {
-        if(T->current->right == NULL) {
-            T->current->right = NewNode(T->current);
-            T->current->right->value = T->copyValue(NULL, I);
-            T->size++;
-            if (Balanced(T) == 0) {
-                BalanceTree(T, T->current->right);
-            }
-        } else {
-            T->current = T->current->right;
-            Insert(T,I);
-        }
-    } else if (T->compareValues(T->current->value,I) == 1) {
-        if(T->current->left == NULL) {
-            T->current->left = NewNode(T->current);
-            T->current->left->value = T->copyValue(NULL, I);
-            T->size++;
-            if (Balanced(T) == 0) {
-                BalanceTree(T, T->current->left);
-            }
-        } else {
-            T->current = T->current->left;
-            Insert(T,I);
-        }
-    }
-    T->current = T->root;
+    InsertNode(T, T->root, I);
 }
 
-/*I'm aware that this code is a mess that could be generalized and thus shortened, 
- but I'm terrified that if I change it at all that it will break and never work again*/
-void BalanceTree(Tree* T, TreeNode* n) {
+void InsertNode (Tree* T, TreeNode* n, void* I) {
     int balance;
-    int left;
-    TreeNode* temp;
-    TreeNode* parent;
-    TreeNode* gParent;
-    TreeNode* ggParent;
-    left = 0;
-    
-    if (n->parent == NULL) {
-        T->root = n;
-        
-        return;
-    }
-    parent = n->parent;
-    gParent = parent->parent;
-    if (gParent != NULL) {
-        ggParent = gParent->parent;
-    } else {
-        ggParent = NULL;
-    }
-    if (ggParent && ggParent->left == gParent) {
-        left = 1;
-    }
-    
-    if (gParent != NULL) {
-        balance = findHeight(gParent->left) - findHeight(gParent->right);
-        if (balance < -1) {
-            if (n == parent->right) {
-                temp = parent->left;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                parent->left = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = parent;
-                }
-                gParent->right = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = parent;
-                    } else {
-                        ggParent->right = parent;
-                    }
-                }
-                parent->parent = ggParent;
-                BalanceTree(T, parent);
-            } else if (n == parent->left){
-                temp = n->right;
-                if (temp != NULL) {
-                    temp->parent = parent;
-                }
-                n->right = parent;
-                if (parent != NULL) {
-                    parent->parent = n;
-                }
-                
-                parent->left = temp;
-                temp = n->left;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                
-                n->left = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = n;
-                }
-                
-                gParent->right = temp;
-                
-                if(ggParent){
-                    if (left){
-                        ggParent->left = n;
-                    } else {
-                        ggParent->right = n;
-                    }
-                }
-                
-                n->parent = ggParent;
-                
-                BalanceTree(T, n);
-            }
-        } else if (balance > 1) {
-            if (n == parent->left) {
-                temp = parent->right;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                parent->right = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = parent;
-                }
-                gParent->left = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = parent;
-                    } else {
-                        ggParent->right = parent;
-                    }
-                }
-                parent->parent = ggParent;
-                BalanceTree(T, parent);
-            } else if (n == parent->right){
-                temp = n->left;
-                if (temp != NULL) {
-                    temp->parent = parent;
-                }
-                n->left = parent;
-                if (parent != NULL) {
-                    parent->parent = n;
-                }
-                parent->right = temp;
-                temp = n->right;
-                if (temp != NULL) {
-                    temp->parent = gParent;
-                }
-                n->right = gParent;
-                if (gParent != NULL) {
-                    gParent->parent = n;
-                }
-                gParent->left = temp;
-                if(ggParent){
-                    if (left){
-                        ggParent->left = n;
-                    } else {
-                        ggParent->right = n;
-                    }
-                }
-                n->parent = ggParent;
-                BalanceTree(T, n);
-            }
+    if (n == NULL) {
+        n = NewNode(NULL);
+        n->value = T->copyValue(NULL, I);
+        T->size++;
+    } else if (T->compareValues(n->value,I) == -1) {
+        if(n->right == NULL) {
+            n->right = NewNode(n);
+            n->right->value = T->copyValue(NULL, I);
+            T->size++;
         } else {
-            BalanceTree(T, parent);
+            InsertNode(T, n->right, I);
+        }
+    } else if (T->compareValues(n->value,I) == 1) {
+        if(n->left == NULL) {
+            n->left = NewNode(n);
+            n->left->value = T->copyValue(NULL, I);
+            T->size++;
+        } else {
+            InsertNode(T, n->left, I);
+        }
+    }
+    T->root = n;
+    if (Balanced(T) == 0) {
+        balance = findHeight(n->left) - findHeight(n->right);
+        if (balance < -1) {
+            if(T->compareValues(n->right->value,I) > -1) {
+                rotateRight(n->right, n->right->left);
+            }
+           T->root = rotateLeft(n, n->right);
+        } else if (balance > 1) {
+            if(T->compareValues(n->left->value,I) < 0) {
+                rotateLeft(n->left, n->left->right);
+            }
+            T->root = rotateRight(n, n->left);
         }
     }
 }
 
-/*If you're not sure that your leftmost leaf is the lowest value your BST is broken*/
+TreeNode* rotateLeft (TreeNode* n, TreeNode* c){
+    TreeNode* temp;
+    if(n->parent && n == n->parent->left){
+        n->parent->left = c;
+    } else if (n->parent){
+        n->parent->right = c;
+    }
+    
+    c->parent = n->parent;
+    n->parent = c;
+    temp = c->left;
+    if (temp) {
+        temp->parent = n;
+    }
+    n->right = temp;
+    c->left = n;
+    return c;
+}
+
+TreeNode* rotateRight (TreeNode* n, TreeNode* c){
+    TreeNode* temp;
+    if(n->parent && n == n->parent->left){
+        n->parent->left = c;
+    } else if (n->parent){
+        n->parent->right = c;
+    }
+    
+    c->parent = n->parent;
+    n->parent = c;
+    temp = c->right;
+    if (temp) {
+        temp->parent = n;
+    }
+    n->left = temp;
+    c->right = n;
+    return c;
+}
+
 int Minimum (Tree *T, void *I) {
+    T->current = T->root;
     if (T->size == 0) {
         return 0;
     }
     while (T->current->left != NULL) {
         T->current = T->current->left;
     }
-    I = T->current->value;
+    T->copyValue(I, T->current->value);
     return 1;
 }
 
 int Successor (Tree *T, void *I) {
-    
+    TreeNode* store;
+    TreeNode* oldCurrent;
+    if (T->current->right) {
+        if (T->current->right->left) {
+            T->current = T->current->right->left;
+        } else {
+            T->current = T->current->right;
+        }
+        T->copyValue(I, T->current->value);
+        return 1;
+    }
+    store = T->current;
+    oldCurrent = T->current;
+    T->current = store->parent;
+    while (T->current->left != store) {
+        if (T->current == T->root) {
+            T->current = oldCurrent;
+            return 0;
+        }
+        store = T->current;
+        T->current = store->parent;
+    }
+    T->copyValue(I, T->current->value);
     return 1;
 }
