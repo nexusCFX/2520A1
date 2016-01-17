@@ -1,5 +1,5 @@
 
-OPTIONS = -ansi -pedantic -Wall -Werror
+OPTIONS = -std=c90 -pedantic -Wall -Werror
 
 a.out: myProgram.o StudentImplementation.o QueueImplementation.o
 	gcc $(OPTIONS) myProgram.o StudentImplementation.o QueueImplementation.o

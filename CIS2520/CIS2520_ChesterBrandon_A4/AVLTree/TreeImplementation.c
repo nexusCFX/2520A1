@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "TreeInterface.h"
 #include "StudentInterface.h"
+
 void FreeNode(TreeNode* n);
 int findHeight(TreeNode* n);
 void DestroyNodes(TreeNode* n);
@@ -139,7 +140,7 @@ void InsertNode (Tree* T, TreeNode* n, void* I) {
     }
 }
 
-TreeNode* rotateLeft (TreeNode* n, TreeNode* c){
+TreeNode* rotateLeft (TreeNode* n, TreeNode* c) {
     TreeNode* temp;
     if(n->parent && n == n->parent->left){
         n->parent->left = c;
@@ -158,7 +159,7 @@ TreeNode* rotateLeft (TreeNode* n, TreeNode* c){
     return c;
 }
 
-TreeNode* rotateRight (TreeNode* n, TreeNode* c){
+TreeNode* rotateRight (TreeNode* n, TreeNode* c) {
     TreeNode* temp;
     if(n->parent && n == n->parent->left){
         n->parent->left = c;
