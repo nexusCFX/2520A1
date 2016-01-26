@@ -1,12 +1,14 @@
 /********
 calutil.h -- Public interface for iCalendar utility functions in calutil.c
-Last updated:  4:40 PM January-10-16 
+Last updated:  8:04 PM January-16-16
 
 Customize this file header with your name and student number.
+
+RevA: Changed CalComp* argument of readCalComp().
 ********/
 
 #ifndef CALUTIL_H
-#define CALUTIL_H A1
+#define CALUTIL_H A1_RevA
 
 #include <stdio.h>
 
@@ -67,7 +69,9 @@ typedef struct {
 /* File I/O functions */
 
 CalStatus readCalFile( FILE *const ics, CalComp **const pcomp );
-CalStatus readCalComp( FILE *const ics, CalComp *const comp );
+CalStatus readCalComp( FILE *const ics, CalComp **const pcomp );
 CalStatus readCalLine( FILE *const ics, char **const pbuff );
 CalError parseCalProp( char *const buff, CalProp *const prop );
 void freeCalComp( CalComp *const comp );
+
+#endif
