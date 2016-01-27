@@ -39,14 +39,13 @@ int main () {
     }*/
     CalProp *testProp = malloc(sizeof(*testProp));
     
-    parseCalProp("TRIGGER;VALUE=DURATION;NIGGER=KFC;LAIN=CUTE:-PT30M", testProp);
-    puts("\n\n");
-    printf("\nName of prop:%s\nValue of prop:%s\n",testProp->name,testProp->value);
+    parseCalProp("RRULE;FREQ=WEEKLY;UNTIL=20160429T200000Z;BYDAY=MO,TH,FR:TYRONE", testProp);
+    printf("Name of prop:%s\n",testProp->name);
     if (testProp->nparams > 0) {
         printf("%d PARAMETERS\n",testProp->nparams);
         CalParam* temp = testProp->param;
         while (true) {
-            printf("Name:%s\n",temp->name);
+            printf("Name: %s\n",temp->name);
             printf("%d VALUES-\n",temp->nvalues);
             for (int j = 0; j < temp->nvalues; j++) { 
                 printf("%s\n",temp->value[j]);
@@ -57,6 +56,7 @@ int main () {
               break;   
             }
         }
+        printf("Value of prop: %s\n",testProp->value);
     } else {
         puts("NO PARAMS");
     }
@@ -318,7 +318,7 @@ bool checkEmptyString(const char *line) {
     }
     return true;
 }
-
+//If you have to ever maintain this, god bless your soul
 CalError parseCalProp( char *const buff, CalProp *const prop ) {
     prop->name = NULL;
     prop->value = NULL;
@@ -329,6 +329,7 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
     char* name;
     char* propValue;
     
+    //Copy the buffer into one you can alter with strtok
     buffCpy = malloc(strlen(buff)+1);
     strcpy(buffCpy,buff);
     
@@ -347,18 +348,17 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
     int simpleString = 0;
     for (int i = 0; i < length; i++) {
         if (buffCpy[i] == ':') {
-            puts("SIMPLE");
             simpleString = 2;
             break;
         } else if (buffCpy[i] == ';') {
             simpleString = 1;
-            puts("COMPLEX");
             break;
         }
     }
     
     //If simpleString = 0 something is horribly wrong
     //If simpleString = 2, simple case, easy parsing
+    //Otherwise, a lot of work
     if (simpleString == 0) {
        return SYNTAX; 
    } else if (simpleString == 2) {
@@ -400,17 +400,16 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
            return SYNTAX;
        }
        
-       //Build prop value using delimeter position
-       //Hopefully this copies the NUL terminator
+       //Cut out prop value using delimeter position, append NUL term
        prop->value = malloc(strlen(buffCpy)-propValueDelimeter+1);
        for (int i = propValueDelimeter+1; i < length+1; i++) {
            prop->value[i - propValueDelimeter - 1] = buffCpy[i]; 
        }
        buffCpy[propValueDelimeter] = '\0';
-       printf("Buffer is %s\n",buffCpy);
+     
        
        //Find length of name section
-       int curPos = 0;
+       int curPos = 0; //curPos will mark end of name, beginning of params
        length = strlen(buffCpy);
        for (int i = 0; i < length; i++) {
            curPos++;
@@ -419,18 +418,12 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
            }
        }
        
-       //Copy over name of prop
+       //Copy over name of prop, append NUL
        prop->name = malloc(curPos+1);
-       for (int i = 0; i < curPos; i++) {
+       for (int i = 0; i < curPos-1; i++) {
            prop->name[i] = buffCpy[i];
        }
        prop->name[curPos] = '\0';
-       
-       printf("Buffer now is ");
-       for (int i = curPos; i < length; i++) {
-           printf("%c",buffCpy[i]);
-       }
-       puts("");
        
        //Analyze the individual parameters to avoid errors
        //Go over the string, do case analysis for each ; found
@@ -444,16 +437,18 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
            
            //If next char is ; and we arent in quotes, this is the end of the current param block
            if ((buffCpy[k+1] == ';' || buffCpy[k+1] == '\0') && withinQuotes == false) {
-               puts("BEGINNING PARSE!");
-               CalParam *newParam = malloc(sizeof(CalParam));
-               //Copy param and value segment into a temporary string
                
-               char param[100] = {0};
+               CalParam *newParam = malloc(sizeof(CalParam)); //
+               newParam->name = NULL;
+               newParam->next = NULL;
+               newParam->nvalues = 1;
+               
+               //Copy param and value segment into a temporary string
+               char param[500] = {0};
                for (int i = lasPos; i < k+1; i++) {
                    param[i-lasPos] = buffCpy[i];
                }
                param[strlen(param)] = '\0';
-               printf("Param str: %s\n",param);
                
                //If we have no =, syntax failure
                if (strchr(param,'=') == NULL) {
@@ -462,18 +457,17 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                    //Split the parameter string into name and values
                    char* paramName = strtok(param,"=");
                    char* paramValues = strtok(NULL,"\0");
-                   printf("Param values after strtok: %s\n",paramValues);
+                   
                    //Fixing strtok bug with zero length strings
                    if (paramValues == NULL) {
                        paramValues = "";
                    }
-                   newParam->name = malloc(strlen(paramName)+1);
-                   newParam->next = NULL;
+                   
+                   
+                   newParam->name = malloc(strlen(paramName)+1); //Move name into new parameter
                    strcpy(newParam->name,paramName);
-                   newParam->nvalues = 1;
 
-                   //If we have commas, it's possible that we have
-                   //Multiple values for the parameter
+                   //If we have commas, it's possible that we have multiple values for the parameter
                    if (strchr(paramValues,',')) {
                        //Do multi value analysis
                        bool valueInQuotes = false;
@@ -482,7 +476,7 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                        for (int i = 0; i < length; i++) {
                            //Once you find end of a parameter value, add it
                            if (paramValues[i + 1] == ',' && valueInQuotes == false) {
-                               char tempValue[i - oldPos + 1];
+                               char tempValue[100] = {0};
                                for (int j = 0; j < (i - oldPos); i++) {
                                    tempValue[j] = paramValues[j + oldPos];
                                }
@@ -490,44 +484,33 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                                (newParam) = realloc((newParam), (sizeof(*newParam) + newParam->nvalues*sizeof(char*)));
                                (newParam)->value[newParam->nvalues-1] = malloc(strlen(paramValues)+1);
                                strcpy((newParam)->value[newParam->nvalues-1],paramValues);
-                               
+                               i+=2;
                                oldPos = i;
                            }
                        }
                    } else {
-                       puts("other case");
                        //No commas, one value
                        (newParam) = realloc((newParam), (sizeof(*newParam) + sizeof(char*)));
                        ((newParam)->value[0]) = malloc(strlen(paramValues)+1);
                        strcpy((newParam)->value[0],paramValues);
-                       printf("Param values: %s\n",paramValues);
-                       printf("Copied buffer: %s\n",(newParam)->value[0]);
+
                    }
                }
-               puts("PAST PARSING");
                //Add CalParam to list
                if (prop->param == NULL) {
                    prop->param = newParam;
                } else {
-                   
                    CalParam* temp = prop->param;
                    while (temp->next != NULL) {
-                       puts("YO");
                        temp = temp->next;
                    }
-                   
                    temp->next = newParam;
                    if (prop->param->next != NULL) {
-                        printf("TEMP NEXT %s",temp->next->name);
                    }
                }
-               prop->nparams++;
-               
-           
-           //Move up the last position    
-           k+=2;
-           lasPos = k;
-           
+               prop->nparams++; 
+               k+=2;
+               lasPos = k;
            }
        }
     }
