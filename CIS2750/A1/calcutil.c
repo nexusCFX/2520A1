@@ -39,7 +39,7 @@ int main () {
     }*/
     CalProp *testProp = malloc(sizeof(*testProp));
     
-    parseCalProp("RRULE;FREQ=WEEKLY;UNTIL=20160429T200000Z;BYDAY=MO,TH,FR:TYRONE", testProp);
+    parseCalProp("RRULE;FREQ=WEEKLY;UNTIL=\"2016,0429T2000==:;)00Z\";BYDAY=MO,TH,FR:TYRONE", testProp);
     printf("Name of prop:%s\n",testProp->name);
     if (testProp->nparams > 0) {
         printf("%d PARAMETERS\n",testProp->nparams);
@@ -441,7 +441,7 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                CalParam *newParam = malloc(sizeof(CalParam)); //
                newParam->name = NULL;
                newParam->next = NULL;
-               newParam->nvalues = 1;
+               newParam->nvalues = 0;
                
                //Copy param and value segment into a temporary string
                char param[500] = {0};
@@ -469,22 +469,34 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
 
                    //If we have commas, it's possible that we have multiple values for the parameter
                    if (strchr(paramValues,',')) {
+                       
                        //Do multi value analysis
                        bool valueInQuotes = false;
                        int length = strlen(paramValues);
                        int oldPos = 0;
                        for (int i = 0; i < length; i++) {
+                           if (paramValues[i + 1] == '"') {
+                               valueInQuotes = (!valueInQuotes);
+                           }
                            //Once you find end of a parameter value, add it
-                           if (paramValues[i + 1] == ',' && valueInQuotes == false) {
+                           if ((paramValues[i + 1] == ',' || paramValues[i + 1] == '\0') && valueInQuotes == false) {
+                               
                                char tempValue[100] = {0};
-                               for (int j = 0; j < (i - oldPos); i++) {
+                               
+                               //Move value into a temporary array
+                               for (int j = 0; j < (i - oldPos + 1); j++) {
                                    tempValue[j] = paramValues[j + oldPos];
                                }
+                               tempValue[i - oldPos + 1] = '\0';
+                               
+                               //Allocate space in flexible member and copy over temp array
+                               (newParam) = realloc((newParam), (sizeof(*newParam) + (newParam->nvalues+1)*sizeof(char*)));
+                               (newParam)->value[newParam->nvalues] = malloc(strlen(tempValue)+1);
+                              
+                               strcpy((newParam)->value[newParam->nvalues],tempValue);
                                newParam->nvalues++;
-                               (newParam) = realloc((newParam), (sizeof(*newParam) + newParam->nvalues*sizeof(char*)));
-                               (newParam)->value[newParam->nvalues-1] = malloc(strlen(paramValues)+1);
-                               strcpy((newParam)->value[newParam->nvalues-1],paramValues);
-                               i+=2;
+                               
+                               i+=2; //Shift 2 because you're moving past the comma
                                oldPos = i;
                            }
                        }
@@ -493,7 +505,7 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                        (newParam) = realloc((newParam), (sizeof(*newParam) + sizeof(char*)));
                        ((newParam)->value[0]) = malloc(strlen(paramValues)+1);
                        strcpy((newParam)->value[0],paramValues);
-
+                       newParam->nvalues++;
                    }
                }
                //Add CalParam to list
@@ -505,11 +517,9 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                        temp = temp->next;
                    }
                    temp->next = newParam;
-                   if (prop->param->next != NULL) {
-                   }
                }
                prop->nparams++; 
-               k+=2;
+               k+=2; //Shift 2 because you're moving past the semicolon
                lasPos = k;
            }
        }
