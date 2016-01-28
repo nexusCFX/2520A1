@@ -33,12 +33,7 @@ int main() {
     file = fopen("events.ics", "r");
     CalStatus readStatus;
     readStatus = readCalFile(file, &comp);
-    // printComp(comp);
-
-    /*for (int i = 0; i < comp->ncomps; i++) {
-        printComp(comp->comp[i]);
-    }*/
-
+    
     printf("Error #%d. Lines %d to %d\n", readStatus.code, readStatus.linefrom,
            readStatus.lineto);
     if (readStatus.code == OK) {
@@ -636,8 +631,9 @@ void freeCalComp(CalComp *const comp) {
         if (comp->comp[i]->ncomps > 0) {
             freeCalComp(comp->comp[i]);
         } else {
-            free(comp->comp[i]->name);
+           // free(comp->comp[i]->name);
         }
+        free(comp->comp[i]->name);
 
         // If a component has properties free them
         if (comp->comp[i]->nprops > 0) {
@@ -688,6 +684,7 @@ void freeCalParam(CalParam *const param) {
         for (int i = 0; i < traverseParams->nvalues; i++) {
             free(traverseParams->value[i]);
         }
+        
         free(traverseParams);
         traverseParams = nextParam;
     }
