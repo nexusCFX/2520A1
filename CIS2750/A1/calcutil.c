@@ -219,18 +219,19 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         // Assuming it's not BEGIN:VCALENDAR
         CalProp *prop = malloc(sizeof(*prop));
+        assert(prop != NULL);
         parseCalProp(pbuff, prop);
 
         // First case: another CalComp
         if (strcmp(prop->name, "BEGIN") == 0) {
             (*pcomp)->ncomps++;
-            (*pcomp) = realloc((*pcomp), (sizeof(**pcomp) +
-                                   ((*pcomp)->ncomps)*sizeof(CalComp *)));
-                                   
-             assert(*pcomp != NULL);
-             
-             
-            //Allocate our new CalComp and initialize it
+            (*pcomp) =
+                realloc((*pcomp), (sizeof(**pcomp) +
+                                   ((*pcomp)->ncomps) * sizeof(CalComp *)));
+
+            assert(*pcomp != NULL);
+
+            // Allocate our new CalComp and initialize it
             (*pcomp)->comp[(*pcomp)->ncomps - 1] = malloc(sizeof(CalComp));
             CalComp *nextComp = (*pcomp)->comp[(*pcomp)->ncomps - 1];
             nextComp->prop = NULL;
@@ -238,18 +239,18 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             nextComp->ncomps = 0;
             nextComp->name = malloc(strlen(prop->value) + 1);
             strcpy(nextComp->name, prop->value);
-            
+
             // Free the now unneeded property struct
             free(prop->name);
             free(prop->value);
             free(prop);
             callDepth++;
-            
-            //Recursively call readCalComp
+
+            // Recursively call readCalComp
             returnStatus =
                 readCalComp(ics, &((*pcomp)->comp[(*pcomp)->ncomps - 1]));
         } else if (strcmp(prop->name, "END") == 0) {
-            
+
             // make sure it matches the current comp, i.e. it matches the begin
             // decrement call depth, free prop memory, return
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
@@ -271,13 +272,11 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 (*pcomp)->prop = prop;
             } else {
                 CalProp *temp = (*pcomp)->prop;
-                //  printf("depth %d\n",callDepth);
                 while (temp->next != NULL) {
                     temp = temp->next;
                 }
                 temp->next = prop;
             }
-            //     printf("Numparams %d\n",prop->nparams);
         }
     }
     free(pbuff);
@@ -630,39 +629,27 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
     return OK;
 }
 
-/*bool isValidToken(char *token) {
-    if (token == NULL) {
-        return false;
-    } else if (strlen(token == 0)) {
-        return false;
-    } else {
-        return true;
-    }
-}*/
-
-// Free params of props, free props of subcomps, free subcomps of comps, free
-// comp
-// This function seems to be completed
 void freeCalComp(CalComp *const comp) {
     // Go along list of sub components, moving to deeper sub components if
     // needed
     for (int i = 0; i < comp->ncomps; i++) {
-        // If a sub component has a sub component [inception]
         if (comp->comp[i]->ncomps > 0) {
             freeCalComp(comp->comp[i]);
         } else {
             free(comp->comp[i]->name);
         }
 
-        // If a component has properties
+        // If a component has properties free them
         if (comp->comp[i]->nprops > 0) {
-           freeCalProp(comp->comp[i]->prop);
+            freeCalProp(comp->comp[i]->prop);
         }
 
-        // free(comp->comp[i]->comp);
+        free(comp->comp[i]);
     }
-    free(comp->name);
-    // free(comp);
+    if (strcmp(comp->name, "VCALENDAR") == 0) {
+        free(comp->name);
+        free(comp);
+    }
 }
 
 void freeCalProp(CalProp *const prop) {
