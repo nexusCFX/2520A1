@@ -20,48 +20,102 @@ void freeCalProp (CalProp *const prop);
 bool checkEmptyString(const char *line);
 CalStatus makeCalStatus (CalError code, int linefrom, int lineto);
 bool hasCRLF (FILE *const ics, char inputLine[]);
+void printComp(CalComp* comp);
 
 int main () {
-    /*FILE* file;
+    CalComp *comp = malloc(sizeof(*comp));
+    comp = malloc(sizeof(CalComp));
+    comp->name = NULL;
+    comp->nprops = 0;
+    comp->prop = NULL;
+    comp->ncomps = 0;
+    FILE* file;
     file = fopen("events.ics","r");
-    char* buffer;
     CalStatus returnValue;
+    returnValue = readCalComp(file, &comp);
+    printf("\n%d\n",returnValue.code);
+    printComp(comp);
+    
+    for (int i = 0; i < comp->ncomps; i++) {
+        printComp(comp->comp[i]);
+    }
+
+   /* char* buffer;
+    
     readCalLine(NULL,NULL);
     while (!feof(file)) {
         returnValue = readCalLine(file, &buffer);
         if (returnValue.code == OK) {
-            printf("Lines %d to %d %s\n",returnValue.linefrom, returnValue.lineto, buffer);
+            returnValue.code = parseCalProp(buffer, testProp); 
         } else {
             printf("%u\n",returnValue.code);
             exit(0);
         }
         
-    }*/
-    CalProp *testProp = malloc(sizeof(*testProp));
-    
-    parseCalProp("RRULE;FREQ=WEEKLY;UNTIL=\"2016,0429T2000==:;)00Z\";BYDAY=MO,TH,FR:TYRONE", testProp);
-    printf("Name of prop:%s\n",testProp->name);
-    if (testProp->nparams > 0) {
-        printf("%d PARAMETERS\n",testProp->nparams);
-        CalParam* temp = testProp->param;
-        while (true) {
-            printf("Name: %s\n",temp->name);
-            printf("%d VALUES-\n",temp->nvalues);
-            for (int j = 0; j < temp->nvalues; j++) { 
-                printf("%s\n",temp->value[j]);
+        if (returnValue.code != OK) {
+            printf("Error %d on lines %d to %d\n",returnValue.code, returnValue.linefrom, returnValue.lineto);
+            exit(0);
+        } else {
+            printf("Name of prop:%s\n",testProp->name);
+            if (testProp->nparams > 0) {
+                printf("%d PARAMETERS\n",testProp->nparams);
+                CalParam* temp = testProp->param;
+                while (true) {
+                    printf("Name: %s\n",temp->name);
+                    printf("%d VALUES-\n",temp->nvalues);
+                    for (int j = 0; j < temp->nvalues; j++) { 
+                        printf("%s\n",temp->value[j]);
+                    }
+                    if (temp->next) {
+                        temp = temp->next;
+                    } else {
+                        break;   
+                    }
+                }
             }
+            printf("Value of prop: %s\n",testProp->value);
+        }
+    }*/
+    return 1;
+}
+
+void printComp(CalComp* comp) {
+    printf("Comp Name: %s\n",comp->name);
+    printf("%d Props\n",comp->nprops);
+    if (comp->nprops > 0) {
+        CalProp *temp = comp->prop;
+        while (temp) {
+            printf("Prop Name: %s\n",temp->name);
+            printf("%d Params\n",temp->nparams);
+            if (temp->nparams > 0) {
+                CalParam* temp2 = temp->param;
+                while (temp2) {
+                    printf("Param Name: %s\n",temp2->name);
+                    printf("%d Values\n",temp2->nvalues);
+                    if (temp2->nvalues > 0) {
+                        for (int i = 0; i < temp2->nvalues; i++) {
+                            printf("Value: %s\n",temp2->value[i]);
+                        }
+                    }
+                    if (temp2->next) {
+                        temp2 = temp2->next;
+                    } else {
+                        temp2 = NULL;
+                    }
+                    
+                }           
+            }
+            printf("Prop Value: %s\n",temp->value);
             if (temp->next) {
                 temp = temp->next;
             } else {
-              break;   
+                temp = NULL;
             }
-        }
-        printf("Value of prop: %s\n",testProp->value);
-    } else {
-        puts("NO PARAMS");
+        } 
+        
     }
+   // printf("Comp Value: %s\n",comp->value);
     
-    return 1;
 }
 
 CalStatus makeCalStatus (CalError code, int linefrom, int lineto) {
@@ -156,33 +210,36 @@ CalStatus readCalFile( FILE *const ics, CalComp **const pcomp ) {
 //Note. This implementation does not call parseCalProp if *pcomp->name == NULL
 //It simply checks the buffer instead of deconstructing a CalProp
 CalStatus readCalComp( FILE *const ics, CalComp **const pcomp ) {
-    static int callDepth;
+    static int callDepth = 1;
     char* pbuff = NULL;
     CalStatus returnStatus;
-  //  bool endFound = false;
     
+    returnStatus.code = OK;
+    returnStatus.linefrom = 0;
     
+    returnStatus.lineto = 0;
     
-    //Might need more than 5
-    
-    while (!feof(ics)) {
-        
+    while (!feof(ics) && returnStatus.code == OK) {
+        if (callDepth > 3) {
+            returnStatus.code = SUBCOM;
+            return returnStatus;
+        }
          returnStatus = readCalLine(ics, &pbuff);
-         
+
+
          //Check to make sure start is BEGIN:VCALENDAR
-         if ((*pcomp)->name == NULL) {
-             if (strcmp(pbuff,"BEGIN:VCALENDAR") == 0) {
-                 (*pcomp)->name = malloc(9);
-                 strcpy((*pcomp)->name,"VCALENDAR");
-                 callDepth = 1;
-                 continue;
-             } else {
-                 //return an error
-             }
-         }
-         
+         if ((*pcomp)->name == NULL && callDepth == 1) {
+            if (strcmp(pbuff,"BEGIN:VCALENDAR") != 0) {
+                returnStatus.code = NOCAL;
+                return returnStatus;
+            }
+            (*pcomp)->name = malloc(10);
+            strcpy((*pcomp)->name,"VCALENDAR");
+            continue;
+        }
+ 
          //Assuming it's not begin vcal
-         CalProp *prop = malloc(sizeof(prop));
+         CalProp *prop = malloc(sizeof(*prop));
          parseCalProp(pbuff, prop);
          
          //At this point, we have our prop structure filled in with SOMETHING
@@ -190,30 +247,59 @@ CalStatus readCalComp( FILE *const ics, CalComp **const pcomp ) {
          
          //First case: another comp
          if (strcmp(prop->name,"BEGIN") == 0) {
+            //printf("value %s\n",prop->value);
              //Realloc to make space for next component
              //Define name of next component using value of prop struct (Should work...)
              //Call readCalComp again with this new comp
-             (*pcomp) = realloc((*pcomp), (sizeof(*pcomp) + (*pcomp)->ncomps*sizeof(CalComp*)));
-             
-             (*pcomp)->comp[(*pcomp)->ncomps]->name = malloc(sizeof(prop->value));
-             strcpy((*pcomp)->comp[(*pcomp)->ncomps]->name,prop->value);
-             
+             (*pcomp)->ncomps++;
+             //(newParam) = realloc((newParam), (sizeof(*newParam) + (newParam->nvalues+1)*sizeof(char*)));
+             (*pcomp) = realloc((*pcomp), (sizeof(**pcomp) + ((*pcomp)->ncomps)*sizeof(CalComp*)));
+             if (*pcomp == NULL) {
+                 puts("ERROR");
+                 exit(0);
+             }
+             //This looks terrible, blame C. Allocating and copying name to new comp
+            // printf("num %d\n",(*pcomp)->ncomps-1);
+             (*pcomp)->comp[(*pcomp)->ncomps-1] = malloc(sizeof(CalComp));
+             CalComp* nextComp = (*pcomp)->comp[(*pcomp)->ncomps-1];
+             nextComp->prop = NULL;
+             nextComp->nprops = 0;
+             nextComp->ncomps = 0;
+             nextComp->name = malloc(strlen(prop->value)+1);
+             strcpy(nextComp->name,prop->value);
              //Free the now unneeded property struct
              free(prop);
-             
              callDepth++;
-             
-             
+             returnStatus = readCalComp(ics,&((*pcomp)->comp[(*pcomp)->ncomps-1]));
          } else if (strcmp(prop->name,"END") == 0) {
              //make sure it matches the current comp, i.e. it matches the begin
              //decrement call depth, free prop memory, return
-         }
-         
- 
-
-         //Malloc memory in pcomp array, do memcpy
+             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
+             //    printf("comp name is: %s\n",(*pcomp)->name);
+                 returnStatus.code = NODATA;
+             } else if (strcmp(prop->value,(*pcomp)->name) != 0) {
+                 returnStatus.code = BEGEND;
+             }
+             callDepth--;
+             free(prop);
+             return returnStatus;
+         } else {
+             (*pcomp)->nprops++;
+             if ((*pcomp)->prop == NULL) {
+                 (*pcomp)->prop = prop;
+             } else {
+                CalProp *temp = (*pcomp)->prop;
+              //  printf("depth %d\n",callDepth);
+                while (temp->next != NULL) {
+                    temp = temp->next;
+                }
+                temp->next = prop;
+            }
+       //     printf("Numparams %d\n",prop->nparams);
+        }
     }
     free(pbuff);
+    
     return returnStatus;
 }
 
@@ -222,14 +308,19 @@ CalStatus readCalLine( FILE *const ics, char **const pbuff ) {
     static int currentLine;
     static int difference;
     static char inputLine[500];
-    
+   
     if (ics == NULL) {
         //do reset things
         puts("Reset successful");
         currentLine = 0;
         difference = 0;
         inputLine[0] = '\0';
+        
         return makeCalStatus(OK,0,0);
+    }
+    
+    if (*pbuff == NULL) {
+        (*pbuff) = malloc(500);
     }
     
     if (feof(ics)) {
@@ -247,6 +338,7 @@ CalStatus readCalLine( FILE *const ics, char **const pbuff ) {
     if (difference == 0) {
         // '\0' defines the initial case
         if (inputLine[0] == '\0') {
+            
             fgets(inputLine, 500, ics);
             puts("Grabbing input line");
             while (checkEmptyString(inputLine) == true) {
@@ -475,9 +567,11 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                        int length = strlen(paramValues);
                        int oldPos = 0;
                        for (int i = 0; i < length; i++) {
-                           if (paramValues[i + 1] == '"') {
+                           if (paramValues[i] == '"') {
                                valueInQuotes = (!valueInQuotes);
                            }
+                          //*********************** printf("PVs %s at char %c and %d\n",paramValues, paramValues[i+1], valueInQuotes);
+                          
                            //Once you find end of a parameter value, add it
                            if ((paramValues[i + 1] == ',' || paramValues[i + 1] == '\0') && valueInQuotes == false) {
                                
@@ -502,6 +596,7 @@ CalError parseCalProp( char *const buff, CalProp *const prop ) {
                        }
                    } else {
                        //No commas, one value
+
                        (newParam) = realloc((newParam), (sizeof(*newParam) + sizeof(char*)));
                        ((newParam)->value[0]) = malloc(strlen(paramValues)+1);
                        strcpy((newParam)->value[0],paramValues);
