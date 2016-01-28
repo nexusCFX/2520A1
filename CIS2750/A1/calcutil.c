@@ -642,7 +642,11 @@ void freeCalComp(CalComp *const comp) {
 
         free(comp->comp[i]);
     }
+    //Free the root CalComp
     if (strcmp(comp->name, "VCALENDAR") == 0) {
+        if (comp->prop) {
+            freeCalProp(comp->prop);
+        }
         free(comp->name);
         free(comp);
     }
