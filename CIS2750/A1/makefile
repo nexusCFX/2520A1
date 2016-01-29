@@ -1,7 +1,7 @@
 OPTIONS = -g -Iinclude -std=c11 -Wpedantic -Wall -Werror
 
-a.out:  calcutil.c calcutil.h
-	gcc $(OPTIONS) calcutil.c
+a.out:  calutil.c calutil.h
+	gcc $(OPTIONS) calutil.c testprog.c
 	 
 
 clean:
