@@ -7,15 +7,29 @@
 #include <ctype.h>
 #include "calcutil.h"
 
+#define BUF_LEN 500
+
 /*
-File: calcutil.c \\put description too
+File: calcutil.c 
+
+Implementation of utilities defined in calutil.h
+
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
 Created:
-Last modified:
+Last modified: 
 */
 
+
+/* Free parameters belonging to a CalProp struct
+
+Arguments:
+param: The first parameter of the CalProp
+
+Return Value: Not applicable */
 void freeCalParam(CalParam *const param);
+
+
 void freeCalProp(CalProp *const prop);
 bool checkEmptyString(const char *line);
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
@@ -24,63 +38,16 @@ void printComp(CalComp *comp);
 
 int main() {
     CalComp *comp;
-    comp = malloc(sizeof(CalComp));
-    comp->name = NULL;
-    comp->nprops = 0;
-    comp->prop = NULL;
-    comp->ncomps = 0;
     FILE *file;
     file = fopen("events.ics", "r");
     CalStatus readStatus;
     readStatus = readCalFile(file, &comp);
     
     printf("Error #%d. Lines %d to %d\n", readStatus.code, readStatus.linefrom,
-           readStatus.lineto);
-    if (readStatus.code == OK) {
-        freeCalComp(comp);
-    }
+    readStatus.lineto);
+    fclose(file);
+    
     return 1;
-}
-
-void printComp(CalComp *comp) {
-
-    printf("**COMP NAME**: %s\n", comp->name);
-    printf("%d Props\n", comp->nprops);
-    if (comp->nprops > 0) {
-        CalProp *temp = comp->prop;
-        while (temp) {
-            printf("Prop Name: %s\n", temp->name);
-            printf("%d Params\n", temp->nparams);
-            if (temp->nparams > 0) {
-                CalParam *temp2 = temp->param;
-                while (temp2) {
-                    printf("Param Name: %s\n", temp2->name);
-                    printf("%d Values\n", temp2->nvalues);
-                    if (temp2->nvalues > 0) {
-                        for (int i = 0; i < temp2->nvalues; i++) {
-                            printf("Value: %s\n", temp2->value[i]);
-                        }
-                    }
-                    if (temp2->next) {
-                        temp2 = temp2->next;
-                    } else {
-                        temp2 = NULL;
-                    }
-                }
-            }
-            printf("Prop Value: %s\n", temp->value);
-            if (temp->next) {
-                temp = temp->next;
-            } else {
-                temp = NULL;
-            }
-        }
-    }
-    if (comp->ncomps > 0) {
-        printComp(comp->comp[0]);
-    }
-
-    // printf("Comp Value: %s\n",comp->value);
 }
 
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto) {
@@ -91,18 +58,12 @@ CalStatus makeCalStatus(CalError code, int linefrom, int lineto) {
     return returnStatus;
 }
 
-// pcomp points to var where address of newly allocated calcomp structure will
-// be returned
-// ics is file pointer. precondition is that it is open for reading, is at
-// beginning of file
-
-// function returns CalStatus struct with status OK if file is read to EOF
-// Calstatus line numbers give the total lines read from file
-// FREE PCOMP USING PCALFILE
 CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     readCalLine(NULL, NULL);
-    // Potentially move this into another function
-    // Initialize pcomp for use, call readcalLine with null ^^
+    
+    (*pcomp) = malloc(sizeof(CalComp));
+    assert((*pcomp) != NULL);
+    
     (*pcomp)->name = NULL;
     (*pcomp)->nprops = 0;
     (*pcomp)->prop = NULL;
@@ -111,6 +72,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     CalStatus readStatus;
 
     readStatus = readCalComp(ics, pcomp);
+    
     // If error found at or after this point, call freecalcomp and return
     if (readStatus.code != OK) {
         freeCalComp(*pcomp);
@@ -121,11 +83,13 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     bool hasProdID = false;
     bool startWithV = false;
 
+    //Check to make sure we have "valid" VERSION and PRODID properties
     CalProp *traverseProps = (*pcomp)->prop;
     while (traverseProps) {
         if (strcmp(traverseProps->name, "VERSION") == 0) {
             if (hasVersion || strcmp(traverseProps->value, VCAL_VER) != 0) {
                 readStatus.code = BADVER;
+                freeCalComp(*pcomp);
                 return readStatus;
             }
             hasVersion = true;
@@ -141,12 +105,15 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     }
 
     if (readStatus.code != OK) {
+        freeCalComp(*pcomp);
         return readStatus;
     }
 
+    //Make sure that at least one component starts with V
     for (int i = 0; i < (*pcomp)->ncomps; i++) {
         if ((*pcomp)->ncomps == 0) {
             readStatus.code = NOCAL;
+            freeCalComp(*pcomp);
             return readStatus;
         }
 
@@ -157,6 +124,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
 
     if (startWithV == false) {
         readStatus.code = NOCAL;
+        freeCalComp(*pcomp);
         return readStatus;
     }
 
@@ -166,25 +134,16 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
         readCalLine(ics, &buff);
         if (buff != NULL) {
             readStatus.code = AFTEND;
+            freeCalComp(*pcomp);
         }
     }
-
     return readStatus;
 }
 
-// This funciton called at start of a new BEGIN block
-
-// Note. This implementation does not call parseCalProp if *pcomp->name == NULL
-// It simply checks the buffer instead of deconstructing a CalProp
 CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     static int callDepth = 1;
     char *pbuff = NULL;
-    CalStatus returnStatus;
-
-    returnStatus.code = OK;
-    returnStatus.linefrom = 0;
-
-    returnStatus.lineto = 0;
+    static CalStatus returnStatus;
 
     while ((pbuff == NULL) ||
            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK)) {
@@ -193,21 +152,21 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             return returnStatus;
         }
         returnStatus = readCalLine(ics, &pbuff);
+        
         if (returnStatus.code != OK) {
-            if (pbuff != NULL) {
                 free(pbuff);
-            }
-
             return returnStatus;
         }
 
         // Check to make sure start is BEGIN:VCALENDAR
         if ((*pcomp)->name == NULL && callDepth == 1) {
             if (strcmp(pbuff, "BEGIN:VCALENDAR") != 0) {
+                free(pbuff);
                 returnStatus.code = NOCAL;
                 return returnStatus;
             }
             (*pcomp)->name = malloc(10);
+            assert((*pcomp)->name != NULL);
             strcpy((*pcomp)->name, "VCALENDAR");
             continue;
         }
@@ -229,10 +188,12 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             // Allocate our new CalComp and initialize it
             (*pcomp)->comp[(*pcomp)->ncomps - 1] = malloc(sizeof(CalComp));
             CalComp *nextComp = (*pcomp)->comp[(*pcomp)->ncomps - 1];
+            assert(nextComp != NULL);
             nextComp->prop = NULL;
             nextComp->nprops = 0;
             nextComp->ncomps = 0;
             nextComp->name = malloc(strlen(prop->value) + 1);
+            assert(nextComp->name != NULL);
             strcpy(nextComp->name, prop->value);
 
             // Free the now unneeded property struct
@@ -241,13 +202,12 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             free(prop);
             callDepth++;
 
-            // Recursively call readCalComp
+            // Call readCalComp to add new properties to new component
             returnStatus =
                 readCalComp(ics, &((*pcomp)->comp[(*pcomp)->ncomps - 1]));
         } else if (strcmp(prop->name, "END") == 0) {
 
-            // make sure it matches the current comp, i.e. it matches the begin
-            // decrement call depth, free prop memory, return
+            // make sure the END matches the original begin, free memory
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
                 returnStatus.code = NODATA;
             } else if (strcmp(prop->value, (*pcomp)->name) != 0) {
@@ -279,14 +239,14 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     return returnStatus;
 }
 
-// This functions seems to be completed
+
 CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
     static char inputLine[500];
 
     if (ics == NULL) {
-        // do reset things
+        //Reset function. Set input line to symbolic "empty"
         currentLine = 0;
         difference = 0;
         inputLine[0] = '\0';
@@ -295,7 +255,8 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     }
 
     if (*pbuff == NULL) {
-        (*pbuff) = malloc(500);
+        *pbuff = malloc(BUF_LEN);
+        assert(*pbuff != NULL);
     }
 
     // Increment line number, reset diff
@@ -307,15 +268,15 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     currentLine++;
 
     if (difference == 0) {
-        // '\0' defines the initial case
+        // \0 defines the initial case
         if (inputLine[0] == '\0') {
-            fgets(inputLine, 500, ics);
+            fgets(inputLine, BUF_LEN, ics);
             while (checkEmptyString(inputLine) == true) {
-                fgets(inputLine, 500, ics);
+                fgets(inputLine, BUF_LEN, ics);
             }
         }
 
-        // CRLF check
+        
         if (!hasCRLF(ics, inputLine)) {
             free(*pbuff);
             *pbuff = NULL;
@@ -324,7 +285,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         strcpy(*pbuff, inputLine);
     }
 
-    fgets(inputLine, 500, ics);
+    fgets(inputLine, BUF_LEN, ics);
 
     // Manage line folding if next line has a space
     while (inputLine[0] == ' ') {
@@ -403,6 +364,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 
     // Copy the buffer into one you can alter with strtok
     buffCpy = malloc(strlen(buff) + 1);
+    assert(buffCpy != NULL);
     strcpy(buffCpy, buff);
 
     // Implies zero length name
@@ -437,14 +399,17 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
     } else if (simpleString == 2) {
         name = strtok(buffCpy, ":");
         prop->name = malloc(strlen(name) + 1);
+        assert(prop->name != NULL);
         strcpy(prop->name, name);
 
         propValue = strtok(NULL, ":");
         if (propValue == NULL) {
             prop->value = malloc(1);
+            assert(prop->value != NULL);
             strcpy(prop->value, "");
         } else {
             prop->value = malloc(strlen(propValue) + 1);
+            assert(prop->value != NULL);
             strcpy(prop->value, propValue);
         }
         free(buffCpy);
@@ -476,6 +441,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 
         // Cut out prop value using delimeter position, append NUL term
         prop->value = malloc(strlen(buffCpy) - propValueDelimeter + 1);
+        assert(prop->value != NULL);
         for (int i = propValueDelimeter + 1; i < length + 1; i++) {
             prop->value[i - propValueDelimeter - 1] = buffCpy[i];
         }
@@ -493,6 +459,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 
         // Copy over name of prop, append NUL
         prop->name = malloc(curPos + 1);
+        assert(prop->name != NULL);
         for (int i = 0; i < curPos - 1; i++) {
             prop->name[i] = buffCpy[i];
         }
@@ -513,6 +480,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
             if ((buffCpy[k + 1] == ';' || buffCpy[k + 1] == '\0') &&
                 withinQuotes == false) {
                 CalParam *newParam = malloc(sizeof(CalParam)); //
+                assert(newParam != NULL);
                 newParam->name = NULL;
                 newParam->next = NULL;
                 newParam->nvalues = 0;
@@ -539,6 +507,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 
                     newParam->name = malloc(strlen(paramName) +
                                             1); // Move name into new parameter
+                                            assert(newParam->name != NULL);
                     strcpy(newParam->name, paramName);
 
                     // If we have commas, it's possible that we have multiple
@@ -553,10 +522,6 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
                             if (paramValues[i] == '"') {
                                 valueInQuotes = (!valueInQuotes);
                             }
-                            //*********************** printf("PVs %s at char %c
-                            // and
-                            //%d\n",paramValues, paramValues[i+1],
-                            // valueInQuotes);
 
                             // Once you find end of a parameter value, add it
                             if ((paramValues[i + 1] == ',' ||
@@ -583,6 +548,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 
                                 (newParam)->value[newParam->nvalues] =
                                     malloc(strlen(tempValue) + 1);
+                                assert((newParam)->value[newParam->nvalues] != NULL);
 
                                 strcpy((newParam)->value[newParam->nvalues],
                                        tempValue);
@@ -600,6 +566,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
                             (newParam), (sizeof(*newParam) + sizeof(char *)));
                         ((newParam)->value[0]) =
                             malloc(strlen(paramValues) + 1);
+                        assert(((newParam)->value[0]) != NULL);
                         strcpy((newParam)->value[0], paramValues);
                         newParam->nvalues++;
                     }
@@ -627,11 +594,14 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
 void freeCalComp(CalComp *const comp) {
     // Go along list of sub components, moving to deeper sub components if
     // needed
+    if (comp->name == NULL) {
+        free(comp); //Only happens with NOCAL
+        return; 
+    }
+    
     for (int i = 0; i < comp->ncomps; i++) {
         if (comp->comp[i]->ncomps > 0) {
             freeCalComp(comp->comp[i]);
-        } else {
-           // free(comp->comp[i]->name);
         }
         free(comp->comp[i]->name);
 
