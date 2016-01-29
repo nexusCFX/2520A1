@@ -5,7 +5,7 @@ a.out:  calutil.c calutil.h
 	 
 
 clean:
-	rm *.o a.out
+	rm *.o a.*
 
 
 

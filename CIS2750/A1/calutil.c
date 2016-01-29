@@ -8,62 +8,74 @@
 
 #define BUF_LEN 500
 
-/* calcutil.c
+/************************
+calcutil.c
 
 Implementation of utilities defined in calutil.h
 
 Note to future programmers: This file conforms to the syntax used for the LLVM
 project and this should be maintained with all future modifications to ensure
-consistency
+consistency.
 
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
 Created: Jan 14, 2016
-Last modified: Jan 28, 2016 */
+Last modified: Jan 28, 2016
+*************************/
 
-/* complexStringParse
+/*************************
+complexStringParse
 Internal function which parses input strings with greater complexity than those
 of the form NAME:VALUE. Should only be called from parseCalProp
 
 Arguments:
 buffCpy: A copy of the buffer sent from readCalLine, which can be safely
 modified.
+
 prop: The CalProp structure that will be populated with the information stored
 in buffCpy once parsed.
 
 Return Value: A CalError which will either be OK or SYNTAX depending on the
-validity of the input string. */
+validity of the input string.
+*************************/
 CalError complexStringParse(char *buffCpy, CalProp *const prop);
 
-/* checkEmptyString
+/*************************
+checkEmptyString
 Internal function which checks if a string is zero length or all white space.
 
 Arguments:
 line: The input line to be examined.
 
 Return Value: A bool which will be true if the string is empty, or false if it
-is not. */
+is not.
+*************************/
 bool checkEmptyString(const char *line);
 
-/* freeCalParam
+/*************************
+freeCalParam
 Internal function which frees parameters belonging to a CalProp struct.
 
 Arguments:
 param: The first parameter of the CalProp.
 
-Return Value: Not applicable. */
+Return Value: Not applicable.
+*************************/
 void freeCalParam(CalParam *const param);
 
-/* freeCalProp
+/*************************
+freeCalProp
 Internal function which frees properties belonging to a CalParam struct.
 
 Arguments:
 prop: The first property of the CalParam.
 
-Return Value: Not applicable. */
+Return Value: Not applicable.
+*************************/
 void freeCalProp(CalProp *const prop);
 
-/* makeCalStatus
+/*************************
+makeCalStatus
 Internal function which returns a CalStatus structure.
 
 Arguments:
@@ -71,10 +83,12 @@ code: The error code to be included in the struct.
 linefrom: The first line parsed by readCalLine before being unfolded.
 lineto: The last line parsed by readCalLine before the error occurred.
 
-Return Value: A CalStatus structure populated by the variables passed in. */
+Return Value: A CalStatus structure populated by the variables passed in.
+*************************/
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
 
-/* hasCRLF
+/*************************
+hasCRLF
 Internal function which checks if a line has the correct return character
 sequence.
 
@@ -84,10 +98,12 @@ inputLine: The char array populated by fgets when reading a line from the file.
 
 Return Value: A bool which will be true if the string has the CRLF convention,
 or if the file hit EOF before that. False if the line does not have the correct
-ending. */
+ending.
+*************************/
 bool hasCRLF(FILE *const ics, char inputLine[]);
 
-/* makeUpperCase
+/*************************
+makeUpperCase
 Internal functions which converts a string to upper case.
 
 Arguments:
@@ -96,16 +112,9 @@ buffer: The character array to be turned into uppercase form.
 NOTE: This function will not alter strings that begin and end with " which
 follows the specifications defined for managing iCalendar data.
 
-Return Value: Not applicable.*/
+Return Value: Not applicable.
+*************************/
 void makeUpperCase(char *buffer);
-
-CalStatus makeCalStatus(CalError code, int linefrom, int lineto) {
-    CalStatus returnStatus;
-    returnStatus.code = code;
-    returnStatus.linefrom = linefrom;
-    returnStatus.lineto = lineto;
-    return returnStatus;
-}
 
 CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     readCalLine(NULL, NULL);
@@ -118,19 +127,16 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     (*pcomp)->prop = NULL;
     (*pcomp)->ncomps = 0;
 
-    CalStatus readStatus;
-
-    readStatus = readCalComp(ics, pcomp);
+    CalStatus readStatus = readCalComp(ics, pcomp);
 
     // If error found at or after this point, call freecalcomp and return
     if (readStatus.code != OK) {
-        //freeCalComp(*pcomp);
+        freeCalComp(*pcomp);
         return readStatus;
     }
 
     bool hasVersion = false;
     bool hasProdID = false;
-    
 
     // Check to make sure we have "valid" VERSION and PRODID properties
     CalProp *traverseProps = (*pcomp)->prop;
@@ -152,7 +158,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
         }
         traverseProps = traverseProps->next;
     }
-    
+
     if (hasVersion == false) {
         readStatus.code = BADVER;
     } else if (hasProdID == false) {
@@ -203,11 +209,14 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
     while ((pbuff == NULL) ||
            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK)) {
+
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
             return returnStatus;
         }
+
         returnStatus = readCalLine(ics, &pbuff);
+
         if (returnStatus.code != OK) {
             free(pbuff);
             return returnStatus;
@@ -230,7 +239,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         CalProp *prop = malloc(sizeof(*prop));
         assert(prop != NULL);
         returnStatus.code = parseCalProp(pbuff, prop);
-        
+
         if (returnStatus.code != OK) {
             free(pbuff);
             return returnStatus;
@@ -239,6 +248,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         // First case: another CalComp
         if (strcmp(prop->name, "BEGIN") == 0) {
             (*pcomp)->ncomps++;
+
             (*pcomp) =
                 realloc((*pcomp), (sizeof(**pcomp) +
                                    ((*pcomp)->ncomps) * sizeof(CalComp *)));
@@ -247,6 +257,8 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
             // Allocate our new CalComp and initialize it
             (*pcomp)->comp[(*pcomp)->ncomps - 1] = malloc(sizeof(CalComp));
+
+            // Make a temporary pointer with a shorter name than the mess above
             CalComp *nextComp = (*pcomp)->comp[(*pcomp)->ncomps - 1];
             assert(nextComp != NULL);
             nextComp->prop = NULL;
@@ -267,6 +279,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             returnStatus =
                 readCalComp(ics, &((*pcomp)->comp[(*pcomp)->ncomps - 1]));
         } else if (strcmp(prop->name, "END") == 0) {
+
             // make sure the END matches the original begin, free memory
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
                 returnStatus.code = NODATA;
@@ -312,7 +325,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
     static char inputLine[500];
-    
+
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -370,8 +383,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
                                      currentLine + difference);
             }
 
-            // Then shift every element in inputLine over by 1 to remove leading
-            // space
+            // Shift every element in inputLine over to remove leading space
             int tempLength = strlen(inputLine);
             for (int i = 0; i < tempLength; i++) {
                 inputLine[i] = inputLine[i + 1];
@@ -395,19 +407,6 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 
-bool hasCRLF(FILE *const ics, char inputLine[]) {
-    if (!feof(ics)) {
-        if (inputLine[strlen(inputLine) - 2] == '\r' &&
-            inputLine[strlen(inputLine) - 1] == '\n') {
-            inputLine[strlen(inputLine) - 2] = '\0';
-            return true;
-        } else {
-            return false;
-        }
-    }
-    return true;
-}
-
 bool checkEmptyString(const char *line) {
     int length = strlen(line);
     if (length == 0) {
@@ -421,11 +420,32 @@ bool checkEmptyString(const char *line) {
     return true;
 }
 
+bool hasCRLF(FILE *const ics, char inputLine[]) {
+    if (!feof(ics)) {
+        if (inputLine[strlen(inputLine) - 2] == '\r' &&
+            inputLine[strlen(inputLine) - 1] == '\n') {
+            inputLine[strlen(inputLine) - 2] = '\0';
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+CalStatus makeCalStatus(CalError code, int linefrom, int lineto) {
+    CalStatus returnStatus;
+    returnStatus.code = code;
+    returnStatus.linefrom = linefrom;
+    returnStatus.lineto = lineto;
+    return returnStatus;
+}
+
 CalError parseCalProp(char *const buff, CalProp *const prop) {
     char *buffCpy;
     char *name;
     char *propValue;
-    
+
     prop->name = NULL;
     prop->value = NULL;
     prop->nparams = 0;
@@ -437,7 +457,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
     assert(buffCpy != NULL);
     strcpy(buffCpy, buff);
 
-    // Implies zero length name
+    // Implies invalid zero length name
     if (buffCpy[0] == ':') {
         free(buffCpy);
         return SYNTAX;
@@ -460,9 +480,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
         }
     }
 
-    // If simpleString = 0 something is horribly wrong
-    // If simpleString = 1, simple case, easy parsing
-    // Otherwise, a lot of work
+    // Parse string based on its form
     if (simpleString == 0) {
         free(buffCpy);
         return SYNTAX;
@@ -472,8 +490,8 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
         assert(prop->name != NULL);
         makeUpperCase(name);
         strcpy(prop->name, name);
-
         propValue = strtok(NULL, ":");
+
         if (propValue == NULL) {
             prop->value = malloc(1);
             assert(prop->value != NULL);
@@ -504,11 +522,11 @@ void makeUpperCase(char *buffer) {
 }
 
 CalError complexStringParse(char *buffCpy, CalProp *const prop) {
-    // Find the position of the actual : between params and prop value
     int length = strlen(buffCpy);
     int propValueDelimeter = -1;
     bool preceedsSemiOrQuote = false;
 
+    // Find the position of the actual : between params and prop value
     for (int i = 0; i < length; i++) {
         if (buffCpy[i] == ':') {
             preceedsSemiOrQuote = false;
@@ -524,7 +542,8 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
             }
         }
     }
-    // No delimeter, syntax error
+
+    // -1 means no delimeter, syntax error
     if (propValueDelimeter == -1) {
         return SYNTAX;
     }
@@ -554,12 +573,14 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
         prop->name[i] = toupper(buffCpy[i]);
     }
     prop->name[curPos] = '\0';
+
     // Analyze the individual parameters to avoid errors
     // Go over the string, do case analysis for each ; found
     int lasPos = curPos;
     bool withinQuotes = false;
     for (int k = curPos; k < length; k++) {
-        // If the next char is ", invert withinQuotes
+
+        // If the next char is " invert withinQuotes
         if (buffCpy[k + 1] == '"') {
             withinQuotes = (!withinQuotes);
         }
@@ -584,26 +605,24 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
             // If we have no =, syntax failure
             if (strchr(param, '=') == NULL) {
                 return SYNTAX;
-            } else {
-                // Split the parameter string into name and values
+            } else { // Split the parameter string into name and values
                 char *paramName = strtok(param, "=");
                 char *paramValues = strtok(NULL, "\0");
 
-                // Fixing strtok bug with zero length strings
+                // Fixing strtok behavior with zero length strings
                 if (paramValues == NULL) {
                     paramValues = "";
                 }
 
-                newParam->name = malloc(strlen(paramName) +
-                                        1); // Move name into new parameter
+                // Move name into new parameter
+                newParam->name = malloc(strlen(paramName) + 1);
                 assert(newParam->name != NULL);
                 makeUpperCase(paramName);
                 strcpy(newParam->name, paramName);
 
                 // If we have commas, it's possible that we have multiple
                 // values for the parameter
-                if (strchr(paramValues, ',')) {
-                    // Do multi value analysis
+                if (strchr(paramValues, ',')) { // Do multi value analysis
                     bool valueInQuotes = false;
                     int length = strlen(paramValues);
                     int oldPos = 0;
@@ -612,14 +631,13 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                             valueInQuotes = (!valueInQuotes);
                         }
 
-                        // Once you find end of a parameter value, add it
+                        // Once you find end of a parameter value, add to array
                         if ((paramValues[i + 1] == ',' ||
                              paramValues[i + 1] == '\0') &&
                             valueInQuotes == false) {
 
-                            char tempValue[100] = {0};
-
                             // Move value into a temporary array
+                            char tempValue[100] = {0};
                             for (int j = 0; j < (i - oldPos + 1); j++) {
                                 tempValue[j] = paramValues[j + oldPos];
                             }
@@ -639,14 +657,17 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
 
                             (newParam)->value[newParam->nvalues] =
                                 malloc(strlen(tempValue) + 1);
+
                             assert((newParam)->value[newParam->nvalues] !=
                                    NULL);
 
                             strcpy((newParam)->value[newParam->nvalues],
                                    tempValue);
+
                             newParam->nvalues++;
-                            
-                            if ((i + 2 <= strlen(paramValues)) && paramValues[i + 2] == '"') {
+
+                            if ((i + 2 <= strlen(paramValues)) &&
+                                paramValues[i + 2] == '"') {
                                 valueInQuotes = (!valueInQuotes);
                             }
                             i += 2; // Shift 2 because you're moving past
@@ -654,9 +675,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                             oldPos = i;
                         }
                     }
-                } else {
-                    // No commas, one value
-
+                } else { // No lone commas means only one value
                     (newParam) = realloc((newParam),
                                          (sizeof(*newParam) + sizeof(char *)));
 
@@ -688,13 +707,12 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
 }
 
 void freeCalComp(CalComp *const comp) {
-    // Go along list of sub components, moving to deeper sub components if
-    // needed
+    // Go along list of sub components, go to subcomponents if needed
     if (comp->name == NULL) {
-        free(comp); //Only happens with NOCAL
-        return; 
+        free(comp); // Only happens with NOCAL
+        return;
     }
-    
+
     for (int i = 0; i < comp->ncomps; i++) {
         if (comp->comp[i]->ncomps > 0) {
             freeCalComp(comp->comp[i]);
@@ -708,7 +726,7 @@ void freeCalComp(CalComp *const comp) {
 
         free(comp->comp[i]);
     }
-    //Free the root CalComp
+    // Free the root CalComp
     if (strcmp(comp->name, "VCALENDAR") == 0) {
         if (comp->prop) {
             freeCalProp(comp->prop);
@@ -754,7 +772,7 @@ void freeCalParam(CalParam *const param) {
         for (int i = 0; i < traverseParams->nvalues; i++) {
             free(traverseParams->value[i]);
         }
-        
+
         free(traverseParams);
         traverseParams = nextParam;
     }
