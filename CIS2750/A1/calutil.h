@@ -1,11 +1,17 @@
-/********
-calutil.h -- Public interface for iCalendar utility functions in calutil.c
-Last updated:  8:04 PM January-16-16
-
-Customize this file header with your name and student number.
-
-RevA: Changed CalComp* argument of readCalComp().
-********/
+/************************
+calutil.h
+ 
+Public interface for iCalendar utility functions in calutil.c
+ 
+Note to future programmers: This file conforms to the syntax used for the LLVM
+project and this should be maintained with all future modifications to ensure
+consistency.
+ 
+Author: Brandon Chester : 0877477
+Contact: bchester@mail.uoguelph.ca
+Created: Jan 14, 2016
+Last modified: Jan 29, 2016
+*************************/
 
 #ifndef CALUTIL_H
 #define CALUTIL_H A1_RevA
@@ -48,7 +54,7 @@ typedef struct CalComp {    // calendar's (sub)component
 /* General status return from functions */
 
 typedef enum { OK=0,
-    AFTEND,     // more text found after end of calendar 
+    AFTEND,     // more text found after end of calendar
     BADVER,     // version missing or wrong
     BEGEND,     // BEGIN...END not found as expected
     IOERR,      // I/O error
@@ -59,11 +65,11 @@ typedef enum { OK=0,
     SUBCOM,     // subcomponent not allowed
     SYNTAX,     // property not in valid form
 } CalError;
-    
+
 typedef struct {
     CalError code;          // error code
     int linefrom, lineto;   // line numbers where error occurred
-} CalStatus;    
+} CalStatus;
 
 
 /* File I/O functions */

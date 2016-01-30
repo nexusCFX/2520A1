@@ -9,9 +9,9 @@
 #define BUF_LEN 500
 
 /************************
-calcutil.c
+calutil.c
 
-Implementation of utilities defined in calutil.h
+Implementation of iCalendar utility functions in calutil.h
 
 Note to future programmers: This file conforms to the syntax used for the LLVM
 project and this should be maintained with all future modifications to ensure
@@ -20,7 +20,7 @@ consistency.
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
 Created: Jan 14, 2016
-Last modified: Jan 28, 2016
+Last modified: Jan 29, 2016
 *************************/
 
 /*************************
@@ -279,8 +279,8 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             returnStatus =
                 readCalComp(ics, &((*pcomp)->comp[(*pcomp)->ncomps - 1]));
         } else if (strcmp(prop->name, "END") == 0) {
-
             // make sure the END matches the original begin, free memory
+            makeUpperCase(prop->value);
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
                 returnStatus.code = NODATA;
             } else if (strcmp(prop->value, (*pcomp)->name) != 0) {
