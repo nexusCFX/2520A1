@@ -494,7 +494,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
         makeUpperCase(name);
         strcpy(prop->name, name);
         propValue = strtok(NULL, "\0");
-        printf("%s\n",propValue);
+       // printf("%s\n",propValue);
         if (propValue == NULL) {
             prop->value = malloc(1);
             assert(prop->value != NULL);
