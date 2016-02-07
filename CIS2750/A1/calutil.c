@@ -209,7 +209,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-    while (((pbuff == NULL) ||
+    while ((!feof(ics))&&((pbuff == NULL) ||
            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
 
         if (callDepth > 3) {
@@ -220,7 +220,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-       /* if (feof(ics)) {
+        if (feof(ics)) {
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
             }
@@ -229,7 +229,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 free(pbuff);
                 return returnStatus;
             }    
-        }*/
+        }
 
         if (returnStatus.code != OK) {
             free(pbuff);
@@ -298,9 +298,11 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         } else if (strcmp(prop->name, "END") == 0) {
             // make sure the END matches the original begin, free memory
             makeUpperCase(prop->value);
+            
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
                 returnStatus.code = NODATA;
             } else if (strcmp(prop->value, (*pcomp)->name) != 0) {
+                printf("start %s end %s\n",prop->value, (*pcomp)->name);
                 returnStatus.code = BEGEND;
             }
             callDepth--;
@@ -329,14 +331,14 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 temp->next = prop;
             }
         }
-        if (feof(ics) && callDepth > 1) {
+        if (feof(ics) && callDepth >= 1) {
             returnStatus.code = BEGEND;
             free(pbuff);
             return returnStatus;
         }
     }
     free(pbuff);
-
+    
     return returnStatus;
 }
 
