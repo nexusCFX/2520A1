@@ -376,7 +376,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     fgets(inputLine, BUF_LEN, ics);
 
     // Manage line folding if next line has a space
-    while (isspace(inputLine[0])) {
+    while (inputLine[0] == ' ') {
         if (checkEmptyString(inputLine) == false) {
             // CRLF check for folded lines
             if (!hasCRLF(ics, inputLine)) {
