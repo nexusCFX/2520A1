@@ -227,6 +227,11 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         // Check to make sure start is BEGIN:VCALENDAR
         if ((*pcomp)->name == NULL && callDepth == 1) {
+            if (feof(ics)) {
+                free(pbuff);
+                returnStatus.code = NOCAL;
+                return returnStatus;
+            }
             if (strcmp(pbuff, "BEGIN:VCALENDAR") != 0) {
                 free(pbuff);
                 returnStatus.code = NOCAL;
