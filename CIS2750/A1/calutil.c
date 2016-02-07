@@ -313,6 +313,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         } else {
             // Add to property list
             if (returnStatus.code != OK) {
+                free(pbuff);
                 return returnStatus;
             }
             (*pcomp)->nprops++;
