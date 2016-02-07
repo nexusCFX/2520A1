@@ -209,7 +209,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-    while ((!feof(ics)) && ((pbuff == NULL) ||
+    while (((pbuff == NULL) ||
            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
 
         if (callDepth > 3) {
@@ -220,14 +220,16 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-        if (feof(ics)) {
+       /* if (feof(ics)) {
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
             }
             if (strcmp("END:VCALENDAR", pbuff) != 0) {
                 returnStatus.code = BEGEND;
+                free(pbuff);
+                return returnStatus;
             }    
-        }
+        }*/
 
         if (returnStatus.code != OK) {
             free(pbuff);
