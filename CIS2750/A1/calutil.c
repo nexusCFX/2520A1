@@ -191,6 +191,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     }
 
     // Check EOF. If there are lines after END:VCALENDAR, error
+    if (!feof(ics)) {
         char *buff = NULL;
         readCalLine(ics, &buff);
         if (buff != NULL) {
@@ -199,6 +200,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
             readStatus.linefrom++;
             freeCalComp(*pcomp);
         }
+    }
     return readStatus;
 }
 
