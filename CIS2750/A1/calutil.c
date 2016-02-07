@@ -586,7 +586,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
     for (int i = 0; i < curPos - 1; i++) {
         prop->name[i] = toupper(buffCpy[i]);
     }
-    prop->name[curPos] = '\0';
+    prop->name[curPos-1] = '\0';
 
     // Analyze the individual parameters to avoid errors
     // Go over the string, do case analysis for each ; found
