@@ -209,8 +209,8 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-    while ((pbuff == NULL) ||
-           (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK)) {
+    while ((!feof(ics)) && ((pbuff == NULL) ||
+           (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
 
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
