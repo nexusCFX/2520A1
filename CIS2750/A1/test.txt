@@ -1,1 +1,6 @@
-yo daflkdsjfklsklfkldsj
+BEGIN:VCALENDAR
+PRODID:-//hacksw/handcal//NONSGML v1.0//EN
+BEGIN:VEVENT
+TRIGGER:14:00AM
+END:VEVENT
+END:VCALENDAR

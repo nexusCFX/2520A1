@@ -1,6 +1,6 @@
 typedef int Item;
 
-#define MAXLISTSIZE 10000
+#define MAXLISTSIZE 100000
 typedef struct {
 	Item items[MAXLISTSIZE];
 	int size;

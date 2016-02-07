@@ -1,5 +1,5 @@
 
-OPTIONS = -ansi -pedantic -Wall -Werror
+OPTIONS = -std=c11 -Ofast -pedantic -Wall -Werror
 
 test: test.o ListImplementation.o
 	gcc $(OPTIONS) test.c ListImplementation.o -o test

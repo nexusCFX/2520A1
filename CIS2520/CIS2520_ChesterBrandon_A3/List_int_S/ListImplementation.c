@@ -12,7 +12,8 @@
  *        . As we will see, there is a better way to check whether
  *          the preconditions and postconditions are met.
  *********************************************************************/
-
+int partition(int arr[], int first, int last);
+void swap(int *a, int *b);
 
 #include "ListInterface.h"
 #include <stdlib.h>
@@ -131,24 +132,59 @@ void BubbleSort1(List * L) {
     }
 }
 
-void BubbleSort2(List * L) {
-    int k;
-    int i;
-    int temp;
-    int swapped;
-    k = L->size;
-    do {
-        swapped = 0;
-        for (i = 0; i < k; i++) {
-            if (L->items[i-1] > L->items[i]) {
-                temp = L->items[i];
-                L->items[i] = L->items[i-1];
-                L->items[i-1] = temp;
-                swapped = 1;
-            }
-        }
-    } while (swapped == 1);
+/**************************************************************** Quick sort ***********************************/
+
+void QuickSort(int arr[], int p, int r )
+{
+    if (p < r)
+    {
+        int q = partition(arr, p, r);
+        // Sort the left side or below partition value
+        QuickSort(arr, p, q-1);
+        // Sort right side or values above the partition value
+        QuickSort(arr, q + 1, r);
+    }
+    
 }
+
+int partition(int arr[], int first, int last)
+{
+    // Store partition or dividing value.
+    int  x = arr[last];
+    
+    // Start at position before insertion point.
+    int i = first-1;
+    
+    // Go through the array from our position first to last-1.
+    // Everything below 'x' will be on the left side  of i and everything above x will be on the right side of i
+    for (int j = first; j <= last - 1; j++)
+    {
+        if (arr[j] <= x)
+        {
+            i++;
+            int temp = arr[j];
+            arr[j] = arr[i];
+            arr[i] = temp;
+            //swap(&arr[j], &arr[i]);
+        }
+    }
+    
+    // Swap the partition value that divides the left and right array into the middle.
+    //swap(&arr[last], &arr[i+1] );
+    int temp2 = arr[last];
+    arr[last] = arr[i+1];
+    arr[i+1] = temp2;
+    return i+1;
+    
+}
+
+void swap(int* a, int* b)
+{
+    int* tmp = a;
+    a = b;
+    b = tmp;
+}
+
 
 void Merge(List * A, int first, int middle, int last) {
     int L[MAXLISTSIZE];

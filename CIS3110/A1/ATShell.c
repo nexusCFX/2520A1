@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <unistd.h>
 
+
 char **parseInput(char *input);
 int executeCommand (char **args);
 void freeArgs ();
@@ -13,21 +14,23 @@ void freeArgs ();
 int main (int argc, char* argv[]) {
     char *input = NULL;
     char **args;
-    int error;
+    int status = 1;
     do {
+        
         printf("> ");
         size_t size = 0;
         getline(&input, &size, stdin);
+        if (strlen(input) == 1 && input[0] == '\n') {
+            continue;
+        }
         args = parseInput(input);
-        error = executeCommand(args);
-    } while (error);
-    
-    
+        status = executeCommand(args);
+    } while (status);
     return 1;
 }
 
 void freeArgs () {
-    
+   //Maybe free stuff, or maybe just let the OS clean it up 
 }
 
 char **parseInput(char *input) {
@@ -42,7 +45,7 @@ char **parseInput(char *input) {
         token = strtok(NULL," \n");
         numArgs++;
     }
-
+    args[numArgs-1][strlen(args[numArgs-1])] = '\0';
     args[numArgs] = NULL;
     
     
@@ -58,8 +61,18 @@ int executeCommand (char **args) {
     }
     
     if (strcmp(args[0],"exit") == 0) {
-        puts("JIHAD THE INFIDELS");
+        printf("logout\n\n[Process completed]\n");
         exit(0);
+    }
+    
+    int i = 0;
+    bool isBG = false;
+    while (args[i] != NULL) {
+        i++;
+    }
+    
+    if (strcmp("&",args[i-1]) == 0) {
+        isBG = true;
     }
     
     pid_t childPID;
@@ -70,9 +83,11 @@ int executeCommand (char **args) {
     if (childPID >= 0) {
         //Fork successful
         if(childPID == 0) {
-			//this is the child
-		//	printf("This is the child process.  PID is: %d\n", getpid());
-            
+			//this is the childz
+            //use sigaction
+            if (isBG) {
+		      setpgid(0, 0);
+            }
 			//since we are the child, we want to perform exec and use up this process ID
 		    int status = execvp(args[0], args);
             if (status == -1) {
@@ -80,9 +95,11 @@ int executeCommand (char **args) {
             }
 			exit(0);
 		} else {
-			//this is the parent
-		//	printf("Parent process.  PID is: %d\n", getpid());
-			waitpid(childPID, &status, 0);
+            if (!isBG) {
+              waitpid(childPID, &status, 0);
+            } else {
+              waitpid(-1, &status,WNOHANG);
+            }
 		}
     } else {
         puts("Failed to fork");

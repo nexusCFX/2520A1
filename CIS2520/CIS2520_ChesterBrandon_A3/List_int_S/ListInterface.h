@@ -146,4 +146,4 @@ void BubbleSort1(List * L);
  * a quicker sort is used if the list is already sorted
  * ARGUMENTS: The address of the List (List *)
  *********************************************************************/
-void BubbleSort2(List * L);
+void QuickSort(int arr[], int p, int r );
