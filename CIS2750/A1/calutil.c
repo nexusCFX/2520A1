@@ -214,6 +214,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
+            free(pbuff);
             return returnStatus;
         }
 
@@ -349,7 +350,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         return makeCalStatus(OK, 0, 0);
     }
 
-    if (*pbuff == NULL) {
+    if ((*pbuff) == NULL) {
         *pbuff = malloc(BUF_LEN);
         assert(*pbuff != NULL);
     }
@@ -581,7 +582,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
     }
 
     // Copy over name of prop, append NUL
-    prop->name = malloc(curPos + 1);
+    prop->name = malloc(curPos);
     assert(prop->name != NULL);
     for (int i = 0; i < curPos - 1; i++) {
         prop->name[i] = toupper(buffCpy[i]);
