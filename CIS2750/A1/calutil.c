@@ -219,14 +219,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-        if (feof(ics)) {
-            for (int i = 0; i < strlen(pbuff); i++) {
-                pbuff[i] = toupper(pbuff[i]);
-            }
-            if (strcmp("END:VCALENDAR", pbuff) != 0) {
-                returnStatus.code = BEGEND;
-            }    
-        }
+        
 
         if (returnStatus.code != OK) {
             free(pbuff);
