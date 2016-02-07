@@ -224,6 +224,9 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         // Check to make sure start is BEGIN:VCALENDAR
         if ((*pcomp)->name == NULL && callDepth == 1) {
+            for (int i = 0; i < strlen(pbuff); i++) {
+                pbuff[i] = toupper(pbuff[i]);
+            }
             if (strcmp(pbuff, "BEGIN:VCALENDAR") != 0) {
                 free(pbuff);
                 returnStatus.code = NOCAL;
