@@ -191,14 +191,14 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
     }
 
     // Check EOF. If there are lines after END:VCALENDAR, error
+    if (!feof(ics)) {
         char *buff = NULL;
         readCalLine(ics, &buff);
         if (buff != NULL) {
             readStatus.code = AFTEND;
-            readStatus.lineto++;
-            readStatus.linefrom++;
             freeCalComp(*pcomp);
         }
+    }
     return readStatus;
 }
 
@@ -224,9 +224,6 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         // Check to make sure start is BEGIN:VCALENDAR
         if ((*pcomp)->name == NULL && callDepth == 1) {
-            for (int i = 0; i < strlen(pbuff); i++) {
-                pbuff[i] = toupper(pbuff[i]);
-            }
             if (strcmp(pbuff, "BEGIN:VCALENDAR") != 0) {
                 free(pbuff);
                 returnStatus.code = NOCAL;
@@ -242,7 +239,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         CalProp *prop = malloc(sizeof(*prop));
         assert(prop != NULL);
         returnStatus.code = parseCalProp(pbuff, prop);
-        
+
         if (returnStatus.code != OK) {
             free(pbuff);
             return returnStatus;
@@ -494,7 +491,7 @@ CalError parseCalProp(char *const buff, CalProp *const prop) {
         makeUpperCase(name);
         strcpy(prop->name, name);
         propValue = strtok(NULL, "\0");
-       // printf("%s\n",propValue);
+
         if (propValue == NULL) {
             prop->value = malloc(1);
             assert(prop->value != NULL);
