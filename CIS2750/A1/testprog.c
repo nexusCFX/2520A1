@@ -1,16 +1,28 @@
 #include "calutil.h"
-
+#include <stdlib.h>
+#include <stdio.h>
 int main() {
-    CalComp *comp;
-    CalStatus readStatus;
+   // CalComp *comp;
+    CalProp *prop = malloc(sizeof(*prop));
+    CalError readStatus;
     FILE *file;
     file = fopen("test.txt", "r");
-    readStatus = readCalFile(file, &comp);   
-    printf("Error #%d. Lines %d to %d\n", readStatus.code, readStatus.linefrom,
-         readStatus.lineto);
-         if (readStatus.code == OK) {
-             freeCalComp(comp);
-         }
+    readStatus = parseCalProp("NAMELIST;NAME=Bill,John:NA", prop);   
+    
+    printf("Name %s\n",prop->name);
+    CalParam *travPar = prop->param;
+    while (travPar) {
+        printf("%s\n",travPar->name);
+        printf("%d values\n",travPar->nvalues);
+        for (int j = 0; j < travPar->nvalues; j++) {
+            printf("%s\n",travPar->value[j]);
+        }
+        travPar = travPar->next;
+    }
+    printf("Value %s\n",prop->value);
+      //   if (readStatus.code == OK) {
+           //  freeCalComp(comp);
+        // }
     fclose(file);
 
     return 1;

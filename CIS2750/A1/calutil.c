@@ -581,7 +581,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
     }
 
     // Copy over name of prop, append NUL
-    prop->name = malloc(curPos + 2);
+    prop->name = malloc(curPos + 1);
     assert(prop->name != NULL);
     for (int i = 0; i < curPos - 1; i++) {
         prop->name[i] = toupper(buffCpy[i]);
