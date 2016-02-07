@@ -329,6 +329,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         }
         if (feof(ics) && callDepth > 1) {
             returnStatus.code = BEGEND;
+            free(pbuff);
             return returnStatus;
         }
     }
