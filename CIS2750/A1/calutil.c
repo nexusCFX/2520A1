@@ -6,7 +6,7 @@
 #include <ctype.h>
 #include "calutil.h"
 
-#define BUF_LEN 500
+#define BUF_LEN 4000
 
 /************************
 calutil.c
@@ -341,7 +341,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
-    static char inputLine[500];
+    static char inputLine[BUF_LEN];
 
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
@@ -418,7 +418,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
             strcat(*pbuff, inputLine);
         }
-        fgets(inputLine, 500, ics);
+        fgets(inputLine, BUF_LEN, ics);
     }
 
     // If the buffer is somehow empty, recursively call to get next line
