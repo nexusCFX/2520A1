@@ -132,7 +132,7 @@ void testSort (List* L, double* min, double* max, double* average, char* sort) {
         t2=clock();
     } else if (strcmp("Bubble2",sort)==0){
         t1=clock();
-        BubbleSort2(L);
+      //  BubbleSort2(L);
         t2=clock();
     } else {
         t1=clock();

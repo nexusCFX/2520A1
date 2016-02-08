@@ -368,7 +368,11 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     if (difference == 0) {
         // \0 defines the initial case
         if (inputLine[0] == '\0') {
-            fgets(inputLine, BUF_LEN, ics);
+            if (fgets(inputLine, BUF_LEN, ics) == NULL) {
+                free(*pbuff);
+                *pbuff = NULL;
+                return makeCalStatus(NOCAL, 0, 0);
+            }
             while (checkEmptyString(inputLine) == true) {
                 fgets(inputLine, BUF_LEN, ics);
             }
