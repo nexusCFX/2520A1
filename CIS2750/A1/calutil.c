@@ -377,8 +377,13 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
                 fgets(inputLine, BUF_LEN, ics);
             }
             if (feof(ics)) {
-                free(*pbuff);
-                *pbuff = NULL;
+                if (inputLine[0] != '\0') {
+                    strcpy(*pbuff, inputLine);
+                } else {
+                   free(*pbuff);
+                   *pbuff = NULL; 
+                }
+                
                 return makeCalStatus(OK, currentLine, currentLine + difference);
             }
         }
