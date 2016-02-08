@@ -628,6 +628,11 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                 return SYNTAX;
             } else { // Split the parameter string into name and values
                 char *paramName = strtok(param, "=");
+                for (int i = 0; i < strlen(paramName); i++) {
+                    if (isspace(paramName[i])) {
+                        return SYNTAX;
+                    }
+                }
                 char *paramValues = strtok(NULL, "\0");
 
                 // Fixing strtok behavior with zero length strings
