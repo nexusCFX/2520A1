@@ -220,7 +220,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-        if (feof(ics)) {
+        /*if (feof(ics) && pbuff != NULL) {
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
             }
@@ -228,7 +228,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 returnStatus.code = BEGEND;
             }    
             
-        }
+        }*/
 
         if (returnStatus.code != OK) {
             free(pbuff);
