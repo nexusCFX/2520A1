@@ -220,16 +220,15 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-        if (feof(ics)) {
-            
-            if ((pbuff == NULL) || strcmp("END:VCALENDAR", pbuff) != 0) {
+       /* if (feof(ics) && pbuff != NULL) {
+            if (strcmp("END:VCALENDAR", pbuff) != 0) {
                 returnStatus.code = BEGEND;
             } else {
                 for (int i = 0; i < strlen(pbuff); i++) {
                     pbuff[i] = toupper(pbuff[i]);
                 }
             } 
-        }
+        }*/
 
         if (returnStatus.code != OK) {
             free(pbuff);
