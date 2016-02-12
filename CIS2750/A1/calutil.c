@@ -220,7 +220,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
         
-        /*if (feof(ics) && pbuff != NULL) {
+      /*  if (feof(ics) && pbuff != NULL) {
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
             }
@@ -343,7 +343,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
     static char inputLine[BUF_LEN];
-
+    char* zbuff = NULL;
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -353,12 +353,17 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         return makeCalStatus(OK, 0, 0);
     }
 
-    if ((*pbuff) == NULL) {
-        *pbuff = malloc(BUF_LEN);
-        assert(*pbuff != NULL);
+    if (feof(ics)) {
+
+       // *pbuff = NULL;
+       // return makeCalStatus(OK, currentLine, currentLine);
+    }
+    if ((zbuff) == NULL) {
+        zbuff = malloc(BUF_LEN);
+        assert(zbuff != NULL);
     }
 
-    // Increment line number, reset diff
+   // Increment line number, reset diff
     if (difference != 0) {
         currentLine += difference;
     }
@@ -370,8 +375,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         // \0 defines the initial case
         if (inputLine[0] == '\0') {
             if (fgets(inputLine, BUF_LEN, ics) == NULL) {
-                free(*pbuff);
-                *pbuff = NULL;
+                free(zbuff);
+                zbuff = NULL;
+		*pbuff = zbuff;
                 return makeCalStatus(NOCAL, 0, 0);
             }
             while (checkEmptyString(inputLine) == true) {
@@ -379,22 +385,24 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
             if (feof(ics)) {
                 if (inputLine[0] != '\0') {
-                    strcpy(*pbuff, inputLine);
+                    strcpy(zbuff, inputLine);
                 } else {
-                   free(*pbuff);
-                   *pbuff = NULL; 
+                   free(zbuff);
+                   zbuff = NULL;
+		   *pbuff = zbuff; 
                 }
                 
-                return makeCalStatus(OK, currentLine, currentLine + difference);
+                return makeCalStatus(OK, currentLine, currentLine + difference+1);
             }
         }
 
         if (!hasCRLF(ics, inputLine)) {
-            free(*pbuff);
-            *pbuff = NULL;
+            free(zbuff);
+            zbuff = NULL;
+	    *pbuff = zbuff;
             return makeCalStatus(NOCRNL, currentLine, currentLine + difference);
         }
-        strcpy(*pbuff, inputLine);
+        strcpy(zbuff, inputLine);
     }
 
     fgets(inputLine, BUF_LEN, ics);
@@ -404,8 +412,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         if (checkEmptyString(inputLine) == false) {
             // CRLF check for folded lines
             if (!hasCRLF(ics, inputLine)) {
-                free(*pbuff);
-                *pbuff = NULL;
+                free(zbuff);
+                zbuff = NULL;
+		*pbuff = zbuff;
                 return makeCalStatus(NOCRNL, currentLine,
                                      currentLine + difference);
             }
@@ -417,20 +426,24 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
 
             difference++;
-            char *tempPtr =
-                realloc(*pbuff, (strlen(*pbuff) + strlen(inputLine) + 1));
-            if (tempPtr != NULL) {
-                *pbuff = tempPtr;
-            }
-            strcat(*pbuff, inputLine);
+            zbuff  =
+                realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
+          //  if (tempPtr != NULL) {
+            //    zbuff = tempPtr;
+          //  }
+            strcat(zbuff, inputLine);
         }
         fgets(inputLine, BUF_LEN, ics);
     }
 
     // If the buffer is somehow empty, recursively call to get next line
-    if (strlen(*pbuff) == 0) {
+    if (strlen(zbuff) == 0) {
+	free(zbuff);
         return readCalLine(ics, pbuff);
     }
+    *pbuff = malloc(strlen(zbuff)+1);
+    strcpy(*pbuff,zbuff);
+    free(zbuff);
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 

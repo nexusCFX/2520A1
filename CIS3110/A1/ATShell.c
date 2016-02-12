@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +7,8 @@
 #include <assert.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include <sys/types.h>
+#include <sys/wait.h>
 char **parseInput(char *input);
 int executeCommand (char **args);
 void freeArgs ();
