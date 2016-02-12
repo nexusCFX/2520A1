@@ -344,6 +344,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int difference;
     static char inputLine[BUF_LEN];
     char* zbuff = NULL;
+    
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -352,7 +353,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
         return makeCalStatus(OK, 0, 0);
     }
-
+        free(*pbuff);
+        *pbuff = NULL;
+    
     if (feof(ics)) {
 
        // *pbuff = NULL;
@@ -377,7 +380,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             if (fgets(inputLine, BUF_LEN, ics) == NULL) {
                 free(zbuff);
                 zbuff = NULL;
-		*pbuff = zbuff;
+		        *pbuff = zbuff;
                 return makeCalStatus(NOCAL, 0, 0);
             }
             while (checkEmptyString(inputLine) == true) {
@@ -389,7 +392,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
                 } else {
                    free(zbuff);
                    zbuff = NULL;
-		   *pbuff = zbuff; 
+		           *pbuff = zbuff; 
                 }
                 
                 return makeCalStatus(OK, currentLine, currentLine + difference+1);
@@ -399,7 +402,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         if (!hasCRLF(ics, inputLine)) {
             free(zbuff);
             zbuff = NULL;
-	    *pbuff = zbuff;
+	        *pbuff = zbuff;
             return makeCalStatus(NOCRNL, currentLine, currentLine + difference);
         }
         strcpy(zbuff, inputLine);
@@ -414,7 +417,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             if (!hasCRLF(ics, inputLine)) {
                 free(zbuff);
                 zbuff = NULL;
-		*pbuff = zbuff;
+		        *pbuff = zbuff;
                 return makeCalStatus(NOCRNL, currentLine,
                                      currentLine + difference);
             }
@@ -444,7 +447,6 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     }
     
     if ((*pbuff) == NULL) {
-        
         (*pbuff) = malloc(4000);
     }
    
