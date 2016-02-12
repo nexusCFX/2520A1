@@ -36,7 +36,13 @@ int main (int argc, char* argv[]) {
         }
         
         args = parseInput(input);
-        status = executeCommand(args);
+        
+        if (strcmp(args[0],"cd")==0) {
+            chdir(args[1]);
+        } else {
+            status = executeCommand(args);
+        }
+        
         if (status == -1) {
             isBG = true;
         }
@@ -108,12 +114,6 @@ int executeCommand (char **args) {
     pid_t childPID;
     int status = 1;
     bool background;
-    
-   /* if (strncmp(,,2);) {
-        changeDirectory();
-        char dir[1000] = getcwd(cd, sizeof(cwd));
-        return 1;
-    }*/
     
     childPID = fork();
     if (childPID >= 0) {
