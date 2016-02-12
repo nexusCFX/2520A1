@@ -353,8 +353,6 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
         return makeCalStatus(OK, 0, 0);
     }
-        free(*pbuff);
-        *pbuff = NULL;
     
     if (feof(ics)) {
 
@@ -441,17 +439,14 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
     // If the buffer is somehow empty, recursively call to get next line
     if (strlen(zbuff) == 0) {
-	   free(zbuff);
+	    free(zbuff);
         zbuff = NULL;
         return readCalLine(ics, pbuff);
     }
     
-    if ((*pbuff) == NULL) {
-        (*pbuff) = malloc(4000);
-    }
-   
-    strcpy(*pbuff,zbuff);
-    free(zbuff);
+    
+    (*pbuff) = zbuff;
+    
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 
