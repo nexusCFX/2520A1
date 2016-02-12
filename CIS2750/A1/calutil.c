@@ -441,7 +441,13 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 	free(zbuff);
         return readCalLine(ics, pbuff);
     }
-    *pbuff = malloc(strlen(zbuff)+1);
+    
+    if ((*pbuff) != NULL) {
+        *pbuff = realloc((*pbuff), sizeof((*pbuff)+strlen(zbuff)+1));
+    } else {
+        *pbuff = malloc(strlen(zbuff)+1);
+    }
+   
     strcpy(*pbuff,zbuff);
     free(zbuff);
     return makeCalStatus(OK, currentLine, currentLine + difference);
