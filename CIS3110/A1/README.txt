@@ -8,7 +8,7 @@ This shell allows for the execution of commands, with and without arguments, alo
 
 The shell allows for the use of output and input redirection from files, along with a single level of piping between two programs. This fulfills the requirements for section 2 functions.
 
-The shell also supports using the cd command to change directories.
+The shell also supports using the cd command to change directories. It does not support any other section 3 functionality.
 
 Limitations / Issues:
 
