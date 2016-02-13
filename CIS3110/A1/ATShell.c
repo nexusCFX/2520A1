@@ -109,7 +109,7 @@ int executeCommand(char **args) {
             // since we are the child, we want to perform exec and use up this
             // process ID
             if (isBG) {
-                printf("Child process[%d]\n", childPID);
+               
                 setpgid(0, 0);
             }
             // If we have >, we are outputting to a file
@@ -167,7 +167,12 @@ int executeCommand(char **args) {
             }
             exit(0);
         } else {
-            waitpid(childPID, &status, 0);
+            if (!isBG) {
+              waitpid(childPID, &status, 0);  
+            } else {
+                printf("Child process[%d]\n", childPID);
+            }
+            
         }
     } else {
         perror("Fork");
