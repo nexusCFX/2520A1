@@ -190,25 +190,25 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-    while ((!feof(ics)) && ((pbuff == NULL) ||
-           (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
+    while ((!feof(ics)) &&
+           ((pbuff == NULL) ||
+            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
 
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
             free(pbuff);
             return returnStatus;
         }
-        
+
         returnStatus = readCalLine(ics, &pbuff);
-        
+
         if (feof(ics) && pbuff != NULL) {
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
             }
             if (strcmp("END:VCALENDAR", pbuff) != 0) {
                 returnStatus.code = BEGEND;
-            }    
-            
+            }
         }
 
         if (returnStatus.code != OK) {
@@ -311,7 +311,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         }
         if (feof(ics) && callDepth > 1) {
             returnStatus.code = BEGEND;
-            
+
             free(pbuff);
             return returnStatus;
         }
@@ -325,7 +325,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
     static char inputLine[BUF_LEN];
-    char* zbuff = NULL;
+    char *zbuff = NULL;
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -337,15 +337,15 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
     if (feof(ics)) {
 
-       // *pbuff = NULL;
-       // return makeCalStatus(OK, currentLine, currentLine);
+        // *pbuff = NULL;
+        // return makeCalStatus(OK, currentLine, currentLine);
     }
     if ((zbuff) == NULL) {
         zbuff = malloc(BUF_LEN);
         assert(zbuff != NULL);
     }
 
-   // Increment line number, reset diff
+    // Increment line number, reset diff
     if (difference != 0) {
         currentLine += difference;
     }
@@ -359,7 +359,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             if (fgets(inputLine, BUF_LEN, ics) == NULL) {
                 free(zbuff);
                 zbuff = NULL;
-		*pbuff = zbuff;
+                *pbuff = zbuff;
                 return makeCalStatus(NOCAL, 0, 0);
             }
             while (checkEmptyString(inputLine) == true) {
@@ -367,15 +367,15 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
             if (feof(ics)) {
                 if (inputLine[0] != '\0') {
-                   // difference--;
-			strcpy(zbuff, inputLine);
-			*pbuff = zbuff;
+                    // difference--;
+                    strcpy(zbuff, inputLine);
+                    *pbuff = zbuff;
                 } else {
-                   free(zbuff);
-                   zbuff = NULL;
-		  	       *pbuff = zbuff; 
+                    free(zbuff);
+                    zbuff = NULL;
+                    *pbuff = zbuff;
                 }
-                
+
                 return makeCalStatus(OK, currentLine, currentLine + difference);
             }
         }
@@ -383,7 +383,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         if (!hasCRLF(ics, inputLine)) {
             free(zbuff);
             zbuff = NULL;
-	    *pbuff = zbuff;
+            *pbuff = zbuff;
             return makeCalStatus(NOCRNL, currentLine, currentLine + difference);
         }
         strcpy(zbuff, inputLine);
@@ -392,14 +392,14 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     fgets(inputLine, BUF_LEN, ics);
 
     // Manage line folding if next line has a space
-    while ((inputLine[0])==' ' || inputLine[0] == '\t') {
-        
-	if (checkEmptyString(inputLine) == false) {
+    while ((inputLine[0]) == ' ' || inputLine[0] == '\t') {
+
+        if (checkEmptyString(inputLine) == false) {
             // CRLF check for folded lines
             if (!hasCRLF(ics, inputLine)) {
                 free(zbuff);
                 zbuff = NULL;
-		*pbuff = zbuff;
+                *pbuff = zbuff;
                 return makeCalStatus(NOCRNL, currentLine,
                                      currentLine + difference);
             }
@@ -411,32 +411,31 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
 
             difference++;
-            zbuff  =
-                realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
-          //  if (tempPtr != NULL) {
+            zbuff = realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
+            //  if (tempPtr != NULL) {
             //    zbuff = tempPtr;
-          //  }
+            //  }
             strcat(zbuff, inputLine);
-		inputLine[0] = '\0';
+            inputLine[0] = '\0';
         } else {
-	
-	difference++;
-}
+
+            difference++;
+        }
         fgets(inputLine, BUF_LEN, ics);
     }
 
     // If the buffer is somehow empty, recursively call to get next line
     if (strlen(zbuff) == 0) {
-         free(zbuff);
-//	currentLine++;
-         CalStatus temp = readCalLine(ics, &zbuff);
-         *pbuff = malloc(strlen(zbuff)+1);
-         strcpy(*pbuff,zbuff);
-         return temp;
+        free(zbuff);
+        //	currentLine++;
+        CalStatus temp = readCalLine(ics, &zbuff);
+        *pbuff = malloc(strlen(zbuff) + 1);
+        strcpy(*pbuff, zbuff);
+        return temp;
     }
-    
-    *pbuff = malloc(strlen(zbuff)+1);
-    strcpy(*pbuff,zbuff);
+
+    *pbuff = malloc(strlen(zbuff) + 1);
+    strcpy(*pbuff, zbuff);
     free(zbuff);
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
@@ -606,29 +605,30 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
     for (int i = 0; i < curPos - 1; i++) {
         prop->name[i] = toupper(buffCpy[i]);
     }
-    prop->name[curPos-1] = '\0';
+    prop->name[curPos - 1] = '\0';
 
     // Analyze the individual parameters to avoid errors
     // Go over the string, do case analysis for each ; found
     int lasPos = curPos;
     bool withinQuotes = false;
     if ((curPos - length) == 0) {
-return SYNTAX;    
-} 
+        return SYNTAX;
+    }
     for (int k = curPos; k < length; k++) {
 
         // If the next char is " invert withinQuotes
         if (buffCpy[k + 1] == '"') {
             withinQuotes = (!withinQuotes);
         }
-	
+
         // If next char is ; and we arent in quotes, this is the end of the
         // current param block
         if ((buffCpy[k + 1] == ';' || buffCpy[k + 1] == '\0') &&
             withinQuotes == false) {
-          //      if ((buffCpy[k + 1] == ';') && (buffCpy[k + 2] == ':' || buffCpy[k + 2] == ';')) {
- 	//		return SYNTAX;                   
-          //      }
+            //      if ((buffCpy[k + 1] == ';') && (buffCpy[k + 2] == ':' ||
+            //      buffCpy[k + 2] == ';')) {
+            //		return SYNTAX;
+            //      }
             CalParam *newParam = malloc(sizeof(CalParam));
             assert(newParam != NULL);
             newParam->name = NULL;
@@ -640,11 +640,11 @@ return SYNTAX;
             for (int i = lasPos; i < k + 1; i++) {
                 param[i - lasPos] = buffCpy[i];
             }
-            
+
             param[strlen(param)] = '\0';
 
             // If we have no =, syntax failure
-            char* eq = strchr(param, '=');
+            char *eq = strchr(param, '=');
             if (eq == NULL || isspace(param[(int)(eq - param)])) {
                 return SYNTAX;
             } else { // Split the parameter string into name and values
