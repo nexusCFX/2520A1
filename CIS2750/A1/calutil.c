@@ -631,20 +631,23 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
     // Go over the string, do case analysis for each ; found
     int lasPos = curPos;
     bool withinQuotes = false;
+    if ((curPos - length) == 0) {
+return SYNTAX;    
+} 
     for (int k = curPos; k < length; k++) {
 
         // If the next char is " invert withinQuotes
         if (buffCpy[k + 1] == '"') {
             withinQuotes = (!withinQuotes);
         }
-
+	
         // If next char is ; and we arent in quotes, this is the end of the
         // current param block
         if ((buffCpy[k + 1] == ';' || buffCpy[k + 1] == '\0') &&
             withinQuotes == false) {
-                if ((buffCpy[k + 1] == ';') && (buffCpy[k + 2] == ':' || buffCpy[k + 2] == ';')) {
-                    
-                }
+          //      if ((buffCpy[k + 1] == ';') && (buffCpy[k + 2] == ':' || buffCpy[k + 2] == ';')) {
+ 	//		return SYNTAX;                   
+          //      }
             CalParam *newParam = malloc(sizeof(CalParam));
             assert(newParam != NULL);
             newParam->name = NULL;
