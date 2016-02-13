@@ -173,14 +173,14 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
 
     // Check EOF. If there are lines after END:VCALENDAR, error
     if (!feof(ics)) {
-        char *buff = NULL;
+        /*char *buff = NULL;
         readCalLine(ics, &buff);
         if (buff != NULL) {
             readStatus.code = AFTEND;
             readStatus.lineto++;
             readStatus.linefrom++;
             freeCalComp(*pcomp);
-        }
+        }*/
     }
     return readStatus;
 }
@@ -197,6 +197,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
             free(pbuff);
+            pbuff = NULL;
             return returnStatus;
         }
 
@@ -213,6 +214,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         if (returnStatus.code != OK) {
             free(pbuff);
+            pbuff = NULL;
             return returnStatus;
         }
 
@@ -223,12 +225,15 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             }
             if (strcmp(pbuff, "BEGIN:VCALENDAR") != 0) {
                 free(pbuff);
+                pbuff = NULL;
                 returnStatus.code = NOCAL;
                 return returnStatus;
             }
             (*pcomp)->name = malloc(10);
             assert((*pcomp)->name != NULL);
             strcpy((*pcomp)->name, "VCALENDAR");
+            free(pbuff);
+            pbuff = NULL;
             continue;
         }
 
@@ -239,6 +244,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         if (returnStatus.code != OK) {
             free(pbuff);
+            pbuff = NULL;
             return returnStatus;
         }
 
@@ -290,12 +296,14 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
             if (pbuff != NULL) {
                 free(pbuff);
+                pbuff = NULL;
             }
             return returnStatus;
         } else {
             // Add to property list
             if (returnStatus.code != OK) {
                 free(pbuff);
+                pbuff = NULL;
                 return returnStatus;
             }
             (*pcomp)->nprops++;
@@ -313,11 +321,13 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             returnStatus.code = BEGEND;
 
             free(pbuff);
+            pbuff = NULL;
             return returnStatus;
         }
-    }
+    
     free(pbuff);
-
+    pbuff = NULL;
+            }
     return returnStatus;
 }
 
@@ -326,6 +336,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int difference;
     static char inputLine[BUF_LEN];
     char *zbuff = NULL;
+    
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -427,13 +438,11 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     // If the buffer is somehow empty, recursively call to get next line
     if (strlen(zbuff) == 0) {
         free(zbuff);
-        //	currentLine++;
-        CalStatus temp = readCalLine(ics, &zbuff);
-        *pbuff = malloc(strlen(zbuff) + 1);
-        strcpy(*pbuff, zbuff);
+        free(*pbuff);
+        CalStatus temp = readCalLine(ics, pbuff);
         return temp;
     }
-
+    
     *pbuff = malloc(strlen(zbuff) + 1);
     strcpy(*pbuff, zbuff);
     free(zbuff);
