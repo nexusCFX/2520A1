@@ -438,11 +438,13 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
     // If the buffer is somehow empty, recursively call to get next line
     if (strlen(zbuff) == 0) {
-		free(zbuff);
-        return readCalLine(ics, pbuff);
+         free(zbuff);
+         Calstatus temp = readCalLine(ics, &zbuff);
+         *pbuff = malloc(strlen(zbuff)+1);
+         strcpy(*pbuff,zbuff);
+         return temp;
     }
     
-    free(*pbuff);
     *pbuff = malloc(strlen(zbuff)+1);
     strcpy(*pbuff,zbuff);
     free(zbuff);
