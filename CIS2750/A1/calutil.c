@@ -642,6 +642,9 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
         // current param block
         if ((buffCpy[k + 1] == ';' || buffCpy[k + 1] == '\0') &&
             withinQuotes == false) {
+                if ((buffCpy[k + 1] == ';') && (buffCpy[k + 2] == ':' || buffCpy[k + 2] == ';')) {
+                    
+                }
             CalParam *newParam = malloc(sizeof(CalParam));
             assert(newParam != NULL);
             newParam->name = NULL;
@@ -653,6 +656,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
             for (int i = lasPos; i < k + 1; i++) {
                 param[i - lasPos] = buffCpy[i];
             }
+            
             param[strlen(param)] = '\0';
 
             // If we have no =, syntax failure
