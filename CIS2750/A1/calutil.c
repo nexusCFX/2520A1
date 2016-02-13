@@ -378,7 +378,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             if (fgets(inputLine, BUF_LEN, ics) == NULL) {
                 free(zbuff);
                 zbuff = NULL;
-		*pbuff = zbuff;
+			    *pbuff = zbuff;
                 return makeCalStatus(NOCAL, 0, 0);
             }
             while (checkEmptyString(inputLine) == true) {
@@ -430,16 +430,11 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
 
             difference++;
-            zbuff  =
-                realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
-          //  if (tempPtr != NULL) {
-            //    zbuff = tempPtr;
-          //  }
+            zbuff  = realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
             strcat(zbuff, inputLine);
-		inputLine[0] = '\0';
+		   inputLine[0] = '\0';
         } else {
-	
-	difference++;
+              difference++;
 }
         fgets(inputLine, BUF_LEN, ics);
     }
@@ -447,16 +442,10 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     // If the buffer is somehow empty, recursively call to get next line
     if (strlen(zbuff) == 0) {
          free(zbuff);
-//	currentLine++;
-         CalStatus temp = readCalLine(ics, &zbuff);
-         *pbuff = malloc(strlen(zbuff)+1);
-         strcpy(*pbuff,zbuff);
-         return temp;
+         readCalLine(ics, &zbuff);
     }
-    
-    *pbuff = malloc(strlen(zbuff)+1);
-    strcpy(*pbuff,zbuff);
-    free(zbuff);
+    *pbuff = zbuff;
+    //free(zbuff);
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 
