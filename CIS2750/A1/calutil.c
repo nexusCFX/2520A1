@@ -173,14 +173,15 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
 
     // Check EOF. If there are lines after END:VCALENDAR, error
     if (!feof(ics)) {
-        /*char *buff = NULL;
+        char *buff = NULL;
         readCalLine(ics, &buff);
         if (buff != NULL) {
             readStatus.code = AFTEND;
             readStatus.lineto++;
             readStatus.linefrom++;
             freeCalComp(*pcomp);
-        }*/
+            free(buff);
+        }
     }
     return readStatus;
 }
@@ -203,14 +204,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         returnStatus = readCalLine(ics, &pbuff);
 
-        if (feof(ics) && pbuff != NULL) {
-            for (int i = 0; i < strlen(pbuff); i++) {
-                pbuff[i] = toupper(pbuff[i]);
-            }
-            if (strcmp("END:VCALENDAR", pbuff) != 0) {
-                returnStatus.code = BEGEND;
-            }
-        }
+        
 
         if (returnStatus.code != OK) {
             free(pbuff);
@@ -317,7 +311,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 temp->next = prop;
             }
         }
-        if (feof(ics) && callDepth > 1) {
+        if (feof(ics) && callDepth > 0) {
             returnStatus.code = BEGEND;
 
             free(pbuff);
