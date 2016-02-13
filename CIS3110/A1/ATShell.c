@@ -20,9 +20,11 @@ int main (int argc, char* argv[]) {
     getcwd(curDir, 500);
     char **args;
     int status;
-    
+    pid_t pid;
     while (1) {
-        pid_t pid;
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+            printf ("Background process[%d] ended.\n",pid);
+        }
         
         getcwd(curDir, 500);
         printf("%s>",curDir);
@@ -38,10 +40,6 @@ int main (int argc, char* argv[]) {
             chdir(args[1]);
         } else {
             status = executeCommand(args);
-        }
-        
-        while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-            printf ("Background process[%d] ended.\n",pid);
         }
     }
     return 1;
@@ -109,15 +107,22 @@ int executeCommand (char **args) {
         if(childPID == 0) {
 			//since we are the child, we want to perform exec and use up this process ID
             if (isBG) {
+                printf ("Child process[%d]\n",childPID);
                 setpgid(0,0);
             }
+            //If we have >, we are outputting to a file
             if ((i > 1) && strcmp(args[i-2],">")==0) {
                 FILE* output = fopen(args[i-1], "w");
                 args[i-2] = NULL;
                 args[i-1] = NULL;
+                //Redirect STDOUT
                 dup2(fileno(output), 1);
                 fclose(output);
                 status = execvp(args[0], args); 
+                if (status == -1) {
+                    perror("Execvp failure");
+                }
+            //If we have <, we are getting input from a file
             } else if ((i > 1) && strcmp(args[i-2],"<")==0) {
                 FILE* input = fopen(args[i-1], "r");
                 args[i-2] = NULL;
@@ -125,6 +130,10 @@ int executeCommand (char **args) {
                 dup2(fileno(input), STDIN_FILENO);
                 fclose(input);
                 status = execvp(args[0], args); 
+                if (status == -1) {
+                    perror("Execvp failure");
+                }
+            //We have a pipe
             } else if (pipePos != -1) { 
                 for (int j = pipePos+1; j < i; j++) {
                     args2[j-(pipePos+1)] = args[j];
@@ -132,35 +141,43 @@ int executeCommand (char **args) {
                 }
                 args[pipePos] = NULL;
                    
+                //Initialize pipe, fork again
                 pipe(pipeIO);
                 pid_t tempPid = fork();
                 if (tempPid == 0) {
+                   //We are child. Close one end of pipe
                    close(pipeIO[0]);
+                   
+                   //Redirect STDOUT
                    dup2(pipeIO[1], 1); 
                    close(pipeIO[1]);
                   status = execvp(args[0], args);
+                  if (status == -1) {
+                    perror("Execvp failure");
+                }
                 } else {
+                   //Parent, close other end of pipe
                    close(pipeIO[1]);
+                   //Redirect STDIN
                    dup2(pipeIO[0], 0); 
                    close(pipeIO[0]);
-                  status = execvp(args2[0], args2);
+                   status = execvp(args2[0], args2);
+                   if (status == -1) {
+                    perror("Execvp failure");
+                }
                 }
             } else {
                 status = execvp(args[0], args); 
-            }
-
-            if (status == -1) {
-                perror("ATShell");
+                if (status == -1) {
+                    perror("Execvp failure");
+                }
             }
 			exit(0);
 		} else {
-            if (isBG) {
-               return -1;
-            }
             waitpid(childPID, &status, 0);
 		}
     } else {
-        puts("Failed to fork");
+        perror("Failed to fork");
     }
     return 1;   
 }
