@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
 char **parseInput(char *input);
 int executeCommand (char **args);
 void freeArgs ();
@@ -16,18 +17,14 @@ void freeArgs ();
 int main (int argc, char* argv[]) {
     char *input = NULL;
     char curDir[500];
-    getwd(curDir);
+    getcwd(curDir, 500);
     char **args;
     int status;
-    int isBG = false;
     
     while (1) {
         pid_t pid;
         
-        if (isBG) {
-            isBG = false;
-        }
-        getwd(curDir);
+        getcwd(curDir, 500);
         printf("%s>",curDir);
         size_t size = 0;
         getline(&input, &size, stdin);
@@ -43,19 +40,11 @@ int main (int argc, char* argv[]) {
             status = executeCommand(args);
         }
         
-        if (status == -1) {
-            isBG = true;
-        }
-        
         while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
             printf ("Background process[%d] ended.\n",pid);
         }
     }
     return 1;
-}
-
-void freeArgs () {
-   //Maybe free stuff, or maybe just let the OS clean it up 
 }
 
 char **parseInput(char *input) {
@@ -105,7 +94,7 @@ int executeCommand (char **args) {
     }
     
     
-    if ((args > 0) && strcmp("&",args[i-1]) == 0) {
+    if ((i > 0) && strcmp("&",args[i-1]) == 0) {
         isBG = true;
         args[i-1] = NULL;
         i--;
@@ -113,13 +102,15 @@ int executeCommand (char **args) {
     
     pid_t childPID;
     int status = 1;
-    bool background;
     
     childPID = fork();
     if (childPID >= 0) {
         //Fork successful
         if(childPID == 0) {
 			//since we are the child, we want to perform exec and use up this process ID
+            if (isBG) {
+                setpgid(0,0);
+            }
             if ((i > 1) && strcmp(args[i-2],">")==0) {
                 FILE* output = fopen(args[i-1], "w");
                 args[i-2] = NULL;
@@ -149,7 +140,7 @@ int executeCommand (char **args) {
                    close(pipeIO[1]);
                   status = execvp(args[0], args);
                 } else {
-                    close(pipeIO[1]);
+                   close(pipeIO[1]);
                    dup2(pipeIO[0], 0); 
                    close(pipeIO[0]);
                   status = execvp(args2[0], args2);
@@ -157,17 +148,16 @@ int executeCommand (char **args) {
             } else {
                 status = execvp(args[0], args); 
             }
-               
-            
-            
+
             if (status == -1) {
                 perror("ATShell");
             }
 			exit(0);
 		} else {
-            if (!isBG) {
-              waitpid(childPID, &status, 0);
+            if (isBG) {
+               return -1;
             }
+            waitpid(childPID, &status, 0);
 		}
     } else {
         puts("Failed to fork");
