@@ -330,6 +330,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         }
         if (feof(ics) && callDepth > 1) {
             returnStatus.code = BEGEND;
+            
             free(pbuff);
             return returnStatus;
         }
@@ -655,7 +656,8 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
             param[strlen(param)] = '\0';
 
             // If we have no =, syntax failure
-            if (strchr(param, '=') == NULL) {
+            char* eq = strchr(param, '=');
+            if (eq == NULL || isspace(param[(int)(eq - param)])) {
                 return SYNTAX;
             } else { // Split the parameter string into name and values
                 char *paramName = strtok(param, "=");
