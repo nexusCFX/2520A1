@@ -343,8 +343,8 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int currentLine;
     static int difference;
-    static char inputLine[BUF_LEN];
-    char* zbuff = NULL;
+    static char inputLine[500];
+
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -354,17 +354,12 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         return makeCalStatus(OK, 0, 0);
     }
 
-    if (feof(ics)) {
-
-       // *pbuff = NULL;
-       // return makeCalStatus(OK, currentLine, currentLine);
-    }
-    if ((zbuff) == NULL) {
-        zbuff = malloc(BUF_LEN);
-        assert(zbuff != NULL);
+    if (*pbuff == NULL) {
+        *pbuff = malloc(BUF_LEN);
+        assert(*pbuff != NULL);
     }
 
-   // Increment line number, reset diff
+    // Increment line number, reset diff
     if (difference != 0) {
         currentLine += difference;
     }
@@ -375,50 +370,34 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     if (difference == 0) {
         // \0 defines the initial case
         if (inputLine[0] == '\0') {
-            if (fgets(inputLine, BUF_LEN, ics) == NULL) {
-                free(zbuff);
-                zbuff = NULL;
-			    *pbuff = zbuff;
-                return makeCalStatus(NOCAL, 0, 0);
-            }
+            fgets(inputLine, BUF_LEN, ics);
             while (checkEmptyString(inputLine) == true) {
                 fgets(inputLine, BUF_LEN, ics);
             }
             if (feof(ics)) {
-                if (inputLine[0] != '\0') {
-                   // difference--;
-			strcpy(zbuff, inputLine);
-			*pbuff = zbuff;
-                } else {
-                   free(zbuff);
-                   zbuff = NULL;
-		  	       *pbuff = zbuff; 
-                }
-                
+                free(*pbuff);
+                *pbuff = NULL;
                 return makeCalStatus(OK, currentLine, currentLine + difference);
             }
         }
 
         if (!hasCRLF(ics, inputLine)) {
-            free(zbuff);
-            zbuff = NULL;
-	    *pbuff = zbuff;
+            free(*pbuff);
+            *pbuff = NULL;
             return makeCalStatus(NOCRNL, currentLine, currentLine + difference);
         }
-        strcpy(zbuff, inputLine);
+        strcpy(*pbuff, inputLine);
     }
 
     fgets(inputLine, BUF_LEN, ics);
 
     // Manage line folding if next line has a space
-    while ((inputLine[0])==' ' || inputLine[0] == '\t') {
-        
-	if (checkEmptyString(inputLine) == false) {
+    while (inputLine[0] == ' ') {
+        if (checkEmptyString(inputLine) == false) {
             // CRLF check for folded lines
             if (!hasCRLF(ics, inputLine)) {
-                free(zbuff);
-                zbuff = NULL;
-		*pbuff = zbuff;
+                free(*pbuff);
+                *pbuff = NULL;
                 return makeCalStatus(NOCRNL, currentLine,
                                      currentLine + difference);
             }
@@ -430,24 +409,23 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
             }
 
             difference++;
-            zbuff  = realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
-            strcat(zbuff, inputLine);
-		   inputLine[0] = '\0';
-        } else {
-              difference++;
-}
-        fgets(inputLine, BUF_LEN, ics);
+            char *tempPtr =
+                realloc(*pbuff, (strlen(*pbuff) + strlen(inputLine) + 1));
+            if (tempPtr != NULL) {
+                *pbuff = tempPtr;
+            }
+            strcat(*pbuff, inputLine);
+        }
+        fgets(inputLine, 500, ics);
     }
 
     // If the buffer is somehow empty, recursively call to get next line
-    if (strlen(zbuff) == 0) {
-         free(zbuff);
-         readCalLine(ics, &zbuff);
+    if (strlen(*pbuff) == 0) {
+        return readCalLine(ics, pbuff);
     }
-    *pbuff = zbuff;
-    //free(zbuff);
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
+
 
 bool checkEmptyString(const char *line) {
     int length = strlen(line);
