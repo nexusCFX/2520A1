@@ -422,7 +422,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
             difference++;
         }
-        fgets(inputLine, BUF_LEN, ics);
+        if (fgets(inputLine, BUF_LEN, ics)==NULL) {
+            inputLine[0] = '\0';
+        }
     }
 
     // If the buffer is somehow empty, recursively call to get next line
