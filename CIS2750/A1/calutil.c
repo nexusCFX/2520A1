@@ -121,6 +121,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
 
     // Check to make sure we have "valid" VERSION and PRODID properties
     CalProp *traverseProps = (*pcomp)->prop;
+
     while (traverseProps) {
         if (strcmp(traverseProps->name, "VERSION") == 0) {
             if (hasVersion || strcmp(traverseProps->value, VCAL_VER) != 0) {
@@ -139,7 +140,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
         }
         traverseProps = traverseProps->next;
     }
-
+    
     if (hasVersion == false) {
         readStatus.code = BADVER;
     } else if (hasProdID == false) {
@@ -203,8 +204,6 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         }
 
         returnStatus = readCalLine(ics, &pbuff);
-
-        
 
         if (returnStatus.code != OK) {
             free(pbuff);
@@ -292,6 +291,9 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 free(pbuff);
                 pbuff = NULL;
             }
+            if (callDepth == 0) {
+        callDepth = 1;
+    }
             return returnStatus;
         } else {
             // Add to property list
@@ -311,17 +313,17 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 temp->next = prop;
             }
         }
-        if (feof(ics) && callDepth > 0) {
+        /*if (feof(ics) && callDepth > 0) {
             returnStatus.code = BEGEND;
-
             free(pbuff);
             pbuff = NULL;
             return returnStatus;
-        }
+        }*/
+
+        free(pbuff);
+        pbuff = NULL;
+    }
     
-    free(pbuff);
-    pbuff = NULL;
-            }
     return returnStatus;
 }
 
@@ -330,7 +332,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int difference;
     static char inputLine[BUF_LEN];
     char *zbuff = NULL;
-    
+
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -436,10 +438,11 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         CalStatus temp = readCalLine(ics, pbuff);
         return temp;
     }
-    
+
     *pbuff = malloc(strlen(zbuff) + 1);
     strcpy(*pbuff, zbuff);
     free(zbuff);
+
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 
@@ -826,4 +829,73 @@ void freeCalParam(CalParam *const param) {
         free(traverseParams);
         traverseParams = nextParam;
     }
+}
+
+CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
+    
+    // Print component name
+
+    fprintf(ics, "BEGIN:%s\r\n", comp->name);
+
+    // If a component has properties print them
+    if (comp->nprops > 0) {
+        
+        CalProp *traverseProps = comp->prop;
+
+        // Traverse properties
+        while (traverseProps) {
+            char *output = calloc(1, BUF_LEN);
+           // printf("Name %s\n",traverseProps->name);
+            strcat(output, traverseProps->name);
+	          
+            // If the property has parameters
+            if (traverseProps->param) {
+                CalParam *traverseParams = traverseProps->param;
+
+                // Traverse parameters of properties
+                while (traverseParams) {
+                    // Attach name of parameter and semicolon
+                    strcat(output, ";");
+                    strcat(output, traverseParams->name);
+                    strcat(output, "=");
+                    // Add values of parameter
+                    for (int i = 1; i < traverseParams->nvalues; i++) {
+                        strcat(output, traverseParams->value[i - 1]);
+                        strcat(output, ",");
+                    }
+                    strcat(output,
+                           traverseParams->value[traverseParams->nvalues - 1]);
+
+                    traverseParams = traverseParams->next;
+                }
+            }
+            strcat(output, ":");
+            strcat(output, traverseProps->value);
+            int length = strlen(output);
+            for (int i = 0; i < length; i++) {
+                // To handle how the folded lines have a space taking up 1 of
+                // the 75 char limit
+                if ((i == 75) || (i > 75 && ((i + 1) % 74) == 0)) {
+                    fprintf(ics, "\r\n ");
+                }
+                fprintf(ics, "%c", output[i]);
+                
+                
+            }
+            fprintf(ics, "\r\n");
+	        free(output); 
+            traverseProps = traverseProps->next;
+        }
+    }
+    
+
+    for (int i = 0; i < comp->ncomps; i++) {
+        writeCalComp(ics, comp->comp[i]);
+    }
+    fprintf(ics, "END:%s\r\n", comp->name);
+    CalStatus ret;
+    ret.linefrom = 0;
+    ret.lineto = 0;
+    ret.code = OK;
+    return ret;
 }

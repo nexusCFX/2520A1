@@ -14,7 +14,7 @@ Last modified: Jan 29, 2016
 *************************/
 
 #ifndef CALUTIL_H
-#define CALUTIL_H A1_RevA
+#define CALUTIL_H A2
 
 #include <stdio.h>
 
@@ -54,7 +54,7 @@ typedef struct CalComp {    // calendar's (sub)component
 /* General status return from functions */
 
 typedef enum { OK=0,
-    AFTEND,     // more text found after end of calendar
+    AFTEND,     // more text found after end of calendar 
     BADVER,     // version missing or wrong
     BEGEND,     // BEGIN...END not found as expected
     IOERR,      // I/O error
@@ -65,11 +65,11 @@ typedef enum { OK=0,
     SUBCOM,     // subcomponent not allowed
     SYNTAX,     // property not in valid form
 } CalError;
-
+    
 typedef struct {
     CalError code;          // error code
     int linefrom, lineto;   // line numbers where error occurred
-} CalStatus;
+} CalStatus;    
 
 
 /* File I/O functions */
@@ -78,6 +78,7 @@ CalStatus readCalFile( FILE *const ics, CalComp **const pcomp );
 CalStatus readCalComp( FILE *const ics, CalComp **const pcomp );
 CalStatus readCalLine( FILE *const ics, char **const pbuff );
 CalError parseCalProp( char *const buff, CalProp *const prop );
+CalStatus writeCalComp( FILE *const ics, const CalComp *comp );
 void freeCalComp( CalComp *const comp );
 
 #endif

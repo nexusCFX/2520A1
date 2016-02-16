@@ -1,11 +1,16 @@
-OPTIONS = -g -Iinclude -std=c11 -Wpedantic -Wall -Werror
+CC=gcc
+CFLAGS= -g -std=c11 -Wpedantic -Wall
 
-a.out:  calutil.c calutil.h
-	gcc $(OPTIONS) calutil.c testprog.c
-	 
+caltool: caltool.o calutil.o date.o
+
+calutil.o: calutil.c calutil.h
+
+caltool.o: caltool.h caltool.h
+
+date.o: date.c
 
 clean:
-	rm *.o a.*
+	rm -f *.o caltool
 
 
 
