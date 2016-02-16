@@ -38,14 +38,36 @@ int main(int argc, char *argv[]) {
     readStatus = readCalFile(stdin, &comp1);
     // if readstatus error handle it
     if (readStatus.code != 0) {
-        puts("IMA CUT DIS BICH");
-        exit(0);
+        // print error code message
+        return EXIT_FAILURE;
     }
 
     if (strcmp(argv[1], "-info") == 0) {
+        if (argc != 2) {
+            fprintf(stderr,
+                    "Invalid command line arguments. Syntax: caltool -info\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
+        }
         calInfo(comp1, readStatus.lineto, stdout);
     } else if (strcmp(argv[1], "-extract") == 0) {
-
+        CalOpt opt;
+        if (argc != 3) {
+            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
+                            "-extract kind\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
+        }
+        if (argv[2][0] == 'x') {
+            opt = 1;
+        } else if (argv[2][0] == 'e') {
+            opt = 0;
+        } else {
+            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
+                            "-extract kind\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
+        }
     } else if (strcmp(argv[1], "-filter") == 0) {
         CalOpt opt;
         if (argv[2][0] == 't') {
@@ -53,43 +75,74 @@ int main(int argc, char *argv[]) {
         } else if (argv[2][0] == 'e') {
             opt = 0;
         } else {
-            // error
+            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
+                            "-filter content [from date] [to date]\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
         }
 
-        if (argc <= 4) {
+        if (argc == 3) {
             calFilter(comp1, opt, 0, 0, stdout);
-        } else if (argc > 4 && argc <= 6) {
+        } else if (argc == 5) {
             time_t oneDate_t = convertToTime_t(argv[4]);
-
+            if (oneDate_t == -404) {
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
+            }
             if (strcmp(argv[3], "from") == 0) {
                 calFilter(comp1, opt, oneDate_t, 0, stdout);
             } else if (strcmp(argv[3], "to") == 0) {
                 calFilter(comp1, opt, 0, oneDate_t, stdout);
             } else {
-                // error
+                fprintf(stderr, "Invalid command line arguments. Syntax: "
+                                "caltool -filter content [from date] [to "
+                                "date]\n");
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
             }
-
-        } else if (argc > 6) {
+        } else if (argc == 7) {
             time_t fromDate_t = convertToTime_t(argv[4]);
+            if (fromDate_t == -404) {
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
+            }
             time_t toDate_t = convertToTime_t(argv[6]);
+            if (toDate_t == -404) {
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
+            }
+            if (strcmp(argv[3], "from") != 0 || strcmp(argv[5], "to") != 0) {
+                fprintf(stderr, "Invalid command line arguments. Syntax: "
+                                "caltool -filter content [from date] [to "
+                                "date]\n");
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
+            }
             calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
+        } else {
+            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
+                            "-filter content [from date] [to date]\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
         }
     } else if (strcmp(argv[1], "-combine") == 0) {
-        printf("%s\n", argv[2]);
         FILE *ics = fopen(argv[2], "r");
         if (ics == NULL) {
-            // error stuff
+            fprintf(stderr, "Problem opening file %s\n", argv[2]);
             return EXIT_FAILURE;
         }
         readStatus = readCalFile(ics, &comp2);
 
         fclose(ics);
-        // if readstatus error handle it
+        if (readStatus.code != 0) {
+	        printf("%d\n",readStatus.code); 
+            return EXIT_FAILURE;
+        }
 
         calCombine(comp1, comp2, stdout);
         freeCalComp(comp2);
     } else {
-        writeCalComp(stdout, comp1);
+        // Error
     }
 
     freeCalComp(comp1);
@@ -112,8 +165,9 @@ time_t convertToTime_t(char arg[]) {
     }
     int ret = getdate_r(arg, lc);
     if (ret != 0) {
-        puts("ERRORC2T");
-        // error
+        fprintf(stderr,
+                "Problem with DATEMSK environment variable or template file");
+        return -404;
     }
     lc->tm_sec = 0;
     lc->tm_min = 0;
@@ -146,11 +200,12 @@ int findOrganizers(char **organizers, const CalComp *comp) {
         // Traverse properties
         while (traverseProps) {
             if (strcmp(traverseProps->name, "ORGANIZER") == 0) {
-                CalParam* traverseParams = traverseProps->param;
+                CalParam *traverseParams = traverseProps->param;
                 while (traverseParams) {
-                    if (strcmp(traverseParams->name,"CN") == 0) {
+                    if (strcmp(traverseParams->name, "CN") == 0) {
                         for (int i = 0; i < traverseParams->nvalues; i++) {
-                            organizers[numOrganizers] = traverseParams->value[i];
+                            organizers[numOrganizers] =
+                                traverseParams->value[i];
                             numOrganizers++;
                         }
                     }
@@ -170,7 +225,7 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
     static time_t lowestTime = INT_MAX;
     static time_t highestTime = INT_MIN;
     char ret[100];
-    struct tm propDate;
+    struct tm propDate = {0};
     if (comp->nprops > 0) {
 
         CalProp *traverseProps = comp->prop;
@@ -265,9 +320,11 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     if (numSubcom != 1) {
         fprintf(txtfile, "s");
     }
-    fprintf(txtfile, "\n%d propertie", numProps);
+    fprintf(txtfile, "\n%d propert", numProps);
     if (numProps != 1) {
-        fprintf(txtfile, "s");
+        fprintf(txtfile, "ies");
+    } else {
+        fprintf(txtfile, "y");
     }
     fprintf(txtfile, "\n");
     char *dateRange = malloc(100);
@@ -275,7 +332,7 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
 
     time_t lowDate = atoi(strtok(dateRange, ":"));
     time_t highDate = atoi(strtok(NULL, "\0"));
-
+    free(dateRange);
     // strptime(propTime, "%Y%m%d%H%M%S", &propDate);
     if (lowDate == INT_MAX || highDate == INT_MIN) {
         fprintf(txtfile, "No dates\n");
@@ -294,14 +351,17 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     if (numOrganizers == 0) {
         fprintf(txtfile, "No organizers");
     } else {
+
         fprintf(txtfile, "Organizers:\n");
-        organizers[numOrganizers] = NULL;
+
         qsort(organizers, numOrganizers, sizeof(char *), compareOrganizers);
         for (int i = 0; i < numOrganizers; i++) {
-            if (i == 0 || (i > 0 && strcmp(organizers[i],organizers[i-1]) != 0)) {
+            if (i == 0 ||
+                (i > 0 && strcmp(organizers[i], organizers[i - 1]) != 0)) {
                 fprintf(txtfile, "%s\n", organizers[i]);
             }
         }
+        free(organizers);
     }
 
     CalStatus ret;
@@ -324,6 +384,8 @@ int compareOrganizers(const void *org1, const void *org2) {
 }
 
 CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
+    // return strcmp(*(char* const*) p1, *(char* const*) p2);
+    // Use the above for qsort compare for x-props
     CalStatus ret;
     ret.linefrom = 0;
     ret.lineto = 0;
@@ -333,7 +395,7 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
 
 CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                     time_t dateto, FILE *const icsfile) {
-    struct tm propDate;
+    struct tm propDate = {0};
     char filterType[7];
     if (content == OEVENT) {
         strcpy(filterType, "VEVENT");
@@ -425,6 +487,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
 
 CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
                      FILE *const icsfile) {
+
     CalComp *temp = malloc(sizeof(CalComp) +
                            sizeof(CalComp *) * (comp1->ncomps + comp2->ncomps));
 
@@ -454,17 +517,23 @@ CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
     temp->ncomps = (temp->ncomps) + (comp2->ncomps);
 
     writeCalComp(icsfile, temp);
-
+	   
     traverseProps->next = NULL;
     traverseProps = comp2->prop;
-    while (traverseProps->next != NULL) {
+    if (traverseProps == NULL) {
+        traverseProps = unlinkedProdID;
+    } else {
+        while (traverseProps->next != NULL) {
         traverseProps = traverseProps->next;
     }
 
     traverseProps->next = unlinkedProdID;
+    }
+    
     unlinkedProdID->next = unlinkedVersion;
     unlinkedVersion->next = NULL;
     free(temp);
+    
     CalStatus ret;
     ret.linefrom = 0;
     ret.lineto = 0;

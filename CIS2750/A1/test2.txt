@@ -6,9 +6,9 @@ TRIGGER:4:20AM
 BEGIN:VEVENT
 EAT:DATKFC
 DTSTAMP:20160106T145812Z
-END:TYRONE
-ORGANIZER;CN=Jihad John;SENT-BY="mailto:tyrone@weed.com":mailto:tyrone@weed.com
 END:VEVENT
+ORGANIZER;CN=Jihad John;SENT-BY="mailto:tyrone@weed.com":mailto:tyrone@weed.com
+END:VIVE
 RRURR:IMACUTDISBICH
 TITLE:KFC
 BEGIN:VTODO
