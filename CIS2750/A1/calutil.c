@@ -291,10 +291,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 free(pbuff);
                 pbuff = NULL;
             }
-            if (callDepth == 0) {
-        callDepth = 1;
-    }
-            return returnStatus;
+        return returnStatus;
         } else {
             // Add to property list
             if (returnStatus.code != OK) {
@@ -313,17 +310,16 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 temp->next = prop;
             }
         }
-        /*if (feof(ics) && callDepth > 0) {
-            returnStatus.code = BEGEND;
-            free(pbuff);
-            pbuff = NULL;
-            return returnStatus;
-        }*/
+        
 
         free(pbuff);
         pbuff = NULL;
     }
-    
+    if (feof(ics) && callDepth > 0) {
+            returnStatus.code = BEGEND;
+            free(pbuff);
+            pbuff = NULL;
+    }
     return returnStatus;
 }
 

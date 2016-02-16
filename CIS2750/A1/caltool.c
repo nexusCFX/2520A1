@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
     // if readstatus error handle it
     if (readStatus.code != 0) {
         puts("IMA CUT DIS BICH");
+        exit(0);
     }
 
     if (strcmp(argv[1], "-info") == 0) {
