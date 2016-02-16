@@ -310,15 +310,18 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             }
         }
         
-
+        if (feof(ics) && callDepth > 0 && pbuff == NULL) {
+            returnStatus.code = BEGEND;
+            
+    }
         free(pbuff);
         pbuff = NULL;
     } while (!feof(ics));
-    if (feof(ics) && callDepth > 0) {
+    /*if (feof(ics) && callDepth > 0 && (pbuff == NULL || (strcmp(pbuff,"BEGIN:VEVENT") != 0))) {
             returnStatus.code = BEGEND;
             free(pbuff);
             pbuff = NULL;
-    }
+    }*/
     return returnStatus;
 }
 
