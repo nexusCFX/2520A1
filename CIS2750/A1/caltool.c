@@ -24,7 +24,6 @@ void countElements(char *temp, const CalComp *comp);
 void findTimeRange(char *timeRange, const CalComp *comp);
 time_t convertToTime_t(char arg[]);
 
-
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         return EXIT_FAILURE;
@@ -58,33 +57,8 @@ int main(int argc, char *argv[]) {
         if (argc <= 4) {
             calFilter(comp1, opt, 0, 0, stdout);
         } else if (argc > 4 && argc <= 6) {
-            time_t oneDate_t;
-            if (strcmp(argv[4], "today") == 0) {
+            time_t oneDate_t = convertToTime_t(argv[4]);
 
-                oneDate_t = time(NULL);
-
-                struct tm *lc = localtime(&oneDate_t);
-
-                lc->tm_hour = 0;
-                lc->tm_min = 0;
-                lc->tm_sec = 0;
-                oneDate_t = mktime(lc);
-            } else {
-                struct tm oneDate;
-                char oneDateArg[strlen(argv[4]) + 7];
-                strcpy(oneDateArg, argv[4]);
-                strcat(oneDateArg, " 00:00");
-
-                int ret = getdate_r(oneDateArg, &oneDate);
-                if (ret != 0) {
-                    puts("ERROR 66");
-                }
-                oneDate_t = mktime(&oneDate);
-            }
-            char buff[100];
-            struct tm *lc = localtime(&oneDate_t);
-            strftime(buff, 99, "%Y-%b-%d %l:%M %p", lc);
-            printf("%s\n\n", buff);
             if (strcmp(argv[3], "from") == 0) {
                 calFilter(comp1, opt, oneDate_t, 0, stdout);
             } else if (strcmp(argv[3], "to") == 0) {
@@ -98,7 +72,6 @@ int main(int argc, char *argv[]) {
             time_t toDate_t = convertToTime_t(argv[6]);
             calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
         }
-
     } else if (strcmp(argv[1], "-combine") == 0) {
         printf("%s\n", argv[2]);
         FILE *ics = fopen(argv[2], "r");
@@ -123,27 +96,28 @@ int main(int argc, char *argv[]) {
 
 time_t convertToTime_t(char arg[]) {
     time_t argDate_t;
+    struct tm *lc = malloc(sizeof(*lc));
     if (strcmp(arg, "today") == 0) {
+        free(lc);
+
         argDate_t = time(NULL);
-
-        struct tm *lc = localtime(&argDate_t);
-
-        lc->tm_hour = 0;
-        lc->tm_min = 0;
-        lc->tm_sec = 0;
+        lc = localtime(&argDate_t);
         argDate_t = mktime(lc);
-    } else {
-        struct tm date;
-        char dateArg[strlen(arg) + 7];
-        strcpy(dateArg, arg);
-        strcat(dateArg, " 00:00");
-        int ret = getdate_r(dateArg, &date);
-        if (ret != 0) {
-            puts("ERROR");
-            // error
-        }
-        argDate_t = mktime(&date);
+        lc->tm_sec = 0;
+        lc->tm_min = 0;
+        lc->tm_hour = 0;
+        return argDate_t;
     }
+    int ret = getdate_r(arg, lc);
+    if (ret != 0) {
+        puts("ERRORC2T");
+        // error
+    }
+    lc->tm_sec = 0;
+    lc->tm_min = 0;
+    lc->tm_hour = 0;
+    argDate_t = mktime(lc);
+    free(lc);
     return argDate_t;
 }
 
@@ -160,6 +134,26 @@ void countElements(char *temp, const CalComp *comp) {
     }
     sprintf(ret, "%d:%d", subComps, props);
     strcpy(temp, ret);
+}
+
+int findOrganizers(char **organizers, const CalComp *comp) {
+    static int numOrganizers = 0;
+    if (comp->nprops > 0) {
+        CalProp *traverseProps = comp->prop;
+
+        // Traverse properties
+        while (traverseProps) {
+            if (strcmp(traverseProps->name, "ORGANIZER") == 0) {
+                organizers[numOrganizers] = traverseProps->value;
+                numOrganizers++;
+            }
+            traverseProps = traverseProps->next;
+        }
+    }
+    for (int i = 0; i < comp->ncomps; i++) {
+        findOrganizers(organizers, comp->comp[i]);
+    }
+    return numOrganizers;
 }
 
 void findTimeRange(char *timeRange, const CalComp *comp) {
@@ -191,11 +185,12 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
                 for (int i = 8; i < strlen(propTime); i++) {
                     propTime[i] = propTime[i + 1];
                 }
-
+	                
                 // Convert parsed date into struct tm
                 // Should also check for error return
+               
                 strptime(propTime, "%Y%m%d%H%M%S", &propDate);
-
+	            
                 time_t propDate_t = mktime(&propDate);
 
                 if (propDate_t > highestTime) {
@@ -214,10 +209,6 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
     sprintf(ret, "%ld:%ld", lowestTime, highestTime);
     strcpy(timeRange, ret);
 }
-
-/*void findOrganizers () {
-    
-}*/
 
 CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
 
@@ -274,21 +265,25 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
 
     time_t lowDate = atoi(strtok(dateRange, ":"));
     time_t highDate = atoi(strtok(NULL, "\0"));
-    
-    //strptime(propTime, "%Y%m%d%H%M%S", &propDate);
+
+    // strptime(propTime, "%Y%m%d%H%M%S", &propDate);
     if (lowDate == INT_MAX || highDate == INT_MIN) {
         fprintf(txtfile, "No dates\n");
     } else {
         struct tm *lc = localtime(&lowDate);
         char str[100];
         strftime(str, 99, "%Y-%b-%d", lc);
-        fprintf(txtfile, "From %s ",str);
+        fprintf(txtfile, "From %s ", str);
         lc = localtime(&highDate);
         strftime(str, 99, "%Y-%b-%d", lc);
-        fprintf(txtfile, "to %s\n",str);
+        fprintf(txtfile, "to %s\n", str);
     }
-    //organizers
-    //fprintf();
+    // organizers
+    char **organizers = malloc(numProps * sizeof(char *));
+    findOrganizers(organizers, comp);
+    //  qsort();
+    // sortItems();
+    // fprintf();
 
     CalStatus ret;
     ret.linefrom = 0;
@@ -364,11 +359,13 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                             }
                         } else if (datefrom != 0 && dateto == 0) {
                             if (propDate_t >= datefrom) {
+                                
                                 temp->comp[temp->ncomps] = comp->comp[i];
                                 temp->ncomps++;
                                 break;
                             }
                         } else if (datefrom != 0 && dateto != 0) {
+                            
                             if (propDate_t <= dateto &&
                                 propDate_t >= datefrom) {
                                 temp->comp[temp->ncomps] = comp->comp[i];

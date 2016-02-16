@@ -140,7 +140,7 @@ CalStatus readCalFile(FILE *const ics, CalComp **const pcomp) {
         }
         traverseProps = traverseProps->next;
     }
-    
+
     if (hasVersion == false) {
         readStatus.code = BADVER;
     } else if (hasProdID == false) {
@@ -192,7 +192,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-   while (!feof(ics)) {
+    while (!feof(ics)) {
 
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
@@ -281,7 +281,6 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 returnStatus.code = BEGEND;
             }
             callDepth--;
-            printf("Calldepth %d\n",callDepth);
             free(prop->name);
             free(prop->value);
             free(prop);
@@ -290,7 +289,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 free(pbuff);
                 pbuff = NULL;
             }
-        return returnStatus;
+            return returnStatus;
         } else {
             // Add to property list
             if (returnStatus.code != OK) {
@@ -309,16 +308,16 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 temp->next = prop;
             }
         }
-        
-
-        free(pbuff);
-        pbuff = NULL;
-    }
-    if (feof(ics) && callDepth > 0 && (pbuff == NULL || (strcmp(pbuff,"BEGIN:VEVENT") != 0))) {
+        if (feof(ics) && callDepth > 0 &&
+            (pbuff == NULL || (strcmp(pbuff, "BEGIN:VEVENT") != 0))) {
             returnStatus.code = BEGEND;
             free(pbuff);
             pbuff = NULL;
+        }
+        free(pbuff);
+        pbuff = NULL;
     }
+
     return returnStatus;
 }
 
@@ -827,22 +826,22 @@ void freeCalParam(CalParam *const param) {
 }
 
 CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
-    
+
     // Print component name
 
     fprintf(ics, "BEGIN:%s\r\n", comp->name);
 
     // If a component has properties print them
     if (comp->nprops > 0) {
-        
+
         CalProp *traverseProps = comp->prop;
 
         // Traverse properties
         while (traverseProps) {
             char *output = calloc(1, BUF_LEN);
-           // printf("Name %s\n",traverseProps->name);
+            // printf("Name %s\n",traverseProps->name);
             strcat(output, traverseProps->name);
-	          
+
             // If the property has parameters
             if (traverseProps->param) {
                 CalParam *traverseParams = traverseProps->param;
@@ -874,15 +873,12 @@ CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
                     fprintf(ics, "\r\n ");
                 }
                 fprintf(ics, "%c", output[i]);
-                
-                
             }
             fprintf(ics, "\r\n");
-	        free(output); 
+            free(output);
             traverseProps = traverseProps->next;
         }
     }
-    
 
     for (int i = 0; i < comp->ncomps; i++) {
         writeCalComp(ics, comp->comp[i]);
