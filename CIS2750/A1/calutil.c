@@ -192,9 +192,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     char *pbuff = NULL;
     static CalStatus returnStatus;
 
-    while ((!feof(ics)) &&
-           ((pbuff == NULL) ||
-            (strcmp("END:VCALENDAR", pbuff) != 0 && returnStatus.code == OK))) {
+    do {
 
         if (callDepth > 3) {
             returnStatus.code = SUBCOM;
@@ -283,6 +281,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
                 returnStatus.code = BEGEND;
             }
             callDepth--;
+            printf("Calldepth %d\n",callDepth);
             free(prop->name);
             free(prop->value);
             free(prop);
@@ -314,7 +313,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
         free(pbuff);
         pbuff = NULL;
-    }
+    } while (!feof(ics));
     if (feof(ics) && callDepth > 0) {
             returnStatus.code = BEGEND;
             free(pbuff);
