@@ -68,7 +68,7 @@ DTSTAMP:20160106T145812Z
 UID:cb65c27f-681b-4ac8-a873-2603e706a027
 SUMMARY:Padawan breakfast
 STATUS:CONFIRMED
-ORGANIZER;CN=Obi-Wan Kenobi;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
+ORGANIZER;CN=Tyrone;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
  ion@padawan.com
 CATEGORIES:An Outing
 DTSTART;TZID=America/Toronto:20151030T063000
@@ -1876,4 +1876,3 @@ X-LIC-ERROR;X-LIC-ERRORTYPE=VALUE-PARSE-ERROR:No value for DESCRIPTION pro
 END:VALARM
 END:VEVENT
 END:VCALENDAR
-tyrone

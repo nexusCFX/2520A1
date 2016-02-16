@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <time.h>
 #include <stdbool.h>
+#include <ctype.h>
 /************************
 caltool.c
 Implementation of FILL THIS BLANK
@@ -22,6 +23,7 @@ int getdate_r(const char *string, struct tm *tp);
 CalProp *unlinkProp(CalComp *comp2, char *type);
 void countElements(char *temp, const CalComp *comp);
 void findTimeRange(char *timeRange, const CalComp *comp);
+int compareOrganizers(const void *org1, const void *org2);
 time_t convertToTime_t(char arg[]);
 
 int main(int argc, char *argv[]) {
@@ -144,8 +146,16 @@ int findOrganizers(char **organizers, const CalComp *comp) {
         // Traverse properties
         while (traverseProps) {
             if (strcmp(traverseProps->name, "ORGANIZER") == 0) {
-                organizers[numOrganizers] = traverseProps->value;
-                numOrganizers++;
+                CalParam* traverseParams = traverseProps->param;
+                while (traverseParams) {
+                    if (strcmp(traverseParams->name,"CN") == 0) {
+                        for (int i = 0; i < traverseParams->nvalues; i++) {
+                            organizers[numOrganizers] = traverseParams->value[i];
+                            numOrganizers++;
+                        }
+                    }
+                    break;
+                }
             }
             traverseProps = traverseProps->next;
         }
@@ -185,12 +195,12 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
                 for (int i = 8; i < strlen(propTime); i++) {
                     propTime[i] = propTime[i + 1];
                 }
-	                
+
                 // Convert parsed date into struct tm
                 // Should also check for error return
-               
+
                 strptime(propTime, "%Y%m%d%H%M%S", &propDate);
-	            
+
                 time_t propDate_t = mktime(&propDate);
 
                 if (propDate_t > highestTime) {
@@ -278,18 +288,39 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
         strftime(str, 99, "%Y-%b-%d", lc);
         fprintf(txtfile, "to %s\n", str);
     }
-    // organizers
+
     char **organizers = malloc(numProps * sizeof(char *));
-    findOrganizers(organizers, comp);
-    //  qsort();
-    // sortItems();
-    // fprintf();
+    int numOrganizers = findOrganizers(organizers, comp);
+    if (numOrganizers == 0) {
+        fprintf(txtfile, "No organizers");
+    } else {
+        fprintf(txtfile, "Organizers:\n");
+        organizers[numOrganizers] = NULL;
+        qsort(organizers, numOrganizers, sizeof(char *), compareOrganizers);
+        for (int i = 0; i < numOrganizers; i++) {
+            if (i == 0 || (i > 0 && strcmp(organizers[i],organizers[i-1]) != 0)) {
+                fprintf(txtfile, "%s\n", organizers[i]);
+            }
+        }
+    }
 
     CalStatus ret;
     ret.linefrom = 0;
     ret.lineto = 0;
     ret.code = OK;
     return ret;
+}
+
+int compareOrganizers(const void *org1, const void *org2) {
+    char **a = (char **)org1;
+    char **b = (char **)org2;
+    if (toupper(**a) <= toupper(**b)) {
+        return -1;
+    } else if (toupper(**a) > toupper(**b)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
@@ -359,13 +390,12 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                             }
                         } else if (datefrom != 0 && dateto == 0) {
                             if (propDate_t >= datefrom) {
-                                
+
                                 temp->comp[temp->ncomps] = comp->comp[i];
                                 temp->ncomps++;
                                 break;
                             }
                         } else if (datefrom != 0 && dateto != 0) {
-                            
                             if (propDate_t <= dateto &&
                                 propDate_t >= datefrom) {
                                 temp->comp[temp->ncomps] = comp->comp[i];
