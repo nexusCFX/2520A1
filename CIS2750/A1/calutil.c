@@ -200,6 +200,12 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             pbuff = NULL;
             return returnStatus;
         }
+        
+        if (returnStatus.code != OK) {
+            free(pbuff);
+            pbuff = NULL;
+            return returnStatus;
+        }
 
         returnStatus = readCalLine(ics, &pbuff);
 

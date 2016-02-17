@@ -229,7 +229,7 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     char **organizers = malloc(numProps * sizeof(char *));
     int numOrganizers = findOrganizers(organizers, comp);
     if (numOrganizers == 0) {
-        fprintf(txtfile, "No organizers");
+        fprintf(txtfile, "No organizers\n");
     } else {
 
         fprintf(txtfile, "Organizers:\n");
