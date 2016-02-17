@@ -443,6 +443,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
 bool checkEmptyString(const char *line) {
     int length = strlen(line);
+    if (line[length-2] == '\r' && line[length-1] == '\n') {
+        return false;
+    }
     if (length == 0) {
         return true;
     }
