@@ -200,7 +200,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             pbuff = NULL;
             return returnStatus;
         }
-        
+
         if (returnStatus.code != OK) {
             free(pbuff);
             pbuff = NULL;
@@ -216,7 +216,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
         }
 
         // Check to make sure start is BEGIN:VCALENDAR
-        if ((*pcomp)->name == NULL && callDepth <=1) {
+        if ((*pcomp)->name == NULL && callDepth <= 1) {
             callDepth = 1;
             for (int i = 0; i < strlen(pbuff); i++) {
                 pbuff[i] = toupper(pbuff[i]);
@@ -283,6 +283,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             // make sure the END matches the original begin, free memory
             makeUpperCase(prop->value);
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
+                
                 returnStatus.code = NODATA;
             } else if (strcmp(prop->value, (*pcomp)->name) != 0) {
                 returnStatus.code = BEGEND;
@@ -449,7 +450,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
 bool checkEmptyString(const char *line) {
     int length = strlen(line);
-    if (line[length-2] == '\r' && line[length-1] == '\n') {
+    if (line[length - 2] == '\r' && line[length - 1] == '\n') {
         return false;
     }
     if (length == 0) {
@@ -836,10 +837,13 @@ void freeCalParam(CalParam *const param) {
 }
 
 CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
-
+    static int linesPrinted = 0;
     // Print component name
 
-    fprintf(ics, "BEGIN:%s\r\n", comp->name);
+    if (fprintf(ics, "BEGIN:%s\r\n", comp->name) < 0) {
+        return makeCalStatus(IOERR, 0, 0);
+    }
+    linesPrinted++;
 
     // If a component has properties print them
     if (comp->nprops > 0) {
@@ -880,11 +884,20 @@ CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
                 // To handle how the folded lines have a space taking up 1 of
                 // the 75 char limit
                 if ((i == 75) || (i > 75 && ((i + 1) % 74) == 0)) {
-                    fprintf(ics, "\r\n ");
+
+                    if (fprintf(ics, "\r\n ") < 0) {
+                        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+                    }
+                    linesPrinted++;
                 }
-                fprintf(ics, "%c", output[i]);
+                if (fprintf(ics, "%c", output[i]) < 0) {
+                    return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+                }
             }
-            fprintf(ics, "\r\n");
+            if (fprintf(ics, "\r\n") < 0) {
+                return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+            }
+            linesPrinted++;
             free(output);
             traverseProps = traverseProps->next;
         }
@@ -893,10 +906,9 @@ CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
     for (int i = 0; i < comp->ncomps; i++) {
         writeCalComp(ics, comp->comp[i]);
     }
-    fprintf(ics, "END:%s\r\n", comp->name);
-    CalStatus ret;
-    ret.linefrom = 0;
-    ret.lineto = 0;
-    ret.code = OK;
-    return ret;
+    if (fprintf(ics, "END:%s\r\n", comp->name) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    linesPrinted++;
+    return makeCalStatus(OK, linesPrinted, linesPrinted);
 }

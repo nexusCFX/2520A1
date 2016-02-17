@@ -95,7 +95,7 @@ DTSTAMP:20160106T145812Z
 UID:2f4e9642-efd0-42de-b495-d7b15d63eb41
 SUMMARY:pr
 STATUS:CONFIRMED
-ORGANIZER;CN=Obi-Wan Kenobi;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
+ORGANIZER;CN=Adam SMith;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
  ion@padawan.com
 CATEGORIES:An Outing
 X-MOZ-LASTACK:20151002T023017Z
@@ -125,7 +125,7 @@ DTSTAMP:20160106T145812Z
 UID:884afd36-6851-11e5-b909-c735453100c1
 SUMMARY:PL lunch
 STATUS:CONFIRMED
-ORGANIZER;CN=Obi-Wan Kenobi;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
+ORGANIZER;CN=Raylan;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
  ion@padawan.com
 X-MOZ-LASTACK:20151002T150003Z
 DTSTART;TZID=America/New_York:20151002T113000
@@ -180,7 +180,7 @@ DTSTAMP:20160106T145812Z
 UID:8ac18176-6954-11e5-9312-2d7c5ab5202d
 SUMMARY:Jedi rally
 STATUS:CONFIRMED
-ORGANIZER;CN=Obi-Wan Kenobi;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
+ORGANIZER;CN=Brigham Yung;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
  ion@padawan.com
 DTSTART;TZID=America/New_York:20151002T190000
 DTEND;TZID=America/New_York:20151002T210000
@@ -206,7 +206,7 @@ DTSTAMP:20160106T145812Z
 UID:edc88a22-6aa0-11e5-988d-091dffc61459
 SUMMARY:Rebel Council
 STATUS:CONFIRMED
-ORGANIZER;CN=Obi-Wan Kenobi;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
+ORGANIZER;CN=Tyrone;SENT-BY="mailto:obiwan@padawan.com":mailto:laowa
  ion@padawan.com
 DTSTART;TZID=America/New_York:20160507T193000
 DTEND;TZID=America/New_York:20160507T230000

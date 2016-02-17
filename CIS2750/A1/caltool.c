@@ -6,6 +6,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <assert.h>
 /************************
 caltool.c
 Implementation of FILL THIS BLANK
@@ -26,69 +27,76 @@ void findTimeRange(char *timeRange, const CalComp *comp);
 int compareOrganizers(const void *org1, const void *org2);
 int findOrganizers(char **organizers, const CalComp *comp);
 int compareEvents(const void *org1, const void *org2);
-int compareXProps (const void *prop1, const void *prop2);
-CalError extractXProps (char** xProps, const CalComp* comp);
+int compareXProps(const void *prop1, const void *prop2);
+CalError extractXProps(char **xProps, const CalComp *comp);
+CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
 time_t convertToTime_t(char arg[]);
 
 int main(int argc, char *argv[]) {
+    const char *calErrors[] = {"OK", "AFTEND", "BADVER", "BEGEND", "IOERR",
+                               "NOCAL",  "NOCRNL", "NODATA", "NOPROD",
+                               "SUBCOM", "SYNTAX"};
     if (argc < 2) {
         return EXIT_FAILURE;
     }
+
     setenv("DATEMSK", "datemsk.txt", 1);
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
 
     readStatus = readCalFile(stdin, &comp1);
-    // if readstatus error handle it
+
     if (readStatus.code != 0) {
-        // print error code message
+        fprintf(stderr, "Calendar error: %s\n", calErrors[readStatus.code]);
         return EXIT_FAILURE;
     }
 
     if (strcmp(argv[1], "-info") == 0) {
         if (argc != 2) {
-            fprintf(stderr,
-                    "Invalid command line arguments. Syntax: caltool -info\n");
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool -info\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
-        calInfo(comp1, readStatus.lineto, stdout);
+        readStatus = calInfo(comp1, readStatus.lineto, stdout);
     } else if (strcmp(argv[1], "-extract") == 0) {
         CalOpt opt;
         if (argc != 3) {
-            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
-                            "-extract kind\n");
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-extract [ex]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
 
+        // Set correct CalOpt type
         if (argv[2][0] == 'x') {
             opt = 1;
         } else if (argv[2][0] == 'e') {
             opt = 0;
         } else {
-            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
-                            "-extract kind\n");
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-extract [ex]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
-        calExtract(comp1, opt, stdout);
+        readStatus = calExtract(comp1, opt, stdout);
     } else if (strcmp(argv[1], "-filter") == 0) {
         CalOpt opt;
+
+        // Set correct CalOpt type
         if (argv[2][0] == 't') {
             opt = 2;
         } else if (argv[2][0] == 'e') {
             opt = 0;
         } else {
-            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
-                            "-filter content [from date] [to date]\n");
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-filter [et] [from date] [to date]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
 
         if (argc == 3) {
-            calFilter(comp1, opt, 0, 0, stdout);
+            readStatus = calFilter(comp1, opt, 0, 0, stdout);
         } else if (argc == 5) {
             time_t oneDate_t = convertToTime_t(argv[4]);
             if (oneDate_t == -404) {
@@ -96,12 +104,12 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
             }
             if (strcmp(argv[3], "from") == 0) {
-                calFilter(comp1, opt, oneDate_t, 0, stdout);
+                readStatus = calFilter(comp1, opt, oneDate_t, 0, stdout);
             } else if (strcmp(argv[3], "to") == 0) {
-                calFilter(comp1, opt, 0, oneDate_t, stdout);
+                readStatus = calFilter(comp1, opt, 0, oneDate_t, stdout);
             } else {
-                fprintf(stderr, "Invalid command line arguments. Syntax: "
-                                "caltool -filter content [from date] [to "
+                fprintf(stderr, "Invalid arguments:\nUsage: "
+                                "caltool -filter [et] [from date] [to "
                                 "date]\n");
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
@@ -118,16 +126,21 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
             }
             if (strcmp(argv[3], "from") != 0 || strcmp(argv[5], "to") != 0) {
-                fprintf(stderr, "Invalid command line arguments. Syntax: "
-                                "caltool -filter content [from date] [to "
+                fprintf(stderr, "Invalid arguments:\nUsage: "
+                                "caltool -filter [et] [from date] [to "
                                 "date]\n");
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
-            calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
+            if (fromDate_t > toDate_t) {
+                fprintf(stderr, "From date must occur earlier than to date\n");
+                freeCalComp(comp1);
+                return EXIT_FAILURE;
+            }
+            readStatus = calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
         } else {
-            fprintf(stderr, "Invalid command line arguments. Syntax: caltool "
-                            "-filter content [from date] [to date]\n");
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-filter [et] [from date] [to date]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
@@ -135,28 +148,34 @@ int main(int argc, char *argv[]) {
         FILE *ics = fopen(argv[2], "r");
         if (ics == NULL) {
             fprintf(stderr, "Problem opening file %s\n", argv[2]);
+            freeCalComp(comp1);
             return EXIT_FAILURE;
         }
         readStatus = readCalFile(ics, &comp2);
 
         fclose(ics);
         if (readStatus.code != 0) {
-            printf("%d\n", readStatus.code);
+            fprintf(stderr, "Calendar error: %s with file %s\n",
+                    calErrors[readStatus.code], argv[2]);
+            freeCalComp(comp1);
             return EXIT_FAILURE;
         }
 
         calCombine(comp1, comp2, stdout);
         freeCalComp(comp2);
     } else {
-        // Error
+        fprintf(stderr, "Command not found\n");
+        freeCalComp(comp1);
+        return EXIT_FAILURE;
     }
-
+    printf("Status %s printed %d\n", calErrors[readStatus.code],
+           readStatus.lineto);
     freeCalComp(comp1);
     return EXIT_SUCCESS;
 }
 
 CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
-
+    int linesPrinted = 0;
     int numEvents = 0;
     int numTodo = 0;
     int numSubcom;
@@ -170,44 +189,85 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
         }
     }
     char *temp = malloc(100);
+    assert(temp != NULL);
     countElements(temp, comp);
     numSubcom = atoi(strtok(temp, ":")) - comp->ncomps;
     numProps = atoi(strtok(NULL, "\0"));
     free(temp);
 
     fprintf(txtfile, "%d line", lines);
+    if (fprintf(txtfile, "%d line", lines) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
     if (lines != 1) {
-        fprintf(txtfile, "s");
-    }
-    fprintf(txtfile, "\n%d component", comp->ncomps);
-    if (comp->ncomps != 1) {
-        fprintf(txtfile, "s");
-    }
-    fprintf(txtfile, ": %d event", numEvents);
-    if (numEvents != 1) {
-        fprintf(txtfile, "s");
-    }
-    fprintf(txtfile, ", %d todo", numTodo);
-    if (numTodo != 1) {
-        fprintf(txtfile, "s");
-    }
-    fprintf(txtfile, ", %d other", (comp->ncomps - numEvents - numTodo));
-    if ((comp->ncomps - numEvents - numTodo) != 1) {
-        fprintf(txtfile, "s");
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     }
 
-    fprintf(txtfile, "\n%d subcomponent", numSubcom);
+    if (fprintf(txtfile, "\n%d component", comp->ncomps) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    linesPrinted++;
+    if (comp->ncomps != 1) {
+
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+    }
+    if (fprintf(txtfile, ": %d event", numEvents) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    if (numEvents != 1) {
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+    }
+    if (fprintf(txtfile, ", %d todo", numTodo) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    if (numTodo != 1) {
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+    }
+    if (fprintf(txtfile, ", %d other", (comp->ncomps - numEvents - numTodo)) <
+        0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    if ((comp->ncomps - numEvents - numTodo) != 1) {
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+    }
+
+    if (fprintf(txtfile, "\n%d subcomponent", numSubcom) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
     if (numSubcom != 1) {
-        fprintf(txtfile, "s");
+        if (fprintf(txtfile, "s") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     }
-    fprintf(txtfile, "\n%d propert", numProps);
+    if (fprintf(txtfile, "\n%d propert", numProps) < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    linesPrinted++;
     if (numProps != 1) {
-        fprintf(txtfile, "ies");
+        if (fprintf(txtfile, "ies") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     } else {
-        fprintf(txtfile, "y");
+        if (fprintf(txtfile, "y") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     }
-    fprintf(txtfile, "\n");
+    if (fprintf(txtfile, "\n") < 0) {
+        return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+    }
+    linesPrinted++;
     char *dateRange = malloc(100);
+    assert(dateRange != NULL);
     findTimeRange(dateRange, comp);
 
     time_t lowDate = atoi(strtok(dateRange, ":"));
@@ -215,62 +275,72 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     free(dateRange);
     // strptime(propTime, "%Y%m%d%H%M%S", &propDate);
     if (lowDate == INT_MAX || highDate == INT_MIN) {
-        fprintf(txtfile, "No dates\n");
+        if (fprintf(txtfile, "No dates\n") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     } else {
         struct tm *lc = localtime(&lowDate);
         char str[100];
         strftime(str, 99, "%Y-%b-%d", lc);
-        fprintf(txtfile, "From %s ", str);
+        if (fprintf(txtfile, "From %s ", str) < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
         lc = localtime(&highDate);
         strftime(str, 99, "%Y-%b-%d", lc);
-        fprintf(txtfile, "to %s\n", str);
+        if (fprintf(txtfile, "to %s\n", str) < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
     }
+    linesPrinted++;
 
     char **organizers = malloc(numProps * sizeof(char *));
+    assert(organizers != NULL);
     int numOrganizers = findOrganizers(organizers, comp);
     if (numOrganizers == 0) {
-        fprintf(txtfile, "No organizers\n");
+        if (fprintf(txtfile, "No organizers\n") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+        linesPrinted++;
     } else {
 
-        fprintf(txtfile, "Organizers:\n");
-
+        if (fprintf(txtfile, "Organizers:\n") < 0) {
+            return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+        }
+        linesPrinted++;
         qsort(organizers, numOrganizers, sizeof(char *), compareOrganizers);
         for (int i = 0; i < numOrganizers; i++) {
             if (i == 0 ||
                 (i > 0 && strcmp(organizers[i], organizers[i - 1]) != 0)) {
-                fprintf(txtfile, "%s\n", organizers[i]);
+                if (fprintf(txtfile, "%s\n", organizers[i]) < 0) {
+                    return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+                }
+                linesPrinted++;
             }
         }
         free(organizers);
     }
-
-    CalStatus ret;
-    ret.linefrom = 0;
-    ret.lineto = 0;
-    ret.code = OK;
-    return ret;
+    return makeCalStatus(OK, linesPrinted, linesPrinted);
 }
 
 CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
-    
-    
-    
+    int linesPrinted = 0;
     if (kind == 0) {
         char str[100];
-    char *val;
+        char *val;
         bool foundSummary = false;
-    bool foundTime = false;
+        bool foundTime = false;
         int numEvents = 0;
-        CalComp **events = malloc(sizeof(CalComp*)*comp->ncomps);
+        CalComp **events = malloc(sizeof(CalComp *) * comp->ncomps);
+        assert(events != NULL);
         for (int i = 0; i < comp->ncomps; i++) {
             if (strcmp(comp->comp[i]->name, "VEVENT") == 0) {
                 events[numEvents] = comp->comp[i];
                 numEvents++;
             }
         }
-        
+
         qsort(events, numEvents, sizeof(events), compareEvents);
-        
+
         for (int i = 0; i < numEvents; i++) {
             CalProp *traverseProps = events[i]->prop;
             while (traverseProps && (!foundSummary || !foundTime)) {
@@ -283,46 +353,53 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
                     strftime(str, 99, "%Y-%b-%d", &propDate);
                 } else if (strcmp("SUMMARY", traverseProps->name) == 0) {
                     val = malloc(strlen(traverseProps->value) + 1);
+                    assert(val != NULL);
                     strcpy(val, traverseProps->value);
                     foundSummary = true;
                 }
                 traverseProps = traverseProps->next;
             }
-            fprintf(txtfile, "%s: %s\n", str, val);
+            if (fprintf(txtfile, "%s: %s\n", str, val) < 0) {
+                free(events);
+                return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+            }
+            linesPrinted++;
             free(val);
             foundSummary = false;
             foundTime = false;
         }
         free(events);
     } else {
-        char** xProps = malloc(2000*sizeof(char*));
+        char **xProps = malloc(2000 * sizeof(char *));
+        assert(xProps != NULL);
         int numXProps = extractXProps(xProps, comp);
         qsort(xProps, numXProps, sizeof(char *), compareXProps);
         for (int i = 0; i < numXProps; i++) {
-            if (i == 0 ||
-                (i > 0 && strcmp(xProps[i], xProps[i - 1]) != 0)) {
-                fprintf(txtfile, "%s\n", xProps[i]);
+            if (i == 0 || (i > 0 && strcmp(xProps[i], xProps[i - 1]) != 0)) {
+                if (fprintf(txtfile, "%s\n", xProps[i]) < 0) {
+                    free(xProps);
+                    return makeCalStatus(IOERR, linesPrinted, linesPrinted);
+                }
+                linesPrinted++;
             }
         }
         free(xProps);
     }
-
-    CalStatus ret;
-    ret.linefrom = 0;
-    ret.lineto = 0;
-    ret.code = OK;
-    return ret;
+    return makeCalStatus(OK, linesPrinted, linesPrinted);
+    ;
 }
 
-CalError extractXProps (char** xProps, const CalComp* comp) {
+CalError extractXProps(char **xProps, const CalComp *comp) {
     static int numXProps = 0;
     if (comp->nprops > 0) {
         CalProp *traverseProps = comp->prop;
         // Traverse properties
         while (traverseProps) {
-            if (traverseProps->name[0] == 'X' && traverseProps->name[1] == '-') {
+            if (traverseProps->name[0] == 'X' &&
+                traverseProps->name[1] == '-') {
                 if ((numXProps % 2000) == 0 && numXProps != 0) {
-                    xProps = realloc(xProps, (numXProps*2)*sizeof(char*));
+                    xProps = realloc(xProps, (numXProps * 2) * sizeof(char *));
+                    assert(xProps != NULL);
                 }
                 xProps[numXProps] = traverseProps->name;
                 numXProps++;
@@ -336,13 +413,13 @@ CalError extractXProps (char** xProps, const CalComp* comp) {
     return numXProps;
 }
 
-int compareXProps (const void *prop1, const void *prop2) {
-    return strcmp(*(char* const*) prop1, *(char* const*) prop2);
+int compareXProps(const void *prop1, const void *prop2) {
+    return strcmp(*(char *const *)prop1, *(char *const *)prop2);
 }
 
 int compareEvents(const void *comp1, const void *comp2) {
-    CalComp *a = *(CalComp**)comp1;
-    CalComp *b = *(CalComp**)comp2;
+    CalComp *a = *(CalComp **)comp1;
+    CalComp *b = *(CalComp **)comp2;
     char time[9];
     time_t timeA = 0;
     time_t timeB = 0;
@@ -350,25 +427,25 @@ int compareEvents(const void *comp1, const void *comp2) {
     struct tm propDate = {0};
     while (traverseProps) {
         if (strcmp("DTSTART", traverseProps->name) == 0) {
-            strncpy(time,traverseProps->value, 9);
+            strncpy(time, traverseProps->value, 9);
             strptime(time, "%Y%m%d", &propDate);
             timeA = mktime(&propDate);
             break;
-   	    }
+        }
         traverseProps = traverseProps->next;
     }
-    
+
     traverseProps = b->prop;
     while (traverseProps) {
         if (strcmp("DTSTART", traverseProps->name) == 0) {
-            strncpy(time,traverseProps->value,9);
+            strncpy(time, traverseProps->value, 9);
             strptime(time, "%Y%m%d", &propDate);
             timeB = mktime(&propDate);
             break;
         }
         traverseProps = traverseProps->next;
     }
-    
+
     if (timeA < timeB) {
         return -1;
     } else if (timeA == timeB) {
@@ -377,7 +454,6 @@ int compareEvents(const void *comp1, const void *comp2) {
         return 1;
     }
 }
-
 
 CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                     time_t dateto, FILE *const icsfile) {
@@ -392,6 +468,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
     // Shallow copy
     CalComp *temp =
         malloc(sizeof(CalComp) + sizeof(CalComp *) * (comp->ncomps));
+    assert(temp != NULL);
 
     temp->name = comp->name;
     temp->nprops = comp->nprops;
@@ -449,13 +526,13 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
         }
     }
 
-    writeCalComp(stdout, temp);
+    if (temp->ncomps == 0) {
+        free(temp);
+        return makeCalStatus(NOCAL, 0, 0);
+    }
+    CalStatus ret = writeCalComp(stdout, temp);
 
     free(temp);
-    CalStatus ret;
-    ret.linefrom = 0;
-    ret.lineto = 0;
-    ret.code = OK;
     return ret;
 }
 
@@ -464,6 +541,7 @@ CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
 
     CalComp *temp = malloc(sizeof(CalComp) +
                            sizeof(CalComp *) * (comp1->ncomps + comp2->ncomps));
+    assert(temp != NULL);
 
     temp->name = comp1->name;
     temp->nprops = comp1->nprops;
@@ -517,11 +595,10 @@ CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
 
 /*Helper functions below*/
 
-
-
 time_t convertToTime_t(char arg[]) {
     time_t argDate_t;
     struct tm *lc = malloc(sizeof(*lc));
+    assert(lc != NULL);
     if (strcmp(arg, "today") == 0) {
         free(lc);
 
@@ -534,9 +611,15 @@ time_t convertToTime_t(char arg[]) {
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
+    assert(ret != 6);
     if (ret != 0) {
-        fprintf(stderr,
-                "Problem with DATEMSK environment variable or template file");
+        if (ret < 7) {
+            fprintf(
+                stderr,
+                "Problem with DATEMSK environment variable or template file\n");
+        } else {
+            fprintf(stderr, "Date \" %s \" could not be interpreted\n", arg);
+        }
         return -404;
     }
     lc->tm_sec = 0;
@@ -547,10 +630,8 @@ time_t convertToTime_t(char arg[]) {
     return argDate_t;
 }
 
-
-
 // Countelements and findtimerange require that temp is already allocated!
-// Caller must free temp when done with its value
+// aer must free temp when done with its value
 void countElements(char *temp, const CalComp *comp) {
     static int subComps = 0;
     static int props = 0;
@@ -648,15 +729,16 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
 }
 
 int compareOrganizers(const void *org1, const void *org2) {
-    char **a = *(char ***)org1;
-    char **b = *(char ***)org2;
-    if (toupper(**a) <= toupper(**b)) {
+    char *a = *(char **)org1;
+    char *b = *(char **)org2;
+    if (toupper(a[0]) <= toupper(b[0])) {
         return -1;
-    } else if (toupper(**a) > toupper(**b)) {
+    } else if (toupper(a[0]) > toupper(b[0])) {
         return 1;
     } else {
         return 0;
     }
+    return 0;
 }
 
 CalProp *unlinkProp(CalComp *comp2, char *type) {
