@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g -std=c11 -Wpedantic -Wall
+CFLAGS= -DNDEBUG -std=c11 -Wall
 
 caltool: caltool.o calutil.o
 
