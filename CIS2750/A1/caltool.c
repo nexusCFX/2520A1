@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
     readStatus = readCalFile(stdin, &comp1);
 
     if (readStatus.code != 0) {
-        fprintf(stderr, "Calendar error: %s\n", calErrors[readStatus.code]);
+        fprintf(stderr, "Calendar error: %s\n lines %d to %d\n", calErrors[readStatus.code], readStatus.lineto, readStatus.linefrom);
         return EXIT_FAILURE;
     }
 
@@ -242,7 +242,6 @@ int main(int argc, char *argv[]) {
             }
             
         } else if (argc == 7) {
-            
             time_t fromDate_t = convertToTime_t(argv[4], 'f');
             if (fromDate_t == TIME_ERR) {
                 freeCalComp(comp1);
@@ -767,7 +766,7 @@ time_t convertToTime_t(char arg[], char type) {
         argDate_t = time(NULL);
         lc = localtime(&argDate_t);
         argDate_t = mktime(lc);
-        if (type == 't') {
+         if (type == 't') {
             lc->tm_min = 59;
             lc->tm_hour = 23;
         } else {
@@ -789,9 +788,15 @@ time_t convertToTime_t(char arg[], char type) {
         }
         return TIME_ERR;
     }
+     if (type == 't') {
+            lc->tm_min = 59;
+            lc->tm_hour = 23;
+        } else {
+            lc->tm_min = 0;
+            lc->tm_hour = 0;
+        }
     lc->tm_sec = 0;
-    lc->tm_min = 0;
-    lc->tm_hour = 0;
+    
     argDate_t = mktime(lc);
     free(lc);
     return argDate_t;

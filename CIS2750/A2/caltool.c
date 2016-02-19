@@ -20,7 +20,7 @@ Created: Feb 13, 2016
 Last modified: Feb 14, 2016
 *************************/
 
-//int getdate_r(const char *string, struct tm *tp);
+int getdate_r(const char *string, struct tm *tp);
 
 /*************************
 unlinkProp
@@ -104,15 +104,48 @@ Used for comparing X-props with qsort function
 Arguments:
 org1: A void pointer to a pointer to a character string
 org2: A void pointer to a pointer to a character string
-Return Value: -1 if org1 precedes org2, 0 if they are equal, 1 if org2 precedes
-org1
+Return Value: -1 if prop1 precedes prop2, 0 if they are equal, 1 if prop2
+precedes
+prop1
 *************************/
 int compareXProps(const void *prop1, const void *prop2);
 
-CalError extractXProps(char **xProps, const CalComp *comp);
+/*************************
+extractXProps
+Internal function which extracts X-props from a CalComp
+Arguments:
+xProps: An array of char*
+comp: A pointer to a CalProp structure
+Return Value: The number of X-Props pointed at by xProps
+Note: The calling function must allocate space for at least 2000 char* to xProps
+and free it after
+*************************/
+int extractXProps(char **xProps, const CalComp *comp);
 
+/*************************
+makeCalStatus
+Internal function which returns a CalStatus structure.
+Arguments:
+code: The error code to be included in the struct.
+linefrom: The first line parsed by readCalLine before being unfolded.
+lineto: The last line parsed by readCalLine before the error occurred.
+Return Value: A CalStatus structure populated by the variables passed in.
+Note: This function's implementation is in calutil.c
+*************************/
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
-time_t convertToTime_t(char arg[]);
+
+/*************************
+convertToTime_t
+Internal function which converts a string to a time_t value
+Arguments:
+arg: A string representing some time and date
+type: A char which should be f to represent from, or t to represent to
+affects the hours and minutes appended to the structure
+Return Value: A time_t value reflecting the input arg
+If the function cannot parse the date, return value is -404 which signifies an
+error, and an error is printed to stderr
+*************************/
+time_t convertToTime_t(char arg[], char type);
 
 int main(int argc, char *argv[]) {
     const char *calErrors[] = {"OK",     "AFTEND", "BADVER", "BEGEND",
@@ -122,8 +155,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
-
-   // setenv("DATEMSK", "datemsk.txt", 1);
+	setenv("DATEMSK","datemsk.txt",1); 
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
@@ -131,18 +163,21 @@ int main(int argc, char *argv[]) {
     readStatus = readCalFile(stdin, &comp1);
 
     if (readStatus.code != 0) {
-        fprintf(stderr, "Calendar error: %s\n", calErrors[readStatus.code]);
+        fprintf(stderr, "Calendar error: %s\n lines %d to %d\n", calErrors[readStatus.code], readStatus.lineto, readStatus.linefrom);
         return EXIT_FAILURE;
     }
 
     if (strcmp(argv[1], "-info") == 0) {
+        
         if (argc != 2) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool -info\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
         readStatus = calInfo(comp1, readStatus.lineto, stdout);
+        
     } else if (strcmp(argv[1], "-extract") == 0) {
+        
         CalOpt opt;
         if (argc != 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
@@ -163,7 +198,9 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
         readStatus = calExtract(comp1, opt, stdout);
+        
     } else if (strcmp(argv[1], "-filter") == 0) {
+        
         if (argc < 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-filter [et] [from date] [to date]\n");
@@ -187,7 +224,7 @@ int main(int argc, char *argv[]) {
         if (argc == 3) {
             readStatus = calFilter(comp1, opt, 0, 0, stdout);
         } else if (argc == 5) {
-            time_t oneDate_t = convertToTime_t(argv[4]);
+            time_t oneDate_t = convertToTime_t(argv[4], argv[3][0]);
             if (oneDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
@@ -203,39 +240,44 @@ int main(int argc, char *argv[]) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
+            
         } else if (argc == 7) {
-            time_t fromDate_t = convertToTime_t(argv[4]);
+            time_t fromDate_t = convertToTime_t(argv[4], 'f');
             if (fromDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
-            time_t toDate_t = convertToTime_t(argv[6]);
+            time_t toDate_t = convertToTime_t(argv[6], 't');
             if (toDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
+
             if (strcmp(argv[3], "from") != 0 || strcmp(argv[5], "to") != 0) {
                 fprintf(stderr, "Invalid arguments:\nUsage: "
                                 "caltool -filter [et] [from date] [to "
                                 "date]\n");
-                                
+
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
+            
             if (fromDate_t > toDate_t) {
                 fprintf(stderr, "From date must occur earlier than to date\n");
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
             readStatus = calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
-        } else {
             
+        } else {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-filter [et] [from date] [to date]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
+        
     } else if (strcmp(argv[1], "-combine") == 0) {
+        
         if (argc < 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-combine \"file name\"\n");
@@ -260,7 +302,7 @@ int main(int argc, char *argv[]) {
 
         calCombine(comp1, comp2, stdout);
         freeCalComp(comp2);
-        
+
     } else {
         fprintf(stderr, "Command not found\n");
         freeCalComp(comp1);
@@ -609,34 +651,31 @@ CalStatus calCombine(const CalComp *comp1, const CalComp *comp2,
         traverseProps = traverseProps->next;
     }
 
+    // Unlink the two properties and make an array of the remaining ones
     int prodIDPos = 0;
     int versionPos = 0;
-
-    // Unlink the two properties and make an array of the remaining ones
-
     CalProp *unlinkedProdID = unlinkProp("PRODID", comp2, &prodIDPos);
-
     CalProp *unlinkedVersion = unlinkProp("VERSION", comp2, &versionPos);
-    
+
     temp->nprops = (temp->nprops) + (comp2->nprops) - 2;
-    
+
     if (prodIDPos == 0 || versionPos == 0) {
         traverseProps->next = comp2->prop->next;
     } else {
         traverseProps->next = comp2->prop;
     }
-    
+
     // Move over comp2's comps after the unlink
     for (int i = 0; i < comp2->ncomps; i++) {
         temp->comp[temp->ncomps + i] = comp2->comp[i];
     }
     temp->ncomps = (temp->ncomps) + (comp2->ncomps);
-    
+
     returnStatus = writeCalComp(icsfile, temp);
-    
+
     traverseProps->next = NULL;
-    
-    //Relink
+
+    // Relink
     if (versionPos != 0) {
         traverseProps = comp2->prop;
         while (traverseProps->next != unlinkedVersion->next) {
@@ -644,7 +683,7 @@ CalStatus calCombine(const CalComp *comp1, const CalComp *comp2,
         }
         traverseProps->next = unlinkedVersion;
     }
-    
+
     if (prodIDPos != 0) {
         traverseProps = comp2->prop;
         while (traverseProps->next != unlinkedProdID->next) {
@@ -652,30 +691,9 @@ CalStatus calCombine(const CalComp *comp1, const CalComp *comp2,
         }
         traverseProps->next = unlinkedProdID;
     }
-        puts("----------");
-    returnStatus = writeCalComp(icsfile, comp2);
 
     free(temp);
     return returnStatus;
-}
-
-CalProp *unlinkProp(char *type, const CalComp* comp2, int *pos) {
-    CalProp *prev = NULL;
-    CalProp *curr = comp2->prop;
-    CalProp *unlinked = NULL;
-
-    while (strcmp(curr->name, type) != 0) {
-        prev = curr;
-        curr = curr->next;
-        (*pos)++;
-    }
-    unlinked = curr;
-    if ((*pos) == 0) {
-        return unlinked;
-    }
-    prev->next = curr->next;
-
-    return unlinked;
 }
 
 /*Helper functions ordered alphabetically*/
@@ -737,7 +755,7 @@ int compareXProps(const void *prop1, const void *prop2) {
     return strcmp(*(char *const *)prop1, *(char *const *)prop2);
 }
 
-time_t convertToTime_t(char arg[]) {
+time_t convertToTime_t(char arg[], char type) {
     time_t argDate_t;
     struct tm *lc = malloc(sizeof(*lc));
     assert(lc != NULL);
@@ -748,9 +766,14 @@ time_t convertToTime_t(char arg[]) {
         argDate_t = time(NULL);
         lc = localtime(&argDate_t);
         argDate_t = mktime(lc);
+         if (type == 't') {
+            lc->tm_min = 59;
+            lc->tm_hour = 23;
+        } else {
+            lc->tm_min = 0;
+            lc->tm_hour = 0;
+        }
         lc->tm_sec = 0;
-        lc->tm_min = 0;
-        lc->tm_hour = 0;
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
@@ -765,9 +788,15 @@ time_t convertToTime_t(char arg[]) {
         }
         return TIME_ERR;
     }
+     if (type == 't') {
+            lc->tm_min = 59;
+            lc->tm_hour = 23;
+        } else {
+            lc->tm_min = 0;
+            lc->tm_hour = 0;
+        }
     lc->tm_sec = 0;
-    lc->tm_min = 0;
-    lc->tm_hour = 0;
+    
     argDate_t = mktime(lc);
     free(lc);
     return argDate_t;
@@ -788,7 +817,7 @@ void countElements(char *temp, const CalComp *comp) {
     strcpy(temp, ret);
 }
 
-CalError extractXProps(char **xProps, const CalComp *comp) {
+int extractXProps(char **xProps, const CalComp *comp) {
     // Caller must malloc xProps to hold at least 2000 char*
     static int numXProps = 0;
     if (comp->nprops > 0) {
@@ -886,4 +915,23 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
     }
     sprintf(ret, "%ld:%ld", lowestTime, highestTime);
     strcpy(timeRange, ret);
+}
+
+CalProp *unlinkProp(char *type, const CalComp *comp2, int *pos) {
+    CalProp *prev = NULL;
+    CalProp *curr = comp2->prop;
+    CalProp *unlinked = NULL;
+
+    while (strcmp(curr->name, type) != 0) {
+        prev = curr;
+        curr = curr->next;
+        (*pos)++;
+    }
+    unlinked = curr;
+    if ((*pos) == 0) {
+        return unlinked;
+    }
+    prev->next = curr->next;
+
+    return unlinked;
 }

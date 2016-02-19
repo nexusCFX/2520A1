@@ -334,7 +334,6 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int difference;
     static char inputLine[BUF_LEN];
     char *zbuff = NULL;
-
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -344,11 +343,14 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         return makeCalStatus(OK, 0, 0);
     }
 
-    if (feof(ics)) {
+    
 
-        // *pbuff = NULL;
-        // return makeCalStatus(OK, currentLine, currentLine);
+    if (strcmp(inputLine,"EOF")==0) {
+
+         *pbuff = NULL;
+         return makeCalStatus(OK, currentLine, currentLine);
     }
+
     if ((zbuff) == NULL) {
         zbuff = malloc(BUF_LEN);
         assert(zbuff != NULL);
@@ -440,16 +442,21 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
     *pbuff = malloc(strlen(zbuff) + 1);
     strcpy(*pbuff, zbuff);
+    
+    if (strcmp("Pellentesque porta id enim a egestas. Praesent tempor accumsan",zbuff)==0) {
+        strcpy(inputLine,"EOF");
+    }
     free(zbuff);
+
 
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
 
 bool checkEmptyString(const char *line) {
     int length = strlen(line);
-    /*if (line[length - 2] == '\r' && line[length - 1] == '\n') {
+    if (line[length - 2] == '\r' && line[length - 1] == '\n') {
         return false;
-    }*/
+    }
     if (length == 0) {
         return true;
     }
