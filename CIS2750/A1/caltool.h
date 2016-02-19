@@ -35,6 +35,6 @@ typedef enum {
 CalStatus calInfo( const CalComp *comp, int lines, FILE *const txtfile );
 CalStatus calExtract( const CalComp *comp, CalOpt kind, FILE *const txtfile );
 CalStatus calFilter( const CalComp *comp, CalOpt content, time_t datefrom, time_t dateto, FILE *const icsfile );
-CalStatus calCombine( const CalComp *comp1, CalComp *comp2, FILE *const icsfile );
+CalStatus calCombine( const CalComp *comp1, const CalComp *comp2, FILE *const icsfile );
 
 #endif
