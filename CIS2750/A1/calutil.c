@@ -443,7 +443,6 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     *pbuff = malloc(strlen(zbuff) + 1);
     strcpy(*pbuff, zbuff);
     
-
     if (strcmp("Pellentesque porta id enim a egestas. Praesent tempor accumsan",zbuff)==0) {
         strcpy(inputLine,"EOF");
     }
