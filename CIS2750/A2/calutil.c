@@ -798,7 +798,6 @@ void freeCalProp(CalProp *const prop) {
     // Traverse properties
     while (traverseProps) {
         nextProp = traverseProps->next;
-
         // Free name and value of property
         free(traverseProps->name);
         free(traverseProps->value);

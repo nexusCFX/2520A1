@@ -1,9 +1,7 @@
-#include "calutil.h"
 #include "caltool.h"
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <time.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
@@ -121,10 +119,11 @@ int main(int argc, char *argv[]) {
                                "IOERR",  "NOCAL",  "NOCRNL", "NODATA",
                                "NOPROD", "SUBCOM", "SYNTAX"};
     if (argc < 2) {
+        fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
 
-    setenv("DATEMSK", "datemsk.txt", 1);
+   // setenv("DATEMSK", "datemsk.txt", 1);
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
@@ -260,7 +259,6 @@ int main(int argc, char *argv[]) {
         }
 
         calCombine(comp1, comp2, stdout);
-        //comp2->prop = NULL;
         freeCalComp(comp2);
         
     } else {
@@ -617,10 +615,8 @@ CalStatus calCombine(const CalComp *comp1, const CalComp *comp2,
     // Unlink the two properties and make an array of the remaining ones
 
     CalProp *unlinkedProdID = unlinkProp("PRODID", comp2, &prodIDPos);
-    printf("%d\n",prodIDPos);
 
     CalProp *unlinkedVersion = unlinkProp("VERSION", comp2, &versionPos);
-    printf("%d\n",versionPos);
     
     temp->nprops = (temp->nprops) + (comp2->nprops) - 2;
     

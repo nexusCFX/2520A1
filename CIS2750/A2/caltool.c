@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <time.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
+#define TIME_VAL_LEN 15
+#define TIME_ERR -404
 /************************
 caltool.c
 Implementation of FILL THIS BLANK
@@ -19,7 +20,7 @@ Created: Feb 13, 2016
 Last modified: Feb 14, 2016
 *************************/
 
-//int getdate_r(const char *string, struct tm *tp);
+int getdate_r(const char *string, struct tm *tp);
 
 /*************************
 unlinkProp
@@ -30,17 +31,20 @@ comp2: The comp2 struct from the calCombine function
 type: A pointer to a character string. Should be "VERSION" or "PRODID"
 Return Value: A pointer to the unlinked property for re-linking later
 *************************/
-CalProp *unlinkProp(char *type, CalComp *comp2);
+CalProp *unlinkProp(char *type, const CalComp *comp2, int *pos);
 
 /*************************
 countElements
-Internal function which counts the number of subcomponents and properties in a CalComp structure
+Internal function which counts the number of subcomponents and properties in a
+CalComp structure
 Intended use is with calInfo function
 Arguments:
-temp: A pointer to a character string which has already been allocated memory. Temp will contain the number of properties and subcomponents in comp separated by a colon.
+temp: A pointer to a character string which has already been allocated memory.
+Temp will contain the number of properties and subcomponents in comp separated
+by a colon.
 comp: The comp struct from the calInfo function
 Return Value: N/A
-Note: The calling function is responsible for allocating enough memory 
+Note: The calling function is responsible for allocating enough memory
 *************************/
 void countElements(char *temp, const CalComp *comp);
 
@@ -57,21 +61,25 @@ void findTimeRange(char *timeRange, const CalComp *comp);
 
 /*************************
 compareOrganizers
-Internal function which compares two organizers by the first character, case insensitive
+Internal function which compares two organizers by the first character, case
+insensitive
 Used for comparing items with qsort function to sort organizers "alphabetically"
 Arguments:
-org1: A void pointer to a pointer to a character string 
-org2: A void pointer to a pointer to a character string 
-Return Value: -1 if org1 precedes org2, 0 if they are equal, 1 if org2 precedes org1
+org1: A void pointer to a pointer to a character string
+org2: A void pointer to a pointer to a character string
+Return Value: -1 if org1 precedes org2, 0 if they are equal, 1 if org2 precedes
+org1
 *************************/
 int compareOrganizers(const void *org1, const void *org2);
 
 /*************************
 findOrganizers
-Internal function which finds the values of all organizers properties in a calendar
+Internal function which finds the values of all organizers properties in a
+calendar
 Intended use is in conjunction with calInfo to remove version and prodid
 Arguments:
-organizers: An array of pointers to characters. Must be allocated and freed by the caller.
+organizers: An array of pointers to characters. Must be allocated and freed by
+the caller.
 comp: The comp struct from the calInfo function
 Return Value: The number of organizers found in the calendar
 *************************/
@@ -84,7 +92,8 @@ Used for comparing items with qsort function to sort organizers based on time
 Arguments:
 org1: A void pointer to a pointer to a CalProp structure
 org2: A void pointer to a pointer to a CalProp structure
-Return Value: -1 if org1's DTSTART precedes org2, 0 if they are equal, 1 if org2's DTSTART precedes org1
+Return Value: -1 if org1's DTSTART precedes org2, 0 if they are equal, 1 if
+org2's DTSTART precedes org1
 *************************/
 int compareEvents(const void *org1, const void *org2);
 
@@ -93,24 +102,28 @@ compareXProps
 Internal function which compares two X-props alphabetically
 Used for comparing X-props with qsort function
 Arguments:
-org1: A void pointer to a pointer to a character string 
-org2: A void pointer to a pointer to a character string 
-Return Value: -1 if org1 precedes org2, 0 if they are equal, 1 if org2 precedes org1
+org1: A void pointer to a pointer to a character string
+org2: A void pointer to a pointer to a character string
+Return Value: -1 if org1 precedes org2, 0 if they are equal, 1 if org2 precedes
+org1
 *************************/
 int compareXProps(const void *prop1, const void *prop2);
+
 CalError extractXProps(char **xProps, const CalComp *comp);
+
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
 time_t convertToTime_t(char arg[]);
 
 int main(int argc, char *argv[]) {
-    const char *calErrors[] = {"OK", "AFTEND", "BADVER", "BEGEND", "IOERR",
-                               "NOCAL",  "NOCRNL", "NODATA", "NOPROD",
-                               "SUBCOM", "SYNTAX"};
+    const char *calErrors[] = {"OK",     "AFTEND", "BADVER", "BEGEND",
+                               "IOERR",  "NOCAL",  "NOCRNL", "NODATA",
+                               "NOPROD", "SUBCOM", "SYNTAX"};
     if (argc < 2) {
+        fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
 
-    setenv("DATEMSK", "datemsk.txt", 1);
+   // setenv("DATEMSK", "datemsk.txt", 1);
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
@@ -139,9 +152,9 @@ int main(int argc, char *argv[]) {
         }
 
         // Set correct CalOpt type
-        if (argv[2][0] == 'x') {
+        if (argv[2][0] == 'x' && strlen(argv[2]) == 1) {
             opt = 1;
-        } else if (argv[2][0] == 'e') {
+        } else if (argv[2][0] == 'e' && strlen(argv[2]) == 1) {
             opt = 0;
         } else {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
@@ -151,12 +164,18 @@ int main(int argc, char *argv[]) {
         }
         readStatus = calExtract(comp1, opt, stdout);
     } else if (strcmp(argv[1], "-filter") == 0) {
+        if (argc < 3) {
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-filter [et] [from date] [to date]\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
+        }
         CalOpt opt;
 
         // Set correct CalOpt type
-        if (argv[2][0] == 't') {
+        if (argv[2][0] == 't' && strlen(argv[2]) == 1) {
             opt = 2;
-        } else if (argv[2][0] == 'e') {
+        } else if (argv[2][0] == 'e' && strlen(argv[2]) == 1) {
             opt = 0;
         } else {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
@@ -169,7 +188,7 @@ int main(int argc, char *argv[]) {
             readStatus = calFilter(comp1, opt, 0, 0, stdout);
         } else if (argc == 5) {
             time_t oneDate_t = convertToTime_t(argv[4]);
-            if (oneDate_t == -404) {
+            if (oneDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
@@ -186,12 +205,12 @@ int main(int argc, char *argv[]) {
             }
         } else if (argc == 7) {
             time_t fromDate_t = convertToTime_t(argv[4]);
-            if (fromDate_t == -404) {
+            if (fromDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
             time_t toDate_t = convertToTime_t(argv[6]);
-            if (toDate_t == -404) {
+            if (toDate_t == TIME_ERR) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
@@ -199,6 +218,7 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Invalid arguments:\nUsage: "
                                 "caltool -filter [et] [from date] [to "
                                 "date]\n");
+                                
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
@@ -209,12 +229,19 @@ int main(int argc, char *argv[]) {
             }
             readStatus = calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
         } else {
+            
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-filter [et] [from date] [to date]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
     } else if (strcmp(argv[1], "-combine") == 0) {
+        if (argc < 3) {
+            fprintf(stderr, "Invalid arguments:\nUsage: caltool "
+                            "-combine \"file name\"\n");
+            freeCalComp(comp1);
+            return EXIT_FAILURE;
+        }
         FILE *ics = fopen(argv[2], "r");
         if (ics == NULL) {
             fprintf(stderr, "Problem opening file %s\n", argv[2]);
@@ -233,15 +260,18 @@ int main(int argc, char *argv[]) {
 
         calCombine(comp1, comp2, stdout);
         freeCalComp(comp2);
+        
     } else {
         fprintf(stderr, "Command not found\n");
         freeCalComp(comp1);
         return EXIT_FAILURE;
     }
-    
+    if (readStatus.code != 0) {
         printf("Error %s, printed %d lines\n", calErrors[readStatus.code],
-           readStatus.lineto);
-    
+               readStatus.lineto);
+        freeCalComp(comp1);
+        return EXIT_FAILURE;
+    }
     freeCalComp(comp1);
     return EXIT_SUCCESS;
 }
@@ -253,6 +283,7 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     int numSubcom;
     int numProps;
 
+    // Count the number of events and todos in the main component array
     for (int i = 0; i < comp->ncomps; i++) {
         if (strcmp(comp->comp[i]->name, "VEVENT") == 0) {
             numEvents++;
@@ -266,6 +297,8 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     numSubcom = atoi(strtok(temp, ":")) - comp->ncomps;
     numProps = atoi(strtok(NULL, "\0"));
     free(temp);
+
+    // All these ugly if statements are to check if fprintf threw an error
 
     if (fprintf(txtfile, "%d line", lines) < 0) {
         return makeCalStatus(IOERR, linesPrinted, linesPrinted);
@@ -345,7 +378,7 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     time_t lowDate = atoi(strtok(dateRange, ":"));
     time_t highDate = atoi(strtok(NULL, "\0"));
     free(dateRange);
-    // strptime(propTime, "%Y%m%d%H%M%S", &propDate);
+
     if (lowDate == INT_MAX || highDate == INT_MIN) {
         if (fprintf(txtfile, "No dates\n") < 0) {
             return makeCalStatus(IOERR, linesPrinted, linesPrinted);
@@ -396,8 +429,10 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
 
 CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
     int linesPrinted = 0;
+
+    // Kind == 0 means extracting events
     if (kind == 0) {
-        char str[100];
+        char strTime[100];
         char *val;
         bool foundSummary = false;
         bool foundTime = false;
@@ -418,12 +453,12 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
             while (traverseProps && (!foundSummary || !foundTime)) {
                 if (strcmp("DTSTART", traverseProps->name) == 0) {
                     foundTime = true;
-                    char propTime[9];
-                    strncpy(propTime, traverseProps->value, 8);
-                    propTime[8] = '\0';
+                    char propTime[TIME_VAL_LEN + 1];
+                    strncpy(propTime, traverseProps->value, TIME_VAL_LEN);
+                    propTime[TIME_VAL_LEN] = '\0';
                     struct tm propDate = {0};
-                    strptime(propTime, "%Y%m%d", &propDate);
-                    strftime(str, 99, "%Y-%b-%d", &propDate);
+                    strptime(propTime, "%Y%m%dT%k%M%S", &propDate);
+                    strftime(strTime, 99, "%Y-%b-%d %l:%M %p", &propDate);
                 } else if (strcmp("SUMMARY", traverseProps->name) == 0) {
                     val = malloc(strlen(traverseProps->value) + 1);
                     assert(val != NULL);
@@ -432,7 +467,11 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
                 }
                 traverseProps = traverseProps->next;
             }
-            if (fprintf(txtfile, "%s: %s\n", str, val) < 0) {
+            if (!foundSummary) {
+                val = malloc(5);
+                strcpy(val, "(na)");
+            }
+            if (fprintf(txtfile, "%s: %s\n", strTime, val) < 0) {
                 free(events);
                 return makeCalStatus(IOERR, linesPrinted, linesPrinted);
             }
@@ -443,6 +482,7 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
         }
         free(events);
     } else {
+        // Kind != 0 means extracting X-Props
         char **xProps = malloc(2000 * sizeof(char *));
         assert(xProps != NULL);
         int numXProps = extractXProps(xProps, comp);
@@ -495,12 +535,11 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                         strcmp(traverseProps->name, "CREATED") == 0 ||
                         strcmp(traverseProps->name, "DTSTAMP") == 0 ||
                         strcmp(traverseProps->name, "LAST-MODIFIED") == 0) {
-                            
-                            
-                        char propTime[9];
-                        strncpy(propTime, traverseProps->value, 8);
-                        propTime[8] = '\0';
-                        strptime(propTime, "%Y%m%d", &propDate);
+
+                        char propTime[TIME_VAL_LEN + 1];
+                        strncpy(propTime, traverseProps->value, TIME_VAL_LEN);
+                        propTime[TIME_VAL_LEN] = '\0';
+                        strptime(propTime, "%Y%m%dT%k%M%S", &propDate);
                         time_t propDate_t = mktime(&propDate);
 
                         if (datefrom == 0 && dateto != 0) {
@@ -544,61 +583,99 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
     return ret;
 }
 
-CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
+CalStatus calCombine(const CalComp *comp1, const CalComp *comp2,
                      FILE *const icsfile) {
 
+    CalStatus returnStatus;
     CalComp *temp = malloc(sizeof(CalComp) +
                            sizeof(CalComp *) * (comp1->ncomps + comp2->ncomps));
     assert(temp != NULL);
 
+    // Move over name, props, etc
     temp->name = comp1->name;
     temp->nprops = comp1->nprops;
     temp->prop = comp1->prop;
     temp->ncomps = comp1->ncomps;
 
+    // Move over comp1's components
     for (int i = 0; i < comp1->ncomps; i++) {
         temp->comp[i] = comp1->comp[i];
     }
 
     CalProp *traverseProps = temp->prop;
 
+    // Get to end of property array
     while (traverseProps->next != NULL) {
         traverseProps = traverseProps->next;
     }
 
-    CalProp *unlinkedProdID = unlinkProp("PRODID", comp2);
-    CalProp *unlinkedVersion = unlinkProp("VERSION", comp2);
+    int prodIDPos = 0;
+    int versionPos = 0;
 
-    traverseProps->next = comp2->prop;
+    // Unlink the two properties and make an array of the remaining ones
 
+    CalProp *unlinkedProdID = unlinkProp("PRODID", comp2, &prodIDPos);
+
+    CalProp *unlinkedVersion = unlinkProp("VERSION", comp2, &versionPos);
+    
+    temp->nprops = (temp->nprops) + (comp2->nprops) - 2;
+    
+    if (prodIDPos == 0 || versionPos == 0) {
+        traverseProps->next = comp2->prop->next;
+    } else {
+        traverseProps->next = comp2->prop;
+    }
+    
+    // Move over comp2's comps after the unlink
     for (int i = 0; i < comp2->ncomps; i++) {
         temp->comp[temp->ncomps + i] = comp2->comp[i];
     }
     temp->ncomps = (temp->ncomps) + (comp2->ncomps);
-
-    writeCalComp(icsfile, temp);
-
+    
+    returnStatus = writeCalComp(icsfile, temp);
+    
     traverseProps->next = NULL;
-    traverseProps = comp2->prop;
-    if (traverseProps == NULL) {
-        traverseProps = unlinkedProdID;
-    } else {
-        while (traverseProps->next != NULL) {
+    
+    //Relink
+    if (versionPos != 0) {
+        traverseProps = comp2->prop;
+        while (traverseProps->next != unlinkedVersion->next) {
             traverseProps = traverseProps->next;
         }
-
+        traverseProps->next = unlinkedVersion;
+    }
+    
+    if (prodIDPos != 0) {
+        traverseProps = comp2->prop;
+        while (traverseProps->next != unlinkedProdID->next) {
+            traverseProps = traverseProps->next;
+        }
         traverseProps->next = unlinkedProdID;
     }
+        puts("----------");
+    returnStatus = writeCalComp(icsfile, comp2);
 
-    unlinkedProdID->next = unlinkedVersion;
-    unlinkedVersion->next = NULL;
     free(temp);
+    return returnStatus;
+}
 
-    CalStatus ret;
-    ret.linefrom = 0;
-    ret.lineto = 0;
-    ret.code = OK;
-    return ret;
+CalProp *unlinkProp(char *type, const CalComp* comp2, int *pos) {
+    CalProp *prev = NULL;
+    CalProp *curr = comp2->prop;
+    CalProp *unlinked = NULL;
+
+    while (strcmp(curr->name, type) != 0) {
+        prev = curr;
+        curr = curr->next;
+        (*pos)++;
+    }
+    unlinked = curr;
+    if ((*pos) == 0) {
+        return unlinked;
+    }
+    prev->next = curr->next;
+
+    return unlinked;
 }
 
 /*Helper functions ordered alphabetically*/
@@ -606,16 +683,16 @@ CalStatus calCombine(const CalComp *comp1, CalComp *comp2,
 int compareEvents(const void *comp1, const void *comp2) {
     CalComp *a = *(CalComp **)comp1;
     CalComp *b = *(CalComp **)comp2;
-    char time[9];
+    char time[TIME_VAL_LEN + 1];
     time_t timeA = 0;
     time_t timeB = 0;
     CalProp *traverseProps = a->prop;
     struct tm propDate = {0};
     while (traverseProps) {
         if (strcmp("DTSTART", traverseProps->name) == 0) {
-                    strncpy(time, traverseProps->value, 8);
-                    time[8] = '\0';
-            strptime(time, "%Y%m%d", &propDate);
+            strncpy(time, traverseProps->value, TIME_VAL_LEN);
+            time[TIME_VAL_LEN] = '\0';
+            strptime(time, "%Y%m%dT%k%M%S", &propDate);
             timeA = mktime(&propDate);
             break;
         }
@@ -625,9 +702,9 @@ int compareEvents(const void *comp1, const void *comp2) {
     traverseProps = b->prop;
     while (traverseProps) {
         if (strcmp("DTSTART", traverseProps->name) == 0) {
-            strncpy(time, traverseProps->value, 8);
-                    time[8] = '\0';
-            strptime(time, "%Y%m%d", &propDate);
+            strncpy(time, traverseProps->value, TIME_VAL_LEN);
+            time[TIME_VAL_LEN] = '\0';
+            strptime(time, "%Y%m%dT%k%M%S", &propDate);
             timeB = mktime(&propDate);
             break;
         }
@@ -666,7 +743,8 @@ time_t convertToTime_t(char arg[]) {
     assert(lc != NULL);
     if (strcmp(arg, "today") == 0) {
         free(lc);
-        
+
+        // Populates with current time and date
         argDate_t = time(NULL);
         lc = localtime(&argDate_t);
         argDate_t = mktime(lc);
@@ -685,7 +763,7 @@ time_t convertToTime_t(char arg[]) {
         } else {
             fprintf(stderr, "Date \" %s \" could not be interpreted\n", arg);
         }
-        return -404;
+        return TIME_ERR;
     }
     lc->tm_sec = 0;
     lc->tm_min = 0;
@@ -696,6 +774,8 @@ time_t convertToTime_t(char arg[]) {
 }
 
 void countElements(char *temp, const CalComp *comp) {
+    // Return string is in the form subComs:props
+    // Caller must allocate temp to at least 100 bytes and free
     static int subComps = 0;
     static int props = 0;
     char ret[100];
@@ -709,6 +789,7 @@ void countElements(char *temp, const CalComp *comp) {
 }
 
 CalError extractXProps(char **xProps, const CalComp *comp) {
+    // Caller must malloc xProps to hold at least 2000 char*
     static int numXProps = 0;
     if (comp->nprops > 0) {
         CalProp *traverseProps = comp->prop;
@@ -738,11 +819,12 @@ int findOrganizers(char **organizers, const CalComp *comp) {
         CalProp *traverseProps = comp->prop;
         // Traverse properties
         while (traverseProps) {
-            //If we have organizer, point a pointer at the value strings
+            // If we have organizer, point a pointer at the value strings
             if (strcmp(traverseProps->name, "ORGANIZER") == 0) {
                 CalParam *traverseParams = traverseProps->param;
                 while (traverseParams) {
-                    //While I don't believe it will have multiple values it doesn't hurt to check
+                    // While I don't believe it will have multiple values it
+                    // doesn't hurt to check
                     if (strcmp(traverseParams->name, "CN") == 0) {
                         for (int i = 0; i < traverseParams->nvalues; i++) {
                             organizers[numOrganizers] =
@@ -781,11 +863,11 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
                 strcmp(traverseProps->name, "DTSTAMP") == 0 ||
                 strcmp(traverseProps->name, "LAST-MODIFIED") == 0) {
 
-                char time[9];
-                
-                strncpy(time, traverseProps->value, 8);
-                time[8] = '\0';
-                strptime(time, "%Y%m%d", &propDate);
+                char time[TIME_VAL_LEN + 1];
+
+                strncpy(time, traverseProps->value, TIME_VAL_LEN);
+                time[TIME_VAL_LEN] = '\0';
+                strptime(time, "%Y%m%dT%k%M%S", &propDate);
 
                 time_t propDate_t = mktime(&propDate);
 
@@ -804,24 +886,4 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
     }
     sprintf(ret, "%ld:%ld", lowestTime, highestTime);
     strcpy(timeRange, ret);
-}
-
-CalProp *unlinkProp(char *type, CalComp *comp2) {
-    CalProp *prev = NULL;
-    CalProp *curr = NULL;
-    CalProp *unlinked = NULL;
-
-    curr = comp2->prop;
-    while (strcmp(curr->name, type) != 0) {
-        prev = curr;
-        curr = curr->next;
-    }
-    unlinked = curr;
-
-    if (prev == NULL) {
-        comp2->prop = curr->next;
-    } else {
-        prev->next = curr->next;
-    }
-    return unlinked;
 }
