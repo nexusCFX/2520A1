@@ -337,6 +337,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static bool hitEOF = false;
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
+        hitEOF = false;
         currentLine = 0;
         difference = 0;
         inputLine[0] = '\0';
