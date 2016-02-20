@@ -334,6 +334,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     static int difference;
     static char inputLine[BUF_LEN];
     char *zbuff = NULL;
+    static bool hitEOF = false;
     if (ics == NULL) {
         // Reset function. Set input line to symbolic "empty"
         currentLine = 0;
@@ -345,8 +346,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
     
 
-    if (strcmp(inputLine,"EOF")==0) {
-
+    if (hitEOF) {
          *pbuff = NULL;
          return makeCalStatus(OK, currentLine, currentLine);
     }
@@ -443,8 +443,8 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     *pbuff = malloc(strlen(zbuff) + 1);
     strcpy(*pbuff, zbuff);
     
-    if (feof(ics) && strcmp("Pellentesque porta id enim a egestas. Praesent tempor accumsan",zbuff)==0) {
-        strcpy(inputLine,"EOF");
+    if (feof(ics) && strcmp(inputLine,zbuff)==0) {
+        hitEOF = true;
     }
     free(zbuff);
 
