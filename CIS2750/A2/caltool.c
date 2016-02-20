@@ -582,6 +582,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                         strncpy(propTime, traverseProps->value, TIME_VAL_LEN);
                         propTime[TIME_VAL_LEN] = '\0';
                         strptime(propTime, "%Y%m%dT%k%M%S", &propDate);
+                        propDate.tm_isdst = -1;
                         time_t propDate_t = mktime(&propDate);
 
                         if (datefrom == 0 && dateto != 0) {
@@ -711,6 +712,7 @@ int compareEvents(const void *comp1, const void *comp2) {
             strncpy(time, traverseProps->value, TIME_VAL_LEN);
             time[TIME_VAL_LEN] = '\0';
             strptime(time, "%Y%m%dT%k%M%S", &propDate);
+            propDate.tm_isdst = -1;
             timeA = mktime(&propDate);
             break;
         }
@@ -723,6 +725,7 @@ int compareEvents(const void *comp1, const void *comp2) {
             strncpy(time, traverseProps->value, TIME_VAL_LEN);
             time[TIME_VAL_LEN] = '\0';
             strptime(time, "%Y%m%dT%k%M%S", &propDate);
+            propDate.tm_isdst = -1;
             timeB = mktime(&propDate);
             break;
         }
@@ -765,6 +768,7 @@ time_t convertToTime_t(char arg[], char type) {
         // Populates with current time and date
         argDate_t = time(NULL);
         lc = localtime(&argDate_t);
+        lc->tm_isdst = -1;
         argDate_t = mktime(lc);
          if (type == 't') {
             lc->tm_min = 59;
@@ -777,6 +781,7 @@ time_t convertToTime_t(char arg[], char type) {
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
+    lc->tm_isdst = -1;
     assert(ret != 6);
     if (ret != 0) {
         if (ret < 7) {
@@ -897,7 +902,7 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
                 strncpy(time, traverseProps->value, TIME_VAL_LEN);
                 time[TIME_VAL_LEN] = '\0';
                 strptime(time, "%Y%m%dT%k%M%S", &propDate);
-
+                propDate.tm_isdst = -1;
                 time_t propDate_t = mktime(&propDate);
 
                 if (propDate_t > highestTime) {
