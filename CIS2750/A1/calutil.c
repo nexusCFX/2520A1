@@ -261,7 +261,10 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
 
             // Make a temporary pointer with a shorter name than the mess above
             CalComp *nextComp = (*pcomp)->comp[(*pcomp)->ncomps - 1];
+
+            // Assert check using our shorter pointer name
             assert(nextComp != NULL);
+
             nextComp->prop = NULL;
             nextComp->nprops = 0;
             nextComp->ncomps = 0;
@@ -283,7 +286,7 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
             // make sure the END matches the original begin, free memory
             makeUpperCase(prop->value);
             if ((*pcomp)->ncomps == 0 && (*pcomp)->nprops == 0) {
-                
+
                 returnStatus.code = NODATA;
             } else if (strcmp(prop->value, (*pcomp)->name) != 0) {
                 returnStatus.code = BEGEND;
@@ -345,11 +348,9 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
         return makeCalStatus(OK, 0, 0);
     }
 
-    
-
     if (hitEOF) {
-         *pbuff = NULL;
-         return makeCalStatus(OK, currentLine, currentLine);
+        *pbuff = NULL;
+        return makeCalStatus(OK, currentLine, currentLine);
     }
 
     if ((zbuff) == NULL) {
@@ -424,6 +425,7 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
 
             difference++;
             zbuff = realloc(zbuff, (strlen(zbuff) + strlen(inputLine) + 1));
+            assert(zbuff != NULL);
             strcat(zbuff, inputLine);
             inputLine[0] = '\0';
         } else {
@@ -442,13 +444,13 @@ CalStatus readCalLine(FILE *const ics, char **const pbuff) {
     }
 
     *pbuff = malloc(strlen(zbuff) + 1);
+    assert(*pbuff != NULL);
     strcpy(*pbuff, zbuff);
-    
-    if (feof(ics) && strcmp(inputLine,zbuff)==0) {
+
+    if (feof(ics) && strcmp(inputLine, zbuff) == 0) {
         hitEOF = true;
     }
     free(zbuff);
-
 
     return makeCalStatus(OK, currentLine, currentLine + difference);
 }
@@ -714,9 +716,9 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                                                      (newParam->nvalues + 1) *
                                                          sizeof(char *)));
 
-                            if (temp != NULL) {
-                                newParam = temp;
-                            }
+                            assert(temp != NULL);
+
+                            newParam = temp;
 
                             (newParam)->value[newParam->nvalues] =
                                 malloc(strlen(tempValue) + 1);
@@ -741,6 +743,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                 } else { // No lone commas means only one value
                     (newParam) = realloc((newParam),
                                          (sizeof(*newParam) + sizeof(char *)));
+                    assert(newParam != NULL);
 
                     ((newParam)->value[0]) = malloc(strlen(paramValues) + 1);
 
@@ -857,6 +860,7 @@ CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
         // Traverse properties
         while (traverseProps) {
             char *output = calloc(1, BUF_LEN);
+            assert(output != NULL);
             // printf("Name %s\n",traverseProps->name);
             strcat(output, traverseProps->name);
 

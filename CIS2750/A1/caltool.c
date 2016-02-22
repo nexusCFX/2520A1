@@ -20,44 +20,17 @@ Created: Feb 13, 2016
 Last modified: Feb 14, 2016
 *************************/
 
-int getdate_r(const char *string, struct tm *tp);
-
 /*************************
-unlinkProp
-Internal function which unlinks properties from a CalProp struct
-Intended use is in conjunction with calCombine to remove version and prodid
-Arguments:
-comp2: The comp2 struct from the calCombine function
-type: A pointer to a character string. Should be "VERSION" or "PRODID"
-Return Value: A pointer to the unlinked property for re-linking later
-*************************/
-CalProp *unlinkProp(char *type, const CalComp *comp2, int *pos);
-
-/*************************
-countElements
-Internal function which counts the number of subcomponents and properties in a
-CalComp structure
-Intended use is with calInfo function
-Arguments:
-temp: A pointer to a character string which has already been allocated memory.
-Temp will contain the number of properties and subcomponents in comp separated
-by a colon.
-comp: The comp struct from the calInfo function
-Return Value: N/A
-Note: The calling function is responsible for allocating enough memory
-*************************/
-void countElements(char *temp, const CalComp *comp);
-
-/*************************
-findTimeRange
-Internal function which unlinks properties from a CalProp struct
-Intended use is in conjunction with calCombine to remove version and prodid
-Arguments:
-comp2: The comp2 struct from the calCombine function
-type: A pointer to a character string. Should be "VERSION" or "PRODID"
-Return Value: A pointer to the unlinked property for re-linking later
-*************************/
-void findTimeRange(char *timeRange, const CalComp *comp);
+ compareEvents
+ Internal function which compares two events based on the DTSTART property
+ Used for comparing items with qsort function to sort organizers based on time
+ Arguments:
+ org1: A void pointer to a pointer to a CalProp structure
+ org2: A void pointer to a pointer to a CalProp structure
+ Return Value: -1 if org1's DTSTART precedes org2, 0 if they are equal, 1 if
+ org2's DTSTART precedes org1
+ *************************/
+int compareEvents(const void *org1, const void *org2);
 
 /*************************
 compareOrganizers
@@ -73,6 +46,60 @@ org1
 int compareOrganizers(const void *org1, const void *org2);
 
 /*************************
+ compareXProps
+ Internal function which compares two X-props alphabetically
+ Used for comparing X-props with qsort function
+ Arguments:
+ org1: A void pointer to a pointer to a character string
+ org2: A void pointer to a pointer to a character string
+ Return Value: -1 if prop1 precedes prop2, 0 if they are equal, 1 if prop2
+ precedes
+ prop1
+ *************************/
+int compareXProps(const void *prop1, const void *prop2);
+
+/*************************
+ convertToTime_t
+ Internal function which converts a string to a time_t value
+ Arguments:
+ arg: A string representing some time and date
+ type: A char which should be f to represent from, or t to represent to
+ affects the hours and minutes appended to the structure
+ Return Value: A time_t value reflecting the input arg
+ If the function cannot parse the date, return value is -404 which signifies an
+ error, and an error is printed to stderr
+ *************************/
+time_t convertToTime_t(char arg[], char type);
+
+/*************************
+ countElements
+ Internal function which counts the number of subcomponents and properties in a
+ CalComp structure
+ Intended use is with calInfo function
+ Arguments:
+ temp: A pointer to a character string which has already been allocated memory.
+ Temp will contain the number of properties and subcomponents in comp separated
+ by a colon.
+ comp: The comp struct from the calInfo function
+ Return Value: N/A
+ Note: The calling function is responsible for allocating enough memory
+ *************************/
+void countElements(char *temp, const CalComp *comp);
+
+/*************************
+ extractXProps
+ Internal function which extracts X-props from a CalComp
+ Arguments:
+ xProps: An array of char*
+ comp: A pointer to a CalProp structure
+ Return Value: The number of X-Props pointed at by xProps
+ Note: The calling function must allocate space for at least 2000 char* to
+ xProps
+ and free it after
+ *************************/
+int extractXProps(char **xProps, const CalComp *comp);
+
+/*************************
 findOrganizers
 Internal function which finds the values of all organizers properties in a
 calendar
@@ -86,41 +113,15 @@ Return Value: The number of organizers found in the calendar
 int findOrganizers(char **organizers, const CalComp *comp);
 
 /*************************
-compareEvents
-Internal function which compares two events based on the DTSTART property
-Used for comparing items with qsort function to sort organizers based on time
-Arguments:
-org1: A void pointer to a pointer to a CalProp structure
-org2: A void pointer to a pointer to a CalProp structure
-Return Value: -1 if org1's DTSTART precedes org2, 0 if they are equal, 1 if
-org2's DTSTART precedes org1
-*************************/
-int compareEvents(const void *org1, const void *org2);
-
-/*************************
-compareXProps
-Internal function which compares two X-props alphabetically
-Used for comparing X-props with qsort function
-Arguments:
-org1: A void pointer to a pointer to a character string
-org2: A void pointer to a pointer to a character string
-Return Value: -1 if prop1 precedes prop2, 0 if they are equal, 1 if prop2
-precedes
-prop1
-*************************/
-int compareXProps(const void *prop1, const void *prop2);
-
-/*************************
-extractXProps
-Internal function which extracts X-props from a CalComp
-Arguments:
-xProps: An array of char*
-comp: A pointer to a CalProp structure
-Return Value: The number of X-Props pointed at by xProps
-Note: The calling function must allocate space for at least 2000 char* to xProps
-and free it after
-*************************/
-int extractXProps(char **xProps, const CalComp *comp);
+ findTimeRange
+ Internal function which unlinks properties from a CalProp struct
+ Intended use is in conjunction with calCombine to remove version and prodid
+ Arguments:
+ comp2: The comp2 struct from the calCombine function
+ type: A pointer to a character string. Should be "VERSION" or "PRODID"
+ Return Value: A pointer to the unlinked property for re-linking later
+ *************************/
+void findTimeRange(char *timeRange, const CalComp *comp);
 
 /*************************
 makeCalStatus
@@ -135,17 +136,15 @@ Note: This function's implementation is in calutil.c
 CalStatus makeCalStatus(CalError code, int linefrom, int lineto);
 
 /*************************
-convertToTime_t
-Internal function which converts a string to a time_t value
-Arguments:
-arg: A string representing some time and date
-type: A char which should be f to represent from, or t to represent to
-affects the hours and minutes appended to the structure
-Return Value: A time_t value reflecting the input arg
-If the function cannot parse the date, return value is -404 which signifies an
-error, and an error is printed to stderr
-*************************/
-time_t convertToTime_t(char arg[], char type);
+ unlinkProp
+ Internal function which unlinks properties from a CalProp struct
+ Intended use is in conjunction with calCombine to remove version and prodid
+ Arguments:
+ comp2: The comp2 struct from the calCombine function
+ type: A pointer to a character string. Should be "VERSION" or "PRODID"
+ Return Value: A pointer to the unlinked property for re-linking later
+ *************************/
+CalProp *unlinkProp(char *type, const CalComp *comp2, int *pos);
 
 int main(int argc, char *argv[]) {
     CalOpt opt;
@@ -156,7 +155,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
-	setenv("DATEMSK","datemsk.txt",1); 
+    setenv("DATEMSK", "datemsk.txt", 1);
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
@@ -164,21 +163,23 @@ int main(int argc, char *argv[]) {
     readStatus = readCalFile(stdin, &comp1);
 
     if (readStatus.code != OK) {
-        fprintf(stderr, "Calendar error: %s\n lines %d to %d\n", calErrors[readStatus.code], readStatus.lineto, readStatus.linefrom);
+        fprintf(stderr, "Calendar error: %s\n lines %d to %d\n",
+                calErrors[readStatus.code], readStatus.lineto,
+                readStatus.linefrom);
         return EXIT_FAILURE;
     }
 
     if (strcmp(argv[1], "-info") == 0) {
-        
+
         if (argc != 2) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool -info\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
         readStatus = calInfo(comp1, readStatus.lineto, stdout);
-        
+
     } else if (strcmp(argv[1], "-extract") == 0) {
-        
+
         if (argc != 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-extract [ex]\n");
@@ -198,9 +199,9 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
         readStatus = calExtract(comp1, opt, stdout);
-        
+
     } else if (strcmp(argv[1], "-filter") == 0) {
-        
+
         if (argc < 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-filter [et] [from date] [to date]\n");
@@ -219,9 +220,10 @@ int main(int argc, char *argv[]) {
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
-
+        // argc = 3 means no time args
         if (argc == 3) {
             readStatus = calFilter(comp1, opt, 0, 0, stdout);
+            // Argc = 5 means one time arg
         } else if (argc == 5) {
             time_t oneDate_t = convertToTime_t(argv[4], argv[3][0]);
             if (oneDate_t == TIME_ERR) {
@@ -239,7 +241,8 @@ int main(int argc, char *argv[]) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
-            
+
+            // args = 7 means both time args
         } else if (argc == 7) {
             time_t fromDate_t = convertToTime_t(argv[4], 'f');
             if (fromDate_t == TIME_ERR) {
@@ -260,23 +263,23 @@ int main(int argc, char *argv[]) {
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
-            
+
             if (fromDate_t > toDate_t) {
                 fprintf(stderr, "From date must occur earlier than to date\n");
                 freeCalComp(comp1);
                 return EXIT_FAILURE;
             }
             readStatus = calFilter(comp1, opt, fromDate_t, toDate_t, stdout);
-            
+
         } else {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-filter [et] [from date] [to date]\n");
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
-        
+
     } else if (strcmp(argv[1], "-combine") == 0) {
-        
+
         if (argc < 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-combine \"file name\"\n");
@@ -291,7 +294,7 @@ int main(int argc, char *argv[]) {
         }
         readStatus = readCalFile(ics, &comp2);
         fclose(ics);
-        
+
         if (readStatus.code != 0) {
             fprintf(stderr, "Calendar error: %s with file %s\n",
                     calErrors[readStatus.code], argv[2]);
@@ -563,7 +566,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
     temp->prop = comp->prop;
     temp->ncomps = 0;
 
-    //Since we're looking for specific comps, move them as needed
+    // Since we're looking for specific comps, move them as needed
     for (int i = 0; i < comp->ncomps; i++) {
         if (strcmp(comp->comp[i]->name, filterType) == 0) {
             // Do date check
@@ -586,7 +589,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                         propDate.tm_isdst = -1;
                         time_t propDate_t = mktime(&propDate);
 
-                        //Three cases depending on what user specified
+                        // Three cases depending on what user specified
                         if (datefrom == 0 && dateto != 0) {
                             if (propDate_t <= dateto) {
                                 temp->comp[temp->ncomps] = comp->comp[i];
@@ -772,7 +775,7 @@ time_t convertToTime_t(char arg[], char type) {
         lc = localtime(&argDate_t);
         lc->tm_isdst = -1;
         argDate_t = mktime(lc);
-         if (type == 't') {
+        if (type == 't') {
             lc->tm_min = 59;
             lc->tm_hour = 23;
         } else {
@@ -795,15 +798,15 @@ time_t convertToTime_t(char arg[], char type) {
         }
         return TIME_ERR;
     }
-     if (type == 't') {
-            lc->tm_min = 59;
-            lc->tm_hour = 23;
-        } else {
-            lc->tm_min = 0;
-            lc->tm_hour = 0;
-        }
+    if (type == 't') {
+        lc->tm_min = 59;
+        lc->tm_hour = 23;
+    } else {
+        lc->tm_min = 0;
+        lc->tm_hour = 0;
+    }
     lc->tm_sec = 0;
-    
+
     argDate_t = mktime(lc);
     free(lc);
     return argDate_t;
