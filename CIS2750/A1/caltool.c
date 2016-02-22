@@ -148,6 +148,7 @@ error, and an error is printed to stderr
 time_t convertToTime_t(char arg[], char type);
 
 int main(int argc, char *argv[]) {
+    CalOpt opt;
     const char *calErrors[] = {"OK",     "AFTEND", "BADVER", "BEGEND",
                                "IOERR",  "NOCAL",  "NOCRNL", "NODATA",
                                "NOPROD", "SUBCOM", "SYNTAX"};
@@ -162,7 +163,7 @@ int main(int argc, char *argv[]) {
 
     readStatus = readCalFile(stdin, &comp1);
 
-    if (readStatus.code != 0) {
+    if (readStatus.code != OK) {
         fprintf(stderr, "Calendar error: %s\n lines %d to %d\n", calErrors[readStatus.code], readStatus.lineto, readStatus.linefrom);
         return EXIT_FAILURE;
     }
@@ -178,7 +179,6 @@ int main(int argc, char *argv[]) {
         
     } else if (strcmp(argv[1], "-extract") == 0) {
         
-        CalOpt opt;
         if (argc != 3) {
             fprintf(stderr, "Invalid arguments:\nUsage: caltool "
                             "-extract [ex]\n");
@@ -207,7 +207,6 @@ int main(int argc, char *argv[]) {
             freeCalComp(comp1);
             return EXIT_FAILURE;
         }
-        CalOpt opt;
 
         // Set correct CalOpt type
         if (argv[2][0] == 't' && strlen(argv[2]) == 1) {
@@ -291,8 +290,8 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
         readStatus = readCalFile(ics, &comp2);
-
         fclose(ics);
+        
         if (readStatus.code != 0) {
             fprintf(stderr, "Calendar error: %s with file %s\n",
                     calErrors[readStatus.code], argv[2]);
@@ -511,6 +510,7 @@ CalStatus calExtract(const CalComp *comp, CalOpt kind, FILE *const txtfile) {
             }
             if (!foundSummary) {
                 val = malloc(5);
+                assert(val != NULL);
                 strcpy(val, "(na)");
             }
             if (fprintf(txtfile, "%s: %s\n", strTime, val) < 0) {
@@ -553,7 +553,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
         strcpy(filterType, "VTODO");
     }
 
-    // Shallow copy
+    // Shallow copy without comp array
     CalComp *temp =
         malloc(sizeof(CalComp) + sizeof(CalComp *) * (comp->ncomps));
     assert(temp != NULL);
@@ -563,6 +563,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
     temp->prop = comp->prop;
     temp->ncomps = 0;
 
+    //Since we're looking for specific comps, move them as needed
     for (int i = 0; i < comp->ncomps; i++) {
         if (strcmp(comp->comp[i]->name, filterType) == 0) {
             // Do date check
@@ -585,6 +586,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                         propDate.tm_isdst = -1;
                         time_t propDate_t = mktime(&propDate);
 
+                        //Three cases depending on what user specified
                         if (datefrom == 0 && dateto != 0) {
                             if (propDate_t <= dateto) {
                                 temp->comp[temp->ncomps] = comp->comp[i];

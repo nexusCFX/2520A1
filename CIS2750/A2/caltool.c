@@ -20,7 +20,7 @@ Created: Feb 13, 2016
 Last modified: Feb 14, 2016
 *************************/
 
-int getdate_r(const char *string, struct tm *tp);
+//int getdate_r(const char *string, struct tm *tp);
 
 /*************************
 unlinkProp
