@@ -10,7 +10,7 @@ consistency.
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
 Created: Feb 13, 2016
-Last modified: Feb 14, 2016
+Last modified: Feb 22, 2016
 ********/
 
 #ifndef CALTOOL_H

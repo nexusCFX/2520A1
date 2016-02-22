@@ -17,7 +17,7 @@ consistency.
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
 Created: Feb 13, 2016
-Last modified: Feb 14, 2016
+Last modified: Feb 22, 2016
 *************************/
 
 /*************************
@@ -419,6 +419,7 @@ CalStatus calInfo(const CalComp *comp, int lines, FILE *const txtfile) {
     assert(dateRange != NULL);
     findTimeRange(dateRange, comp);
 
+    //See documentation on return from findTimeRange string format
     time_t lowDate = atoi(strtok(dateRange, ":"));
     time_t highDate = atoi(strtok(NULL, "\0"));
     free(dateRange);
