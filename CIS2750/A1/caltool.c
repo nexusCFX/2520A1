@@ -9,7 +9,7 @@
 #define TIME_ERR -404
 /************************
 caltool.c
-Implementation of FILL THIS BLANK
+Implementation of caltool utility functions defined in caltool.h
 Note to future programmers: This file conforms to the syntax used for the LLVM
 project and this should be maintained with all future modifications to ensure
 consistency.
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
-    setenv("DATEMSK", "datemsk.txt", 1);
+
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;

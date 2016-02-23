@@ -1,7 +1,5 @@
 /********
 caltool.h -- Public interface for iCalendar tools in caltool.c
-
-Public interface for iCalendar utility functions in calutil.c
  
 Note to future programmers: This file conforms to the syntax used for the LLVM
 project and this should be maintained with all future modifications to ensure
