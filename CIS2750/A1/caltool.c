@@ -786,7 +786,7 @@ time_t convertToTime_t(char arg[], char type) {
             lc->tm_hour = 0;
         }
         lc->tm_sec = 0;
-        argDate_t = time(lc);
+        argDate_t = mktime(lc);
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
