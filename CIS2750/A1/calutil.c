@@ -888,14 +888,16 @@ CalStatus writeCalComp(FILE *const ics, const CalComp *comp) {
             strcat(output, ":");
             strcat(output, traverseProps->value);
             int length = strlen(output);
+            int numFolds = 0;
             for (int i = 0; i < length; i++) {
                 // To handle how the folded lines have a space taking up 1 of
                 // the 75 char limit
-                if ((i == 75) || (i > 75 && ((i + 1) % 74) == 0)) {
+                if ((i > 0) && (i + numFolds % 75) == 0) {
 
                     if (fprintf(ics, "\r\n ") < 0) {
                         return makeCalStatus(IOERR, linesPrinted, linesPrinted);
                     }
+                    numFolds++;
                     linesPrinted++;
                 }
                 if (fprintf(ics, "%c", output[i]) < 0) {

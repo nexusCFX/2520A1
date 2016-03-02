@@ -9,7 +9,7 @@
 #define TIME_ERR -404
 /************************
 caltool.c
-Implementation of FILL THIS BLANK
+Implementation of caltool utility functions defined in caltool.h
 Note to future programmers: This file conforms to the syntax used for the LLVM
 project and this should be maintained with all future modifications to ensure
 consistency.
@@ -19,6 +19,8 @@ Contact: bchester@mail.uoguelph.ca
 Created: Feb 13, 2016
 Last modified: Feb 22, 2016
 *************************/
+
+int getdate_r(const char *string, struct tm *tp);
 
 /*************************
  compareEvents
@@ -155,7 +157,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "No command entered\n");
         return EXIT_FAILURE;
     }
-    setenv("DATEMSK", "datemsk.txt", 1);
+
     CalComp *comp1 = NULL;
     CalComp *comp2 = NULL;
     CalStatus readStatus;
@@ -626,7 +628,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
         free(temp);
         return makeCalStatus(NOCAL, 0, 0);
     }
-    CalStatus ret = writeCalComp(stdout, temp);
+    CalStatus ret = writeCalComp(icsfile, temp);
 
     free(temp);
     return ret;
@@ -775,7 +777,7 @@ time_t convertToTime_t(char arg[], char type) {
         argDate_t = time(NULL);
         lc = localtime(&argDate_t);
         lc->tm_isdst = -1;
-        argDate_t = mktime(lc);
+        
         if (type == 't') {
             lc->tm_min = 59;
             lc->tm_hour = 23;
@@ -784,6 +786,7 @@ time_t convertToTime_t(char arg[], char type) {
             lc->tm_hour = 0;
         }
         lc->tm_sec = 0;
+        argDate_t = time(lc);
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
