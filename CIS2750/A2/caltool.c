@@ -580,10 +580,7 @@ CalStatus calFilter(const CalComp *comp, CalOpt content, time_t datefrom,
                     if (strcmp(traverseProps->name, "COMPLETED") == 0 ||
                         strcmp(traverseProps->name, "DTEND") == 0 ||
                         strcmp(traverseProps->name, "DUE") == 0 ||
-                        strcmp(traverseProps->name, "DTSTART") == 0 ||
-                        strcmp(traverseProps->name, "CREATED") == 0 ||
-                        strcmp(traverseProps->name, "DTSTAMP") == 0 ||
-                        strcmp(traverseProps->name, "LAST-MODIFIED") == 0) {
+                        strcmp(traverseProps->name, "DTSTART") == 0) {
 
                         char propTime[TIME_VAL_LEN + 1];
                         strncpy(propTime, traverseProps->value, TIME_VAL_LEN);
@@ -786,7 +783,7 @@ time_t convertToTime_t(char arg[], char type) {
             lc->tm_hour = 0;
         }
         lc->tm_sec = 0;
-        argDate_t = time(lc);
+        argDate_t = mktime(lc);
         return argDate_t;
     }
     int ret = getdate_r(arg, lc);
@@ -892,6 +889,9 @@ void findTimeRange(char *timeRange, const CalComp *comp) {
     static time_t highestTime = INT_MIN;
     char ret[100];
     struct tm propDate = {0};
+    if (strcmp("VTIMEZONE",comp->name) == 0) {
+        return;
+    }
     if (comp->nprops > 0) {
 
         CalProp *traverseProps = comp->prop;

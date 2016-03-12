@@ -707,7 +707,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
                                 tempValue[j] = paramValues[j + oldPos];
                             }
                             tempValue[i - oldPos + 1] = '\0';
-                            makeUpperCase(tempValue);
+                          //  makeUpperCase(tempValue);
 
                             // Allocate space in flexible member and copy
                             // over temp array
@@ -749,7 +749,7 @@ CalError complexStringParse(char *buffCpy, CalProp *const prop) {
 
                     assert(((newParam)->value[0]) != NULL);
 
-                    makeUpperCase(paramValues);
+                   // makeUpperCase(paramValues);
                     strcpy((newParam)->value[0], paramValues);
                     newParam->nvalues++;
                 }
