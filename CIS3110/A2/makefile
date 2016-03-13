@@ -1,5 +1,5 @@
 
-OPTIONS = -std=c99 -Wall
+OPTIONS = -std=c99 -Wall -pedantic
 
 simcpu: CPU.o QueueLib.o ThreadLib.o
 	gcc $(OPTIONS) -o simcpu CPU.o QueueLib.o ThreadLib.o

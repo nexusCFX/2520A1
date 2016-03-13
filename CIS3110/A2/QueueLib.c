@@ -60,7 +60,3 @@ void QueueRemoval(Queue *q) {
     }
     q->size--;
 }
-
-void freeQueue() {
-    
-}

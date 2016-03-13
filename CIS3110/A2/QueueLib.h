@@ -1,6 +1,6 @@
 // Very naive queue implementation using a flexible array member and a size.
 // Does not use a moving head counter and it's not a min heap so ops are O(n)
-// instead of O(1). It's fast enough for these data sets.
+// instead of O(1). It's fast enough for these data sets. Not Pascal approved.
 #pragma once
 #include "ThreadLib.h"
 typedef struct Queue {
