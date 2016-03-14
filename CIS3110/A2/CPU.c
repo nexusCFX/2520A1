@@ -19,6 +19,9 @@ void outputStats(Queue *finishQueue, int clock, int cpuTime, int idleTime,
 void moveToReadyQueue(Queue *readyQueue, Queue *waitQueue, int clock,
                       bool isVerbose);
 
+// Checks the ready queue to see if any processes marked as new are ready
+void markProcessAsReady(Queue *readyQueue, int clock, bool isVerbose);
+
 int main(int argc, char *argv[]) {
     bool isVerbose = false;
     bool isDetailed = false;
@@ -110,7 +113,7 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
     Queue *waitQueue = createQueue();
     Queue *finishQueue = createQueue();
 
-    //Required to allocate for flexible array member
+    // Required to allocate for flexible array member
     finishQueue = realloc(finishQueue, sizeof(*finishQueue) +
                                            sizeof(Thread *) * readyQueue->size);
     waitQueue = realloc(waitQueue, sizeof(*waitQueue) +
@@ -125,17 +128,7 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
 
         // Check if any of the threads in the "ready" queue are actually new
         // state and put a message
-        for (int i = 0; i < readyQueue->size; i++) {
-            if (isVerbose && readyQueue->queue[i]->state == NEW &&
-                clock >= readyQueue->queue[i]->readyTime) {
-                printf("At time %d: Thread %d of Process %d moves from new to "
-                       "ready\n",
-                       readyQueue->queue[i]->readyTime,
-                       readyQueue->queue[i]->threadNo + 1,
-                       readyQueue->queue[i]->processNo);
-                readyQueue->queue[i]->state = READY;
-            }
-        }
+        markProcessAsReady(readyQueue, clock, isVerbose);
 
         // Make a new thread pointer that is easier to work with
         Thread *currThread = readyQueue->queue[0];
@@ -145,19 +138,21 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
                    "running\n",
                    clock, currThread->threadNo + 1, currThread->processNo);
         }
+        
+        int currBurst = currThread->currentBurst;
 
         // If we're doing round robin and the quantum is smaller than the burst
-        if (isRR &&
-            currThread->bursts[currThread->currentBurst]->cpuTime > quantum) {
+        if (isRR && currThread->bursts[currBurst]->cpuTime > quantum) {
             clock += 50;
             cpuTime += 50;
-            currThread->bursts[currThread->currentBurst]->cpuTime -= quantum;
+            currThread->bursts[currBurst]->cpuTime -= quantum;
             unfinishedBurst = true;
         } else {
             // Not round robin, or quantum is big enough to do the whole burst
-            clock += currThread->bursts[currThread->currentBurst]->cpuTime;
-            cpuTime += currThread->bursts[currThread->currentBurst]->cpuTime;
+            clock += currThread->bursts[currBurst]->cpuTime;
+            cpuTime += currThread->bursts[currBurst]->cpuTime;
             currThread->currentBurst++;
+            currBurst++;
         }
 
         // Check if any blocked / "ready" need to be moved to main queue
@@ -165,20 +160,10 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
 
         // Go over the ready queue and mark any "new" processes as ready if the
         // clock has passed their arrival time
-        for (int i = 0; i < readyQueue->size; i++) {
-            if (isVerbose && readyQueue->queue[i]->state == NEW &&
-                clock >= readyQueue->queue[i]->readyTime) {
-                printf("At time %d: Thread %d of Process %d moves from new to "
-                       "ready\n",
-                       readyQueue->queue[i]->readyTime,
-                       readyQueue->queue[i]->threadNo + 1,
-                       readyQueue->queue[i]->processNo);
-                readyQueue->queue[i]->state = READY;
-            }
-        }
+        markProcessAsReady(readyQueue, clock, isVerbose);
 
         // If we've finished all our bursts
-        if (currThread->currentBurst == currThread->numBursts) {
+        if (currBurst == currThread->numBursts) {
             currThread->readyTime = clock;
             if (isVerbose) {
                 printf(
@@ -191,51 +176,29 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
             QueueRemoval(readyQueue);
         } else {
             // If the burst was left unfinished in RR don't move to next burst
-            if (unfinishedBurst) {
-                if (isVerbose) {
-                    // If ioTime isn't zero we move to the blocked state
-                    if (currThread->bursts[currThread->currentBurst]->ioTime !=
-                        0) {
-                        printf("At time %d: Thread %d of Process %d moves from "
-                               "running to blocked\n",
-                               clock, currThread->threadNo + 1,
-                               currThread->processNo);
-                        currThread->state = BLOCKED;
-                    } else { // If ioTime is zero we move back to ready
-                        printf("At time %d: Thread %d of Process %d moves from "
-                               "running to ready\n",
-                               clock, currThread->threadNo + 1,
-                               currThread->processNo);
-                        currThread->state = READY;
-                    }
-                }
-                currThread->readyTime =
-                    clock +
-                    currThread->bursts[currThread->currentBurst]->ioTime;
-                unfinishedBurst = false;
-            } else {
-                if (isVerbose) {
-                    // If ioTime isn't zero we move to the blocked state
-                    if (currThread->bursts[currThread->currentBurst - 1]
-                            ->ioTime != 0) {
-                        printf("At time %d: Thread %d of Process %d moves from "
-                               "running to blocked\n",
-                               clock, currThread->threadNo + 1,
-                               currThread->processNo);
-                        currThread->state = BLOCKED;
-                    } else { // If ioTime is zero we move back to ready
-                        printf("At time %d: Thread %d of Process %d moves from "
-                               "running to ready\n",
-                               clock, currThread->threadNo + 1,
-                               currThread->processNo);
-                        currThread->state = READY;
-                    }
-                }
-                // Calculate the time at which the thread will be ready again
-                currThread->readyTime =
-                    clock +
-                    currThread->bursts[currThread->currentBurst - 1]->ioTime;
+            if (!unfinishedBurst) {
+                currBurst--;
             }
+            if (isVerbose) {
+                // If ioTime isn't zero we move to the blocked state
+                if (currThread->bursts[currBurst]->ioTime != 0) {
+                    printf("At time %d: Thread %d of Process %d moves from "
+                           "running to blocked\n",
+                           clock, currThread->threadNo + 1,
+                           currThread->processNo);
+                    currThread->state = BLOCKED;
+                } else { // If ioTime is zero we move back to ready
+                    printf("At time %d: Thread %d of Process %d moves from "
+                           "running to ready\n",
+                           clock, currThread->threadNo + 1,
+                           currThread->processNo);
+                    currThread->state = READY;
+                }
+            }
+            currThread->readyTime =
+                clock + currThread->bursts[currBurst]->ioTime;
+
+            unfinishedBurst = false;
             QueueTimeSortInsert(waitQueue, currThread);
             QueueRemoval(readyQueue);
         }
@@ -267,6 +230,21 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
         }
     }
     outputStats(finishQueue, clock, cpuTime, idleTime, isDetailed);
+}
+
+void markProcessAsReady(Queue *readyQueue, int clock, bool isVerbose) {
+    for (int i = 0; i < readyQueue->size; i++) {
+        if (isVerbose && readyQueue->queue[i]->state == NEW &&
+            clock >= readyQueue->queue[i]->readyTime) {
+            printf("At time %d: Thread %d of Process %d moves from new to "
+                   "ready\n",
+                   readyQueue->queue[i]->readyTime,
+                   readyQueue->queue[i]->threadNo + 1,
+                   readyQueue->queue[i]->processNo);
+
+            readyQueue->queue[i]->state = READY;
+        }
+    }
 }
 
 void moveToReadyQueue(Queue *readyQueue, Queue *waitQueue, int clock,
