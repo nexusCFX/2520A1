@@ -11,7 +11,7 @@ import random
 
 class XCalGUI:
     def __init__(self):
-    
+       
         if os.getenv("DATEMSK", "-1") == "-1":
             top = Tk()
             def tyrone():
@@ -136,8 +136,9 @@ class XCalGUI:
         top.destroy
         
     def getDateMsk(self):
-        print()
-        #datemskloc = askopenfilename()
+        #print()
+        datemskloc = askopenfilename()
+        os.environ["DATEMSK"] = datemskloc
        # command = "env DATEMSK={loc}".format(loc=datemskloc)
         #os.system(command)
 
