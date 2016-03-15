@@ -5,14 +5,14 @@ LDFLAGS= -L/usr/include/python3.5m/lib -lpython3.5m
 caltool: caltool.o Cal.so
 
 Cal.so: calutil.o
-        gcc -shared calutil.o -o Cal.so -L/usr/include/python3.5m/lib -lpython3.5m
+	gcc -shared calutil.o -o Cal.so -L/usr/include/python3.5m/lib -lpython3.5m
 
 calutil.o: calutil.c calutil.h
 
 caltool.o: caltool.h caltool.h
 
 clean:
-        rm -f *.o caltool Cal.so
+	rm -f *.o caltool Cal.so
 
 
 
