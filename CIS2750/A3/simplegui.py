@@ -89,7 +89,7 @@ class XCalGUI:
         #"File"
         self.fileMenu = Menu(m, tearoff=0)
         self.fileMenu.add("command", label="Open", command=self.openFile)
-        self.fileMenu.add("command", label="Save", command=self.saveCurrent)
+        self.fileMenu.add("command", label="Save", command=self.saveFile)
         self.fileMenu.add("command", label="SaveAs", command=self.saveFileAs)
         self.fileMenu.add("command", label="Combine", command=self.combine)
         self.fileMenu.add("command", label="Filter", command=self.filter)
@@ -156,11 +156,11 @@ class XCalGUI:
             self.CompTable.insert('', 'end', text=str(i), values=(tup[0], tup[1], tup[2], tup[3]))
             i = i + 1
         
-    def saveCurrent():
-        quitProg
-        
     def saveFile(self):
-        print ()
+        if os.getenv("DATEMSK", "-1") == "-1":
+            print("bad")
+         else:
+            print("Good")
         
     def showSelected(self):
         tempFile = "ShowSelectedTemp.txt"
