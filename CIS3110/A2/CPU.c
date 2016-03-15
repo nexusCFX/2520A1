@@ -143,8 +143,8 @@ void CPUSimulator(Queue *readyQueue, int sameProcSwitch, int difProcSwitch,
 
         // If we're doing round robin and the quantum is smaller than the burst
         if (isRR && currThread->bursts[currBurst]->cpuTime > quantum) {
-            clock += 50;
-            cpuTime += 50;
+            clock += quantum;
+            cpuTime += quantum;
             currThread->bursts[currBurst]->cpuTime -= quantum;
             unfinishedBurst = true;
         } else {

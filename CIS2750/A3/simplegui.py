@@ -11,6 +11,25 @@ import random
 
 class XCalGUI:
     def __init__(self):
+    
+        if os.getenv("DATEMSK", "-1") == "-1":
+            top = Tk()
+            def tyrone():
+              self.getDateMsk()
+              top.destroy()
+            top.minsize(width=270, height=60)
+            top.maxsize(width=270, height=60)
+            L1 = Label(top, text="You do not have a Datemsk file specified.\nWould you like to enter it now?")
+            L1.grid(row=0, column=0, sticky='n')
+            showB = Button(top,text="Yes",command = tyrone)
+                
+            showB.grid(row=2, column = 0, sticky='e')
+            kfc = Button(top,text="Not now",command = top.destroy)
+            kfc.grid(row=2, column = 0, sticky='w')
+
+                
+            mainloop()
+        
         self.filename = ""
         self.fileList = []
         self.pcal = 0
@@ -112,7 +131,16 @@ class XCalGUI:
             #    self.CompTable.focus(None)
                 
         
+    def dateMskStartup(self, top):
+        self.getDateMsk   
+        top.destroy
         
+    def getDateMsk(self):
+        print()
+        #datemskloc = askopenfilename()
+       # command = "env DATEMSK={loc}".format(loc=datemskloc)
+        #os.system(command)
+
     def combine():
         combineFile = getFileName
     
@@ -167,4 +195,5 @@ class XCalGUI:
         
 
 xCal = XCalGUI()
+    
 mainloop()
