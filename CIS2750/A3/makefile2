@@ -1,15 +1,14 @@
 CC=gcc
-CFLAGS= -fPIC `pkg-config --cflags python3` -std=c11 -Wpedantic -Wall
-caltool: caltool.o Cal.so date.o
+CFLAGS= -fPIC `pkg-config --cflags python3` -std=c11 -Wall
+
+caltool: caltool.o Cal.so
 
 Cal.so: calutil.o
-	gcc -shared calutil.o -o Cal.so -L/usr/local/Cellar/python3/3.5.1/Frameworks/Python.framework/Versions/3.5/lib -lpython3.5m
+	$(cc) $(CFLAGS) -shared calutil.o -o Cal.so 
 
 calutil.o: calutil.c calutil.h
 
 caltool.o: caltool.h caltool.h
-
-date.o: date.c
 
 clean:
 	rm -f *.o caltool Cal.so
