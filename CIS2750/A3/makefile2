@@ -1,10 +1,11 @@
 CC=gcc
-CFLAGS= -fPIC `pkg-config --cflags python3` -std=c11 -Wall
+CFLAGS= -fPIC -I/usr/include/python3.5m -I/usr/include/x86_64-linux-gnu/python3.5m -std=c11 -Wpedantic -Wall
+LDFLAGS= `pkg-config —-libs python3`
 
 caltool: caltool.o Cal.so
 
 Cal.so: calutil.o
-	$(cc) $(CFLAGS) -shared calutil.o -o Cal.so 
+	gcc -shared calutil.o -o Cal.so
 
 calutil.o: calutil.c calutil.h
 
@@ -12,7 +13,6 @@ caltool.o: caltool.h caltool.h
 
 clean:
 	rm -f *.o caltool Cal.so
-
 
 
 
