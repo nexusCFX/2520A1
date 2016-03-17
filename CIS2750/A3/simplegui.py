@@ -452,6 +452,13 @@ class XCalGUI:
             self.pcal = 0
         try:
             os.remove("ShowSelectedTemp.txt")
+            os.remove("FilterTemp.txt")
+            os.remove("FilterTempOutput.txt")
+            os.remove("InfoTempOutput.txt")
+            os.remove("ExtractXPropsTempOutput.txt")
+            os.remove("ExtractEventsTempOutput.txt")
+            os.remove("ExtractXPropsTemp.txt")
+            os.remove("ExtractEventsTemp.txt")
         except OSError:
             pass
         xCal.root.destroy()
