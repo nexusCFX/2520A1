@@ -70,24 +70,33 @@ class XCalGUI:
         self.menuBar = Menu()
 
         self.fileMenu = Menu(self.menuBar, tearoff = 0)
-        self.fileMenu.add("command", label = "Open", command = self.openFileDLG)
-        self.fileMenu.add("command", label = "Save", command = self.saveFile)
-        self.fileMenu.add("command", label = "SaveAs", command = self.saveFileAs)
-        self.fileMenu.add("command", label = "Combine", command = self.combine)
-        self.fileMenu.add("command", label = "Filter", command = self.filter)
-        self.fileMenu.add("command", label = "Exit", command = self.quitProg)
+        self.fileMenu.add_command(label = "Open", command = self.openFileDLG)
+        self.fileMenu.add_command( label = "Save", command = self.saveFile)
+        self.fileMenu.add_command( label = "Save As", command = self.saveFileAs)
+        self.fileMenu.add_command( label = "Combine", command = self.combine)
+        self.fileMenu.add_command( label = "Filter", command = self.filter)
+        self.fileMenu.add_command( label = "Exit", command = self.quitProg)
+        
+        self.fileMenu.entryconfig(1, state=DISABLED)
+        self.fileMenu.entryconfig(2, state=DISABLED)
+        self.fileMenu.entryconfig(3, state=DISABLED)
+        self.fileMenu.entryconfig(4, state=DISABLED)
+        
         
         self.todoMenu = Menu(self.menuBar, tearoff = 0)
-        self.todoMenu.add("command", label = "To-do List", command = self.todoList)
-        self.todoMenu.add("command", label = "About xcal", command = self.aboutWindow)
+        self.todoMenu.add_command(label = "To-do List", command = self.todoList)
+        self.todoMenu.add_command( label = "Undo", command = self.undoCHK)
+        
+        self.todoMenu.entryconfig(0, state=DISABLED)
+        self.todoMenu.entryconfig(1, state=DISABLED)
 
         self.helpMenu = Menu(self.menuBar, tearoff = 0)
-        self.helpMenu.add("command", label = "Date Mask", command = self.getDateMsk)
-        self.helpMenu.add("command", label = "About xcal", command = self.aboutWindow)
+        self.helpMenu.add_command( label = "Date Mask", command = self.getDateMsk)
+        self.helpMenu.add_command( label = "About xcal", command = self.aboutWindow)
 
-        self.menuBar.add("cascade", menu = self.fileMenu, label = "File")
-        self.menuBar.add("cascade", menu = self.todoMenu, label = "Todo")
-        self.menuBar.add("cascade", menu = self.helpMenu, label = "Help")
+        self.menuBar.add_cascade( menu = self.fileMenu, label = "File")
+        self.menuBar.add_cascade( menu = self.todoMenu, label = "Todo")
+        self.menuBar.add_cascade( menu = self.helpMenu, label = "Help")
         self.root.configure(menu = self.menuBar) 
         self.root.grid_rowconfigure(0, weight = 1)
         self.root.grid_columnconfigure(0, weight = 1)
@@ -96,7 +105,7 @@ class XCalGUI:
         self.root.bind_all("<Control-s>", self.saveSC)
         self.root.bind_all("<Control-x>", self.quitSC)
         self.root.bind_all("<Control-t>", self.todoSC)
-       #self.root.bind_all("<Control-z>", self.undoSC)
+        self.root.bind_all("<Control-z>", self.undoSC)
        
         self.root.protocol("WM_DELETE_WINDOW", self.quitProg)
 
@@ -131,6 +140,7 @@ class XCalGUI:
             canvas.configure(scrollregion=canvas.bbox("all"))
             
         toDo = tk.Toplevel()
+        toDo.title("Todo List")
         
         def Done():
             removed = 0
@@ -142,6 +152,7 @@ class XCalGUI:
             if removed > 0:        
                 self.root.title("xcal " + os.path.basename(self.filename) + "*")
                 self.unsavedChanges = 1
+                self.todoMenu.entryconfig(1, state=NORMAL)
                 self.drawFVP()
             toDo.destroy() 
             
@@ -202,6 +213,7 @@ class XCalGUI:
             
         def Continue():
             self.unsavedChanges = 0
+            self.todoMenu.entryconfig(1, state=DISABLED)
             dialog.destroy()
         
         Label(dialog, text = "You have unsaved changes.\nDo you wish to proceed without saving?").pack(fill = "x")
@@ -215,15 +227,35 @@ class XCalGUI:
         btn.pack(fill = "both")
         btn2.pack(fill = "both")
         
-            
+    def undoCHK(self):
+        if (self.unsavedChanges == 1):
+            self.undo()
         
-    def undo():
+    def undoSC(self, event):
+        if (self.unsavedChanges == 1):
+            self.undo()
+        
+    def undo(self):
         dialog = Toplevel()
+        dialog.title("Undo")
+        
+        def Cancel():
+            dialog.destroy()
+            
+        def Undo():
+            dialog.destroy()
+            self.fileList = self.oldList
+            self.oldList = []
+            self.drawFVP()
+            self.unsavedChanges = 0
+            self.todoMenu.entryconfig(1, state=DISABLED)
+            self.root.title("xcal " + os.path.basename(self.filename))
+            
         
         Label(dialog, text = "All Todo items removed since the last save will be restored").pack(fill = "x")
         Label(dialog, text = "Do you want to proceed with this action?").pack(fill = "x")
         btn = Button(dialog, text = "Cancel", command = Cancel)
-        btn2 = Button(filter, text = "Undo", command = Cancel)
+        btn2 = Button(dialog, text = "Undo", command = Undo)
         
         dialog.minsize(width = 250, height = 183)
         dialog.maxsize(width = 250, height = 183)
@@ -281,6 +313,13 @@ class XCalGUI:
                 self.log.config(state = NORMAL)
                 self.log.insert("end", loadedFile + "\n")
                 self.log.config(state = DISABLED)
+                
+                self.fileMenu.entryconfig(1, state=NORMAL)
+                self.fileMenu.entryconfig(2, state=NORMAL)
+                self.fileMenu.entryconfig(3, state=NORMAL)
+                self.fileMenu.entryconfig(4, state=NORMAL)
+                self.todoMenu.entryconfig(0, state=NORMAL)
+                
             else :
                 self.log.config(state = NORMAL)
                 self.log.insert("end", error + "\n")
@@ -301,6 +340,7 @@ class XCalGUI:
     def saveFile(self):
         Cal.writeFile(self.filename, self.pcal, self.fileList)
         self.unsavedChanges = 0
+        self.todoMenu.entryconfig(1, state=DISABLED)
         self.oldList = []
         self.root.title("xcal " + os.path.basename(self.filename))
         
@@ -311,6 +351,7 @@ class XCalGUI:
             
             self.filename = outputFile
             self.unsavedChanges = 0
+            self.todoMenu.entryconfig(1, state=DISABLED)
             self.oldList = []
             self.root.title("xcal " + os.path.basename(self.filename))
             
@@ -346,6 +387,7 @@ class XCalGUI:
                 self.pcal = result[0]
                 self.fileList = result[1]
                 self.unsavedChanges = 1
+                self.todoMenu.entryconfig(1, state=NORMAL)
                 self.root.title("xcal " + os.path.basename(self.filename) + "*")
                 self.drawFVP()
             else :
@@ -409,9 +451,6 @@ class XCalGUI:
         self.log.config(state = NORMAL)
         self.log.insert("end", loadedFile + "\n")
         self.log.config(state = DISABLED)
-
-
-
 
     def dateMskStartup(self, top):
         self.getDateMsk
