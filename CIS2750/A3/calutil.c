@@ -106,17 +106,24 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
     CalComp *comp = NULL;
     CalStatus readStatus;
     FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        char returnString[400];
+        sprintf(returnString, "Error opening file %s", filename);
+        PyObject* ret = Py_BuildValue("s", returnString);
+        return ret;
+    }
     readStatus = readCalFile(file, &comp);
     if (readStatus.code != OK) {
-        //Error return
+        char returnString[400];
+        sprintf(returnString, "ReadCalFile returned error code %d on line %d in file %s",readStatus.code, readStatus.lineto, filename);
+        PyObject* ret = Py_BuildValue("s", returnString);
+        return ret;
     }
-   // PyObject* list = PyList_New(2);
-    unsigned long ptrLong = ((unsigned long)comp);
-    printf("Unsigned rep %lu\n",ptrLong); 
+    
     PyObject* compObj = Py_BuildValue("k",((unsigned long)comp));
     PyList_Append(result, compObj);
-    puts("test1");
     PyObject* compList = PyList_New(comp->ncomps);
+    
     for (int i = 0; i < comp->ncomps; i++) {
         CalComp* c = comp->comp[i];
         char* summary = NULL;
@@ -130,19 +137,16 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
         }
         
         if (summary == NULL) {
-           PyObject* temp = Py_BuildValue("s i i s", c->name, c->nprops, c->ncomps, "");
+           PyObject* temp = Py_BuildValue("siis", c->name, c->nprops, c->ncomps, "");
            PyList_SetItem(compList, i, temp);
         } else {
-            PyObject* temp = Py_BuildValue("s i i s", c->name, c->nprops, c->ncomps, summary);
-        //    PyObject* strRep = PyObject_Repr(temp);
-        //    const char* s = PyUnicode_AsUTF8(strRep);
-        //    fprintf("Representation: %s",s);
+            PyObject* temp = Py_BuildValue("siis", c->name, c->nprops, c->ncomps, summary);
             PyList_SetItem(compList, i, temp);
         }
         
     }
     PyList_Append(result, compList);
-    PyObject* ret = Py_BuildValue("s", "tyrone");
+    PyObject* ret = Py_BuildValue("s", "OK");
     return ret;
 }
 
@@ -154,18 +158,92 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
     
     CalComp* pcomp = (CalComp*)pcal;
     FILE* file = fopen(filename,"w");
+    if (file == NULL) {
+        char returnString[400];
+        sprintf(returnString, "Error writing to file %s", filename);
+        PyObject* ret = Py_BuildValue("s", returnString);
+        return ret;
+    }
     if (PyList_Check(complist) == 1) {
-        //do reduction
-        puts("Case 1");
-        writeCalComp(file, pcomp);
+        int compListLength = PyList_Size(complist);
+        
+        if (compListLength < pcomp->ncomps) {
+            char* tempStr = malloc(3);
+            strcpy(tempStr,"");
+        
+            CalComp* tempComps[pcomp->ncomps];
+            CalComp* reducedComps[compListLength];
+            
+            int reducedCompsSize = 0;
+            int tempCompsSize = pcomp->ncomps;
+            
+            for (int i = 0; i < pcomp->ncomps; i++) {
+                tempComps[i] = pcomp->comp[i];
+            }
+          //  puts("test1");
+            for (int i = 0; i < compListLength; i++) {
+                PyObject* listItem = PyList_GetItem(complist,i);
+                char* name;
+                char *summary;
+                int ncomps;
+                int nprops;
+               
+                PyArg_ParseTuple( listItem, "siis", &name, &nprops, &ncomps, &summary);
+            //    puts("-------------------------------------------------------------");
+             //   printf("we want to find:\nName: %s\nSummary:%s\nProps: %d\n Comps: %d\n\n",name,summary,ncomps, nprops);
+                bool isFound = false;
+                char* propSummary = NULL;
+                int j;
+                for (j = 0; j < pcomp->ncomps; j++) {
+                    CalProp* traverseProps = pcomp->comp[j]->prop;
+                    
+                    for (int k = 0; k < pcomp->comp[j]->nprops; k++) {
+                        if (strcmp(traverseProps->name,"SUMMARY") == 0) {
+                            propSummary = traverseProps->value;
+                            break;
+                        }
+                        traverseProps = traverseProps->next;
+                    }
+                    if (propSummary == NULL) {
+                        propSummary = tempStr;
+                    }
+                  //  printf("We are checking:\nName: %s\nSummary:%s\nProps: %d\n Comps: %d\n\n",pcomp->comp[j]->name,propSummary,pcomp->comp[j]->ncomps, pcomp->comp[j]->nprops);
+                    if (pcomp->comp[j]->ncomps == ncomps && pcomp->comp[j]->nprops == nprops && strcmp(summary, propSummary) == 0 && strcmp(name, pcomp->comp[j]->name) == 0) {
+                        isFound = true;
+                     //   puts("We have found a match");
+                        break;
+                    }
+                }
+                if (isFound) {
+                    reducedComps[reducedCompsSize] = pcomp->comp[j];
+                    reducedCompsSize++;
+                    isFound = false;
+                }
+                
+            }
+           // puts("test2");
+            pcomp->ncomps = reducedCompsSize;
+            for (int i = 0; i < reducedCompsSize; i++) {
+                pcomp->comp[i] = reducedComps[i];
+            }
+            writeCalComp(file, pcomp);
+            
+            pcomp->ncomps = tempCompsSize;
+            for (int i = 0; i < tempCompsSize ; i++) {
+                pcomp->comp[i] = tempComps[i];
+            }
+            
+            free(tempStr);
+        } else {
+            writeCalComp(file, pcomp);
+        }
     } else if (PyLong_Check(complist) == 1) {
         long int pos = PyLong_AsLong(complist);
-        puts("Case 2");
         writeCalComp(file, pcomp->comp[pos]);
     }
     fclose(file);
     
-    PyObject* ret = Py_BuildValue("s", "tyrone");
+    PyObject* ret = Py_BuildValue("s", "OK");
     return ret;
 }
 

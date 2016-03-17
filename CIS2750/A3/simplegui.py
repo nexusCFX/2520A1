@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import copy
 import os
 import Cal
 import tkinter as tk
@@ -11,32 +12,15 @@ import random
 
 class XCalGUI:
     def __init__(self):
-        #os.environ["DATEMSK"] = "nofile"
-        if os.getenv("DATEMSK", "-1") == "-1":
-            top = Tk()
-            def inputDateMsk():
-              self.getDateMsk()
-              top.destroy()
-            top.minsize(width=270, height=60)
-            top.maxsize(width=270, height=60)
-            L1 = Label(top, text="You do not have a Datemsk file specified.\nWould you like to enter it now?")
-            L1.grid(row=0, column=0, sticky='n')
-            yesBtn = Button(top,text="Yes",command = inputDateMsk)
-                
-            yesBtn.grid(row=2, column = 0, sticky='e')
-            noBtn = Button(top,text="Not now",command = top.destroy)
-            noBtn.grid(row=2, column = 0, sticky='w')
- 
-            mainloop()
-        
+    
         self.filename = ""
         self.fileList = []
+        self.oldList = []
         self.pcal = 0
         self.root=Tk()
         self.root.title("xcal")
         self.root.minsize(width=700, height=666)
         self.tableSize = 0
-        self.removedFromList = []
         
         self.CompTable = Treeview(self.root, selectmode="browse")
         self.CompTable.bind("<Button-3>", self.popup)
@@ -64,8 +48,7 @@ class XCalGUI:
         scrollbT = Scrollbar(self.root, command=self.CompTable.yview)
         scrollbT.grid(row=0, column=1, sticky='nsew')
         self.CompTable['yscrollcommand'] = scrollbT.set
-        
-        
+         
         self.showSelButn = Button(self.root,text="Show Selected",command = lambda: self.showSelected())
         self.showSelButn.grid(row=1, column=0, sticky='w')
         
@@ -118,6 +101,33 @@ class XCalGUI:
         self.root.grid_rowconfigure(0, weight = 1)
         self.root.grid_columnconfigure(0, weight = 1)
         
+        self.root.bind_all("<Control-o>", self.openSC)
+        self.root.bind_all("<Control-s>", self.saveSC)
+        self.root.bind_all("<Control-x>", self.quitSC)
+        
+        self.root.bind_all("<Control-t>", self.todoSC)
+       # self.root.bind_all("<Control-z>", self.undoSC)
+        
+        
+        if os.getenv("DATEMSK", "-1") == "-1":
+            top = Toplevel(self.root)
+            top.attributes("-topmost", True)
+            top.lift()
+            def inputDateMsk():
+              self.getDateMsk()
+              top.destroy()
+            top.minsize(width=270, height=60)
+            top.maxsize(width=270, height=60)
+            L1 = Label(top, text="You do not have a Datemsk file specified.\nWould you like to enter it now?")
+            L1.grid(row=0, column=0, sticky='n')
+            yesBtn = Button(top,text="Yes",command = inputDateMsk)
+                
+            yesBtn.grid(row=2, column = 0, sticky='e')
+            noBtn = Button(top,text="Not now",command = top.destroy)
+            noBtn.grid(row=2, column = 0, sticky='w')
+            
+    
+        
     def clearLog(self):
         self.log.config(state = NORMAL)
         self.log.delete('1.0', END)
@@ -126,49 +136,83 @@ class XCalGUI:
     def unsavedChanges(self):
         print("yo")
         
+    def todoSC(self, event):
+        self.todoList()
+        
     def todoList(self):
-        def onFrameConfigure(canvas):
+        def reconfigure(canvas):
             canvas.configure(scrollregion=canvas.bbox("all"))
             
-        root = tk.Tk()
-        canvas = tk.Canvas(root, borderwidth=0, background="#ffffff")
+        toDo = tk.Toplevel()
+        
+        def Done():
+            removed = 0
+            self.oldList = list(self.fileList)
+            for box in boxList:
+                print("box var")
+                print(box.var.get())
+                if box.var.get() == 1:
+                    print("Rem")
+                    del self.fileList[box.index - removed]
+                    removed = removed + 1
+                    
+            self.tableSize = 0
+            for i in self.CompTable.get_children():
+                self.CompTable.delete(i)
+            print(self.fileList)
+            print("old")
+            print(self.oldList)
+            self.drawFVP()
+            toDo.destroy() 
+            
+        def Cancel():
+            toDo.destroy()
+        
+        toDo.minsize(width=240, height=250)
+        toDo.maxsize(width=240, height=10000)
+        canvas = tk.Canvas(toDo, borderwidth=0, background="#ffffff")
         frame = tk.Frame(canvas, background="#ffffff")
-        vsb = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+        vsb = tk.Scrollbar(toDo, orient="vertical", command=canvas.yview)
         canvas.configure(yscrollcommand=vsb.set)
 
         vsb.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
-        canvas.create_window((4,4), window=frame, anchor="nw")
+        canvas.pack(fill="both", expand=True)
+        canvas.create_window(0,0, window=frame, anchor="nw")
 
-        frame.bind("<Configure>", lambda event, canvas=canvas: onFrameConfigure(canvas))
+        frame.bind("<Configure>", lambda event, canvas=canvas: reconfigure(canvas))
         canvas.bind('<4>', lambda event : canvas.yview('scroll', -1, 'units'))
-        canvas.bind('<MouseWheel>', lambda event : canvas.yview('scroll', 1, 'units'))
         canvas.bind('<5>', lambda event : canvas.yview('scroll', 1, 'units'))
         
         i = 0
         
         boxList = []
-    
-
-        
+        j = 0
         for tup in self.fileList:
+           
             if (tup[0] == "VTODO"):
                 
                 Lbl = Label(frame, text=tup[3])
                 Lbl.grid(row = i, column = 0)
-                
                 Var = IntVar()
+                Var.set(0)
                 ChkBox = Checkbutton(frame, variable=Var)
-                ChkBox.grid(row = i, column = 1)
+                ChkBox.var = Var
                 
-                boxList.append(Var)
+                ChkBox.grid(row = i, column = 1)
+                ChkBox.index = j
+                boxList.append(ChkBox)
                 i = i + 1
+            j = j + 1
 
-        
+        btn = Button(toDo,text="Cancel",command = Cancel)
+        btn.pack(fill="both")
+        btn2 = Button(toDo,text="Save",command = Done)
+        btn2.pack(fill="both")
+
         mainloop()
         
-        
-       
+    def openSC(self, event):
+        self.openFile()
         
     def openFile(self):
         self.filename = askopenfilename()
@@ -178,18 +222,19 @@ class XCalGUI:
             self.pcal = result[0]
             self.fileList = result[1]
             self.drawFVP()
+            self.root.title("xcal " + os.path.basename(self.filename))
             
-    def drawFVP(self):
+    def drawFVP(self):   
         for tup in self.fileList:
             self.tableSize = self.tableSize + 1
             self.CompTable.insert('', 'end', iid = self.tableSize, text=str(self.tableSize), values=(tup[0], tup[1], tup[2], tup[3]))
-            self.removedFromList.append(0)
+            
+    def saveSC(self, event):
+        self.saveFile(self)
         
     def saveFile(self):
-        if os.getenv("DATEMSK", "-1") == "-1":
-            print("bad")
-        else:
-            print("Good")
+        Cal.writeFile(outputFile, self.pcal, self.fileList)
+        self.root.title("xcal " + os.path.basename(self.filename))
             
     def saveFileAs(self):
         outputFile = asksaveasfilename(defaultextension=".ics")
@@ -242,24 +287,16 @@ class XCalGUI:
                 self.log.insert("end", loadedFile)
                 self.log.config(state=DISABLED)
 
-    def aboutWindow():
-            #showinfo pops up an entire new window. Alert in Java. 
-            showinfo("About", "xcal\nCompatible with iCalendar V2.0\nWritten by Brandon Chester")
+    def aboutWindow(self):
+        #showinfo pops up an entire new window. Alert in Java. 
+        showinfo("About", "xcal\nCompatible with iCalendar V2.0\nWritten by Brandon Chester")
+        
+    def quitSC(self, event):
+        self.quitProg(self)
             
-    def clearTable(self):
-        command = "./caltool -info < {nameofile} > pytest.self.log".format(nameofile=self.filename)
-        os.system(command)
-        #print (command)
-    # for i in self.CompTable.get_children():
-    #     self.CompTable.delete(i)
-            
-    #Quit program function
-    def quitProg():
-        print ("Goodbye!")
+    def quitProg(self):
         xCal.quit()
         
-        
-
 xCal = XCalGUI()
     
 mainloop()
