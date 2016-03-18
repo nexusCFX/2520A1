@@ -191,6 +191,9 @@ CalStatus readCalComp(FILE *const ics, CalComp **const pcomp) {
     static int callDepth = 1;
     char *pbuff = NULL;
     static CalStatus returnStatus;
+    if (callDepth == 1) {
+        returnStatus = makeCalStatus(OK,0,0);
+    }
 
     while (!feof(ics)) {
 
