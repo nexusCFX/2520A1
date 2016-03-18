@@ -2,6 +2,7 @@
 import time
 import copy
 import os
+import os.path
 import Cal
 import tkinter as tk
 from tkinter import *
@@ -10,6 +11,16 @@ from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import asksaveasfilename
 from tkinter.ttk import *
 import random
+
+#
+#
+#You can also use os.path.isfile
+
+#Return True if path is an existing regular file. This follows symbolic links, so both islink() and isfile() can be true for the same path.
+#import os.path
+#os.path.isfile(fname) 
+#http://stackoverflow.com/questions/82831/how-to-check-whether-a-file-exists-using-python
+#
 
 class XCalGUI:
     def __init__(self): 
@@ -22,6 +33,7 @@ class XCalGUI:
         self.root.title("xcal")
         self.root.minsize(width = 700, height = 666)
         self.tableSize = 0
+        self.rowSelected = 0
         
         self.CompTable = Treeview(self.root, selectmode = "none")
         self.CompTable.bind("<Button-3>", self.popup)
@@ -120,6 +132,12 @@ class XCalGUI:
                 top.destroy()
                 self.getDateMsk()
                 
+            def Cancel2(event):
+                top.destroy()
+        
+        
+            top.bind_all("<Escape>", Cancel2)
+                
             top.minsize(width = 270, height = 60)
             top.maxsize(width = 270, height = 60)
             L1 = Label(top, text = "You do not have a Datemsk file specified.\nWould you like to enter it now?")
@@ -146,6 +164,12 @@ class XCalGUI:
             
         toDo = tk.Toplevel()
         toDo.title("Todo List")
+        
+        def Cancel2(event):
+            toDo.destroy()
+        
+        
+        toDo.bind_all("<Escape>", Cancel2)
         
         def Done():
             removed = 0
@@ -208,30 +232,8 @@ class XCalGUI:
         mainloop()
         
     def openSC(self, event):
-        self.openFile()
-        
-    def saveChangesDialog(self):
-        dialog = Toplevel()
-        dialog.title("Unsaved Changes")
-        
-        def Cancel():
-            dialog.destroy()
-            
-        def Continue():
-            self.unsavedChanges = 0
-            self.todoMenu.entryconfig(1, state=DISABLED)
-            dialog.destroy()
-        
-        Label(dialog, text = "You have unsaved changes.").pack(fill = "x")
-        Label(dialog, text = "Do you want to proceed?").pack(fill = "x")
-        btn = Button(dialog, text = "Cancel", command = Cancel)
-        btn2 = Button(dialog, text = "Continue", command = Continue)
-        
-        dialog.minsize(width = 250, height = 183)
-        dialog.maxsize(width = 250, height = 183)
-
-        btn.pack(fill = "both")
-        btn2.pack(fill = "both")
+        self.openFileDLG()
+       
         
     def undoCHK(self):
         if (self.unsavedChanges == 1):
@@ -248,6 +250,12 @@ class XCalGUI:
         
         def Cancel():
             dialog.destroy()
+            
+        def Cancel2(event):
+            top.destroy()
+        
+        
+        top.bind_all("<Escape>", Cancel2)
             
         def Undo():
             dialog.destroy()
@@ -275,7 +283,7 @@ class XCalGUI:
     def openFileDLG(self):
         if self.unsavedChanges == 1:
             dialog = Toplevel(self.root)
-            
+            dialog.title("Unsaved Changes")
             def Cancel():
                 dialog.destroy()
                 
@@ -397,8 +405,15 @@ class XCalGUI:
         filter.grab_set()
         v = IntVar()
         
+        
         def Cancel():
             filter.destroy()
+            
+        def Cancel2(event):
+            filter.destroy()
+        
+        
+        filter.bind_all("<Escape>", Cancel2)
             
         def Filter():
             fromstr = ""
@@ -411,11 +426,11 @@ class XCalGUI:
                 
             if v.get() == 1:
                 Cal.writeFile("FilterTemp.txt", self.pcal, self.fileList)
-                command = "./caltool -filter t {0} {1} < FilterTemp.txt > FilterTempOutput.txt".format(fromstr, tostr)
+                command = "./caltool -filter t {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2> error.txt".format(fromstr, tostr)
                 os.system(command)
             elif v.get() == 2:
                 Cal.writeFile("FilterTemp.txt", self.pcal, self.fileList)
-                command = "./caltool -filter e {0} {1} < FilterTemp.txt > FilterTempOutput.txt".format(fromstr, tostr)
+                command = "./caltool -filter e {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2> error.txt" .format(fromstr, tostr)
                 os.system(command)
                 
             result = []
@@ -456,15 +471,25 @@ class XCalGUI:
 
     def popup(self, event):
         self.CompTable.config(selectmode="browse")
-        self.showSelButn.config(state=NORMAL)
         iid = self.CompTable.identify_row(event.y)
         item = self.CompTable.focus()
-        self.CompTable.selection_toggle(iid)
+        
         if item == iid:
-            self.showSelButn.config(state=DISABLED)
+            if iid != "":
+                self.CompTable.selection_toggle(iid)
+                if self.rowSelected == 0:
+                    self.rowSelected = 1
+                    self.showSelButn.config(state=NORMAL)
+                else:
+                    self.rowSelected = 0
+                    self.showSelButn.config(state=DISABLED)
+            
         else:
-            self.CompTable.selection_remove(item)
-            #self.showSelButn.config(state=NORMAL)
+            if iid != "":
+                self.rowSelected = 1
+                self.CompTable.selection_remove(item)
+                self.showSelButn.config(state=NORMAL)
+                self.CompTable.selection_toggle(iid)
         self.CompTable.config(selectmode="none")
 
     def extractEvents(self):
