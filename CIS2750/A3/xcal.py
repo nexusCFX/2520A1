@@ -199,7 +199,18 @@ class XCalGUI:
         boxList = []
         j = 0
         
-        btn2 = Button(toDo,text="Save",command = Done)
+        btn2 = Button(toDo,text="Done",command = Done)
+        btn2.config(state=DISABLED)
+        def check():
+            self.numBoxes = 0
+            for box in boxList:
+                if box.var.get() == 1:
+                    self.numBoxes = self.numBoxes + 1
+            
+            if self.numBoxes > 0:
+                btn2.config(state=NORMAL)
+            else:
+                btn2.config(state=DISABLED)
         
         
         for tup in self.fileList:
@@ -210,7 +221,7 @@ class XCalGUI:
                 Lbl.grid(row = i, column = 0)
                 Var = IntVar()
                 Var.set(0)
-                ChkBox = Checkbutton(frame, variable=Var)
+                ChkBox = Checkbutton(frame, variable=Var, command = check)
                 ChkBox.var = Var
                 
                 ChkBox.grid(row = i, column = 1)
@@ -223,7 +234,8 @@ class XCalGUI:
         btn.pack(fill="both")
         
         btn2.pack(fill="both")
-        btn2.config(state=DISABLED)
+        
+        #btn2.config(state=DISABLED)
         mainloop()
         
     def openSC(self, event):
@@ -331,6 +343,7 @@ class XCalGUI:
         self.todoMenu.entryconfig(0, state=DISABLED)
         self.extrEvntBtn.config(state=DISABLED)
         self.extrXPropBtn.config(state=DISABLED)
+        self.showSelButn.config(state=DISABLED)
         self.filename = askopenfilename()
                
         if (self.filename):
@@ -355,10 +368,12 @@ class XCalGUI:
                 os.remove("error.txt")
                 self.log.config(state = NORMAL)
                 self.log.insert("end", stderr + "\n")
+                self.log.see("end")
                 self.log.config(state = DISABLED)
                 
                 self.log.config(state = NORMAL)
                 self.log.insert("end", loadedFile + "\n")
+                self.log.see("end")
                 self.log.config(state = DISABLED)
                 
                 self.fileMenu.entryconfig(1, state=NORMAL)
@@ -372,6 +387,7 @@ class XCalGUI:
             else :
                 self.log.config(state = NORMAL)
                 self.log.insert("end", error + "\n")
+                self.log.see("end")
                 self.log.config(state = DISABLED)
                 self.filename = ""
 
@@ -402,6 +418,7 @@ class XCalGUI:
             os.remove("error.txt")
             self.log.config(state = NORMAL)
             self.log.insert("end", stderr + "\n")
+            self.log.see("end")
             self.log.config(state = DISABLED)
             
             if error == "OK":
@@ -415,6 +432,7 @@ class XCalGUI:
             else :
                 self.log.config(state = NORMAL)
                 self.log.insert("end", error + "\n")
+                self.log.see("end")
                 self.log.config(state = DISABLED) 
             
     def saveSC(self, event):
@@ -440,6 +458,7 @@ class XCalGUI:
             
     def filter(self):
         filter = tk.Toplevel()
+        filter.attributes("-topmost", True)
         filter.grab_set()
         v = IntVar()
         
@@ -479,6 +498,7 @@ class XCalGUI:
             os.remove("error.txt")
             self.log.config(state = NORMAL)
             self.log.insert("end", stderr + "\n")
+            self.log.see("end")
             self.log.config(state = DISABLED)
             
             if error == "OK":
@@ -492,6 +512,7 @@ class XCalGUI:
             else :
                 self.log.config(state = NORMAL)
                 self.log.insert("end", error + "\n")
+                self.log.see("end")
                 self.log.config(state = DISABLED) 
             filter.destroy()
 
@@ -547,6 +568,7 @@ class XCalGUI:
         loadedFile = f.read()
         self.log.config(state = NORMAL)
         self.log.insert("end", loadedFile + "\n")
+        self.log.see("end")
         self.log.config(state = DISABLED)
 
     def extractXProps(self):
@@ -563,10 +585,12 @@ class XCalGUI:
             
         self.log.config(state = NORMAL)
         self.log.insert("end", stderr + "\n")
+        self.log.see("end")
         self.log.config(state = DISABLED)
         
         self.log.config(state = NORMAL)
         self.log.insert("end", loadedFile + "\n")
+        self.log.see("end")
         self.log.config(state = DISABLED)
 
     def dateMskStartup(self, top):
@@ -589,6 +613,7 @@ class XCalGUI:
         loadedFile = f.read()# print(loadedFile)
         self.log.config(state = NORMAL)
         self.log.insert("end", loadedFile + "\n")
+        self.log.see("end")
         self.log.config(state = DISABLED)
 
     def aboutWindow(self): #showinfo pops up an entire new window.Alert in Java.
