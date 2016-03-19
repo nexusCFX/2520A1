@@ -12,6 +12,17 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter.ttk import *
 import random
 
+#############################
+#caltoolpylink.c
+#Python program that provides a GUI interface for
+#functions of caltool command line program
+#
+#Author: Brandon Chester : 0877477
+#Contact: bchester@mail.uoguelph.ca
+#Created: Feb 13, 2016
+#Last modified: Feb 22, 2016
+#############################
+
 class XCalGUI:
     def __init__(self): 
         self.filename = ""
@@ -179,10 +190,10 @@ class XCalGUI:
         def Cancel():
             toDo.destroy()
         
-        toDo.minsize(width=240, height=250)
+        toDo.minsize(width=240, height=350)
         toDo.maxsize(width=240, height=10000)
-        canvas = tk.Canvas(toDo, borderwidth=0, background="#ffffff")
-        frame = tk.Frame(canvas, background="#ffffff")
+        canvas = tk.Canvas(toDo, borderwidth=0)
+        frame = tk.Frame(canvas)
         vsb = tk.Scrollbar(toDo, orient="vertical", command=canvas.yview)
         canvas.configure(yscrollcommand=vsb.set)
 
@@ -218,13 +229,13 @@ class XCalGUI:
             if (tup[0] == "VTODO"):
                 
                 Lbl = Label(frame, text=tup[3])
-                Lbl.grid(row = i, column = 0)
+                Lbl.grid(row = i, column = 0, sticky = W)
                 Var = IntVar()
                 Var.set(0)
                 ChkBox = Checkbutton(frame, variable=Var, command = check)
                 ChkBox.var = Var
                 
-                ChkBox.grid(row = i, column = 1)
+                ChkBox.grid(row = i, column = 1, sticky = E)
                 ChkBox.index = j
                 boxList.append(ChkBox)
                 i = i + 1
@@ -439,22 +450,46 @@ class XCalGUI:
         self.saveFile()
         
     def saveFile(self):
-        Cal.writeFile(self.filename, self.pcal, self.fileList)
-        self.unsavedChanges = 0
-        self.todoMenu.entryconfig(1, state=DISABLED)
-        self.oldList = []
-        self.root.title("xcal " + os.path.basename(self.filename))
+        error = Cal.writeFile(self.filename, self.pcal, self.fileList)
+        if error == "OK":
+            with open(outputFile) as savedFile:
+                linesWritten = sum(1 for line in savedFile)
+                self.log.config(state = NORMAL)
+                self.log.insert("end", "Lines written: " + str(linesWritten) + "\n")
+                self.log.see("end")
+                self.log.config(state = DISABLED) 
+            
+            self.unsavedChanges = 0
+            self.todoMenu.entryconfig(1, state=DISABLED)
+            self.oldList = []
+            self.root.title("xcal " + os.path.basename(self.filename))
+        else:
+            self.log.config(state = NORMAL)
+            self.log.insert("end", error + "\n")
+            self.log.see("end")
+            self.log.config(state = DISABLED)
         
     def saveFileAs(self): 
         outputFile = asksaveasfilename(defaultextension = ".ics")
         if (outputFile):
-            Cal.writeFile(outputFile, self.pcal, self.fileList)
             
+            error = Cal.writeFile(outputFile, self.pcal, self.fileList)
+            with open(outputFile) as savedFile:
+                linesWritten = sum(1 for line in savedFile)
+                self.log.config(state = NORMAL)
+                self.log.insert("end", "Lines written: " + str(linesWritten) + "\n")
+                self.log.see("end")
+                self.log.config(state = DISABLED) 
             self.filename = outputFile
             self.unsavedChanges = 0
             self.todoMenu.entryconfig(1, state=DISABLED)
             self.oldList = []
             self.root.title("xcal " + os.path.basename(self.filename))
+        else:
+            self.log.config(state = NORMAL)
+            self.log.insert("end", error + "\n")
+            self.log.see("end")
+            self.log.config(state = DISABLED)
             
     def filter(self):
         filter = tk.Toplevel()
@@ -623,63 +658,94 @@ class XCalGUI:
         self.quitProg()
 
     def quitProg(self):
-        if (self.pcal != 0):
-            Cal.freeFile(self.pcal)
-            self.pcal = 0
-        try:
-            os.remove("ShowSelectedTemp.txt")
-        except OSError:
-            pass
-        try:   
-            os.remove("FilterTemp.txt")
-        except OSError:
-            pass
+    
+        def trueExit():
+            if (self.pcal != 0):
+                Cal.freeFile(self.pcal)
+                self.pcal = 0
+            try:
+                os.remove("ShowSelectedTemp.txt")
+            except OSError:
+                pass
+            try:   
+                os.remove("FilterTemp.txt")
+            except OSError:
+                pass
+                
+            try:   
+                os.remove("FilterTempOutput.txt")
+            except OSError:
+                pass
+                
+            try:   
+                os.remove("InfoTempOutput.txt")
+            except OSError:
+                pass
+                
+            try:   
+                os.remove("ExtractXPropsTempOutput.txt")
+            except OSError:
+                pass
+                
+            try:   
+                os.remove("ExtractEventsTempOutput.txt")
+            except OSError:
+                pass
+                
+            try:   
+                os.remove("ExtractXPropsTemp.txt")
+            except OSError:
+                pass
+    
+            try:
+                os.remove("ExtractEventsTemp.txt")
+            except OSError:
+                pass
             
-        try:   
-            os.remove("FilterTempOutput.txt")
-        except OSError:
-            pass
+            try:
+                os.remove("error.txt")
+            except OSError:
+                pass  
+            try:   
+                os.remove("CombineTempOutput.txt")
+            except OSError:
+                pass  
+            try:   
+                os.remove("CombineTemp.txt")
+            except OSError:
+                pass  
+            xCal.root.destroy()
+            xCal.root.quit()
+    
+        dialog = Toplevel()
+        dialog.title("Quit confirmation")
+        dialog.attributes("-topmost", True)
+        dialog.lift()
+        dialog.grab_set()
             
-        try:   
-            os.remove("InfoTempOutput.txt")
-        except OSError:
-            pass
-            
-        try:   
-            os.remove("ExtractXPropsTempOutput.txt")
-        except OSError:
-            pass
-            
-        try:   
-            os.remove("ExtractEventsTempOutput.txt")
-        except OSError:
-            pass
-            
-        try:   
-            os.remove("ExtractXPropsTemp.txt")
-        except OSError:
-            pass
-   
-        try:
-            os.remove("ExtractEventsTemp.txt")
-        except OSError:
-            pass
-          
-        try:
-            os.remove("error.txt")
-        except OSError:
-            pass  
-        try:   
-            os.remove("CombineTempOutput.txt")
-        except OSError:
-            pass  
-        try:   
-            os.remove("CombineTemp.txt")
-        except OSError:
-            pass  
-        xCal.root.destroy()
-        xCal.root.quit()
+        def Cancel2(event):
+            dialog.destroy()
         
+        dialog.bind_all("<Escape>", Cancel2)
+            
+        def Cancel():
+            dialog.destroy()
+                
+        def Continue():
+            dialog.destroy()
+            self.openFile()
+                
+            
+        Label(dialog, text = "Are you sure you want to quit?").pack(fill = "x")
+        btn = Button(dialog, text = "Cancel", command = Cancel)
+        btn2 = Button(dialog, text = "Quit", command = trueExit)
+            
+        dialog.minsize(width = 250, height = 65)
+        dialog.maxsize(width = 250, height = 65)
+
+        btn.pack(fill = "both")
+        btn2.pack(fill = "both")
+        dialog.grab_set()
 
 xCal = XCalGUI()
 

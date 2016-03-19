@@ -2,6 +2,17 @@
 #include "calutil.h"
 #include <stdbool.h>
 
+/************************
+caltoolpylink.c
+Linkage code and wrapper functions that allow communication between xcal GUI
+program and caltool command line program
+
+Author: Brandon Chester : 0877477
+Contact: bchester@mail.uoguelph.ca
+Created: Feb 13, 2016
+Last modified: Feb 22, 2016
+*************************/
+
 static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
     PyObject *result;
     const char *filename;
@@ -12,7 +23,8 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         char returnString[400];
-        sprintf(returnString, "Error opening file %s", filename);
+        sprintf(returnString, "Error opening file %s: %s", filename,
+                strerror(errno));
         PyObject *ret = Py_BuildValue("s", returnString);
         return ret;
     }
@@ -70,7 +82,8 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         char returnString[400];
-        sprintf(returnString, "Error writing to file %s", filename);
+        sprintf(returnString, "Error writing to file %s: %s", filename,
+                strerror(errno));
         PyObject *ret = Py_BuildValue("s", returnString);
         return ret;
     }
@@ -79,6 +92,7 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
 
         if (compListLength < pcomp->ncomps) {
             char *tempStr = malloc(3);
+            assert(tempStr != NULL); 
             strcpy(tempStr, "");
 
             CalComp *tempComps[pcomp->ncomps];
@@ -100,10 +114,7 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
 
                 PyArg_ParseTuple(listItem, "siis", &name, &nprops, &ncomps,
                                  &summary);
-                //    puts("-------------------------------------------------------------");
-                //   printf("we want to find:\nName: %s\nSummary:%s\nProps: %d\n
-                //   Comps:
-                //   %d\n\n",name,summary,ncomps, nprops);
+
                 bool isFound = false;
                 char *propSummary = NULL;
                 int j;
@@ -120,16 +131,12 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
                     if (propSummary == NULL) {
                         propSummary = tempStr;
                     }
-                    //  printf("We are checking:\nName: %s\nSummary:%s\nProps:
-                    //  %d\n Comps:
-                    //  %d\n\n",pcomp->comp[j]->name,propSummary,pcomp->comp[j]->ncomps,
-                    //  pcomp->comp[j]->nprops);
+
                     if (pcomp->comp[j]->ncomps == ncomps &&
                         pcomp->comp[j]->nprops == nprops &&
                         strcmp(summary, propSummary) == 0 &&
                         strcmp(name, pcomp->comp[j]->name) == 0) {
                         isFound = true;
-                        //   puts("We have found a match");
                         break;
                     }
                 }
@@ -139,7 +146,7 @@ static PyObject *Cal_writeFile(PyObject *self, PyObject *args) {
                     isFound = false;
                 }
             }
-            // puts("test2");
+
             pcomp->ncomps = reducedCompsSize;
             for (int i = 0; i < reducedCompsSize; i++) {
                 pcomp->comp[i] = reducedComps[i];
