@@ -12,16 +12,6 @@ from tkinter.filedialog import asksaveasfilename
 from tkinter.ttk import *
 import random
 
-#
-#
-#You can also use os.path.isfile
-
-#Return True if path is an existing regular file. This follows symbolic links, so both islink() and isfile() can be true for the same path.
-#import os.path
-#os.path.isfile(fname) 
-#http://stackoverflow.com/questions/82831/how-to-check-whether-a-file-exists-using-python
-#
-
 class XCalGUI:
     def __init__(self): 
         self.filename = ""
@@ -34,6 +24,7 @@ class XCalGUI:
         self.root.minsize(width = 700, height = 666)
         self.tableSize = 0
         self.rowSelected = 0
+        self.numBoxes = 0
         
         self.CompTable = Treeview(self.root, selectmode = "none")
         self.CompTable.bind("<Button-3>", self.popup)
@@ -207,6 +198,10 @@ class XCalGUI:
         
         boxList = []
         j = 0
+        
+        btn2 = Button(toDo,text="Save",command = Done)
+        
+        
         for tup in self.fileList:
            
             if (tup[0] == "VTODO"):
@@ -226,9 +221,9 @@ class XCalGUI:
 
         btn = Button(toDo,text="Cancel",command = Cancel)
         btn.pack(fill="both")
-        btn2 = Button(toDo,text="Save",command = Done)
+        
         btn2.pack(fill="both")
-
+        btn2.config(state=DISABLED)
         mainloop()
         
     def openSC(self, event):
@@ -245,17 +240,20 @@ class XCalGUI:
         
     def undo(self):
         dialog = Toplevel()
-        dialog.grab_set()
+        
         dialog.title("Undo")
+        dialog.attributes("-topmost", True)
+        dialog.lift()
+        dialog.grab_set()
         
         def Cancel():
             dialog.destroy()
             
         def Cancel2(event):
-            top.destroy()
+            dialog.destroy()
         
         
-        top.bind_all("<Escape>", Cancel2)
+        dialog.bind_all("<Escape>", Cancel2)
             
         def Undo():
             dialog.destroy()
@@ -272,8 +270,8 @@ class XCalGUI:
         btn = Button(dialog, text = "Cancel", command = Cancel)
         btn2 = Button(dialog, text = "Undo", command = Undo)
         
-        dialog.minsize(width = 250, height = 183)
-        dialog.maxsize(width = 250, height = 183)
+        dialog.minsize(width = 250, height = 85)
+        dialog.maxsize(width = 250, height = 85)
 
         btn.pack(fill = "both")
         btn2.pack(fill = "both") 
@@ -282,8 +280,17 @@ class XCalGUI:
         
     def openFileDLG(self):
         if self.unsavedChanges == 1:
-            dialog = Toplevel(self.root)
+            dialog = Toplevel()
             dialog.title("Unsaved Changes")
+            dialog.attributes("-topmost", True)
+            dialog.lift()
+            dialog.grab_set()
+            
+            def Cancel2(event):
+                dialog.destroy()
+        
+            dialog.bind_all("<Escape>", Cancel2)
+            
             def Cancel():
                 dialog.destroy()
                 
@@ -297,8 +304,8 @@ class XCalGUI:
             btn = Button(dialog, text = "Cancel", command = Cancel)
             btn2 = Button(dialog, text = "Continue", command = Continue)
             
-            dialog.minsize(width = 250, height = 183)
-            dialog.maxsize(width = 250, height = 183)
+            dialog.minsize(width = 250, height = 85)
+            dialog.maxsize(width = 250, height = 85)
 
             btn.pack(fill = "both")
             btn2.pack(fill = "both")
@@ -307,12 +314,27 @@ class XCalGUI:
             self.openFile()
           
     def openFile(self):
-        self.unsavedChanges = 0
+        self.filename = ""
+        self.root.title("xcal")
+        if self.pcal != 0:
+            Cal.freeFile(self.pcal)
+            self.pcal = 0
+        self.tableSize = 0
+        for i in self.CompTable.get_children():
+            self.CompTable.delete(i)
+        self.oldList = []
+        self.fileList = []
+        self.fileMenu.entryconfig(1, state=DISABLED)
+        self.fileMenu.entryconfig(2, state=DISABLED)
+        self.fileMenu.entryconfig(3, state=DISABLED)
+        self.fileMenu.entryconfig(4, state=DISABLED)
+        self.todoMenu.entryconfig(0, state=DISABLED)
+        self.extrEvntBtn.config(state=DISABLED)
+        self.extrXPropBtn.config(state=DISABLED)
         self.filename = askopenfilename()
-        
-                
+               
         if (self.filename):
-        
+            self.unsavedChanges = 0
             result = []
             error = Cal.readFile(self.filename, result)
             if error == "OK":
@@ -323,10 +345,18 @@ class XCalGUI:
                 self.fileList = result[1]
                 self.drawFVP()
                 self.root.title("xcal " + os.path.basename(self.filename))
-                command = "./caltool -info < {file} > InfoTempOutput.txt".format(file = self.filename)
+                command = "./caltool -info < {file} > InfoTempOutput.txt 2>> error.txt".format(file = self.filename)
                 os.system(command)
                 f = open("InfoTempOutput.txt", "r")
                 loadedFile = f.read()
+                
+                f2 = open("error.txt", "r")
+                stderr = f2.read()
+                os.remove("error.txt")
+                self.log.config(state = NORMAL)
+                self.log.insert("end", stderr + "\n")
+                self.log.config(state = DISABLED)
+                
                 self.log.config(state = NORMAL)
                 self.log.insert("end", loadedFile + "\n")
                 self.log.config(state = DISABLED)
@@ -361,11 +391,19 @@ class XCalGUI:
         combineFile = askopenfilename()
         if combineFile:
             Cal.writeFile("CombineTemp.txt", self.pcal, self.fileList)
-            command = "./caltool -combine {0} < CombineTemp.txt > CombineTempOutput.txt".format(combineFile)
+            command = "./caltool -combine {0} < CombineTemp.txt > CombineTempOutput.txt 2>> error.txt".format(combineFile)
             os.system(command)
 
             result = []
             error = Cal.readFile("CombineTempOutput.txt", result)
+            
+            f = open("error.txt", "r")
+            stderr = f.read()
+            os.remove("error.txt")
+            self.log.config(state = NORMAL)
+            self.log.insert("end", stderr + "\n")
+            self.log.config(state = DISABLED)
+            
             if error == "OK":
                 Cal.freeFile(self.pcal)
                 self.pcal = result[0]
@@ -426,15 +464,23 @@ class XCalGUI:
                 
             if v.get() == 1:
                 Cal.writeFile("FilterTemp.txt", self.pcal, self.fileList)
-                command = "./caltool -filter t {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2> error.txt".format(fromstr, tostr)
+                command = "./caltool -filter t {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2>> error.txt".format(fromstr, tostr)
                 os.system(command)
             elif v.get() == 2:
                 Cal.writeFile("FilterTemp.txt", self.pcal, self.fileList)
-                command = "./caltool -filter e {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2> error.txt" .format(fromstr, tostr)
+                command = "./caltool -filter e {0} {1} < FilterTemp.txt > FilterTempOutput.txt 2>> error.txt" .format(fromstr, tostr)
                 os.system(command)
                 
             result = []
             error = Cal.readFile("FilterTempOutput.txt", result)
+            
+            f = open("error.txt", "r")
+            stderr = f.read()
+            os.remove("error.txt")
+            self.log.config(state = NORMAL)
+            self.log.insert("end", stderr + "\n")
+            self.log.config(state = DISABLED)
+            
             if error == "OK":
                 Cal.freeFile(self.pcal)
                 self.pcal = result[0]
@@ -494,7 +540,7 @@ class XCalGUI:
 
     def extractEvents(self):
         Cal.writeFile("ExtractEventsTemp.txt", self.pcal, self.fileList)
-        command = "./caltool -extract e < ExtractEventsTemp.txt > ExtractEventsTempOutput.txt"
+        command = "./caltool -extract e < ExtractEventsTemp.txt > ExtractEventsTempOutput.txt 2>> error.txt"
         os.system(command)
 
         f = open("ExtractEventsTempOutput.txt", "r")
@@ -505,11 +551,20 @@ class XCalGUI:
 
     def extractXProps(self):
         Cal.writeFile("ExtractXPropsTemp.txt", self.pcal, self.fileList)
-        command = "./caltool -extract x < ExtractXPropsTemp.txt > ExtractXPropsTempOutput.txt"
+        command = "./caltool -extract x < ExtractXPropsTemp.txt > ExtractXPropsTempOutput.txt 2>> error.txt"
         os.system(command)
 
         f = open("ExtractXPropsTempOutput.txt", "r")
         loadedFile = f.read()
+        
+        f2 = open("error.txt", "r")
+        stderr = f2.read()
+        os.remove("error.txt")
+            
+        self.log.config(state = NORMAL)
+        self.log.insert("end", stderr + "\n")
+        self.log.config(state = DISABLED)
+        
         self.log.config(state = NORMAL)
         self.log.insert("end", loadedFile + "\n")
         self.log.config(state = DISABLED)
@@ -522,8 +577,6 @@ class XCalGUI:
         datemskloc = askopenfilename()
         if (datemskloc):
             os.environ["DATEMSK"] = datemskloc
-            # command = "env DATEMSK={loc}".format(loc = datemskloc)# os.system(command)
-            
 
     def showSelected(self):
         tempFile = "ShowSelectedTemp.txt"
@@ -586,6 +639,19 @@ class XCalGUI:
             os.remove("ExtractEventsTemp.txt")
         except OSError:
             pass
+          
+        try:
+            os.remove("error.txt")
+        except OSError:
+            pass  
+        try:   
+            os.remove("CombineTempOutput.txt")
+        except OSError:
+            pass  
+        try:   
+            os.remove("CombineTemp.txt")
+        except OSError:
+            pass  
         xCal.root.destroy()
         xCal.root.quit()
         
