@@ -3,6 +3,7 @@
 #include <semaphore.h>
 #include <pthread.h>
 #include <unistd.h>
+
 // Need to cap # of philosophers to something
 #define MAX 1000
 
@@ -14,7 +15,7 @@ sem_t lock;
 void *philospher(void *num);
 int pickup(int, int total);
 void putdown(int, int total);
-int test(int, int total);
+void test(int, int total);
 
 int currState[MAX];
 
