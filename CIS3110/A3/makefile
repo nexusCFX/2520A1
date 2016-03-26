@@ -2,7 +2,7 @@ CC=gcc
 OPTIONS = -std=c99 -Wall -pedantic
 
 dine: dine.c
-	$(CC) $(CFLAGS) -o dine dine.c
+	$(CC) $(CFLAGS) —pthread o dine dine.c
 
 holes: holes.o QueueLib.o ProcLib.o
 	$(CC) $(CFLAGS) -o holes holes.o QueueLib.o ProcLib.o
@@ -14,7 +14,7 @@ QueueLib.o: QueueLib.c QueueLib.h
 	$(CC) $(CFLAGS) -c QueueLib.c
 
 ProcLib.o: ProcLib.c ProcLib.h
-	$(CC) $(CFLAGS) -c procLib.c
+	$(CC) $(CFLAGS) -c ProcLib.c
 
 clean:
 	rm *.o holes dine
