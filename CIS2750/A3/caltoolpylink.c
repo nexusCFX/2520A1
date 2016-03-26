@@ -9,8 +9,8 @@ program and caltool command line program
 
 Author: Brandon Chester : 0877477
 Contact: bchester@mail.uoguelph.ca
-Created: Feb 13, 2016
-Last modified: Feb 22, 2016
+Created: Mar 10, 2016
+Last modified: Mar 10, 2016
 *************************/
 
 static PyObject *Cal_readFile(PyObject *self, PyObject *args) {

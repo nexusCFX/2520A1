@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     int difProcSwitch = 0;
 
     scanf("%d %d %d", &numProcesses, &sameProcSwitch, &difProcSwitch);
-    getchar();
+    
 
     Queue *readyQueue = parseFile(numProcesses);
     CPUSimulator(readyQueue, sameProcSwitch, difProcSwitch, isDetailed, isRR,

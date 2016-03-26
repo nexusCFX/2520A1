@@ -13,14 +13,14 @@ from tkinter.ttk import *
 import random
 
 #############################
-#caltoolpylink.c
+#xcal.py
 #Python program that provides a GUI interface for
 #functions of caltool command line program
 #
 #Author: Brandon Chester : 0877477
 #Contact: bchester@mail.uoguelph.ca
-#Created: Feb 13, 2016
-#Last modified: Feb 22, 2016
+#Created: Mar 11, 2016
+#Last modified: Mar 18, 2016
 #############################
 
 class XCalGUI:
@@ -288,13 +288,13 @@ class XCalGUI:
             self.root.title("xcal " + os.path.basename(self.filename))
             
         
-        Label(dialog, text = "All Todo items removed since the last save will be restored").pack(fill = "x")
+        Label(dialog, text = "All changes since the last save will be undone").pack(fill = "x")
         Label(dialog, text = "Do you want to proceed?").pack(fill = "x")
         btn = Button(dialog, text = "Cancel", command = Cancel)
         btn2 = Button(dialog, text = "Undo", command = Undo)
         
-        dialog.minsize(width = 250, height = 85)
-        dialog.maxsize(width = 250, height = 85)
+        dialog.minsize(width = 300, height = 85)
+        dialog.maxsize(width = 300, height = 85)
 
         btn.pack(fill = "both")
         btn2.pack(fill = "both") 
@@ -365,6 +365,7 @@ class XCalGUI:
                 if (self.pcal != 0):
                     Cal.freeFile(self.pcal)
                 self.unsavedChanges = 0
+                self.todoMenu.entryconfig(1, state=DISABLED)
                 self.pcal = result[0]
                 self.fileList = result[1]
                 self.drawFVP()
@@ -420,7 +421,7 @@ class XCalGUI:
             Cal.writeFile("CombineTemp.txt", self.pcal, self.fileList)
             command = "./caltool -combine {0} < CombineTemp.txt > CombineTempOutput.txt 2>> error.txt".format(combineFile)
             os.system(command)
-
+            self.oldList = self.fileList
             result = []
             error = Cal.readFile("CombineTempOutput.txt", result)
             
@@ -452,7 +453,7 @@ class XCalGUI:
     def saveFile(self):
         error = Cal.writeFile(self.filename, self.pcal, self.fileList)
         if error == "OK":
-            with open(outputFile) as savedFile:
+            with open(self.filename) as savedFile:
                 linesWritten = sum(1 for line in savedFile)
                 self.log.config(state = NORMAL)
                 self.log.insert("end", "Lines written: " + str(linesWritten) + "\n")
@@ -492,9 +493,9 @@ class XCalGUI:
             self.log.config(state = DISABLED)
             
     def filter(self):
-        filter = tk.Toplevel()
+        filter = Toplevel()
+        filter.title("Filter components")
         filter.attributes("-topmost", True)
-        filter.grab_set()
         v = IntVar()
         
         
@@ -550,9 +551,16 @@ class XCalGUI:
                 self.log.see("end")
                 self.log.config(state = DISABLED) 
             filter.destroy()
+        
+        btn2 = Button(filter, text = "Filter", state=DISABLED, command = Filter)
+        
+        def enablebtn():
+            btn2.config(state=NORMAL)
 
-        Radiobutton(filter, text = "Todos", variable = v, value = 1).pack(fill = "x")
-        Radiobutton(filter, text = "Events", variable = v, value = 2).pack(fill = "x")
+        rb1 = Radiobutton(filter, text = "Todos", variable = v, value = 1, command = enablebtn)
+        rb1.pack(fill = "x")
+        rb2 = Radiobutton(filter, text = "Events", variable = v, value = 2, command = enablebtn)
+        rb2.pack(fill = "x")
             
         Label(filter, text = "From Date:").pack(fill = "x")
         FromDate = Entry(filter)
@@ -567,8 +575,9 @@ class XCalGUI:
             
         btn = Button(filter, text = "Cancel", command = Cancel)
         btn.pack(fill = "both")
-        btn2 = Button(filter, text = "Filter", command = Filter)
+        
         btn2.pack(fill = "both")
+       # filter.grab_set()
         mainloop()
 
     def popup(self, event):
@@ -673,12 +682,11 @@ class XCalGUI:
                 pass
                 
             try:   
-                os.remove("FilterTempOutput.txt")
+                os.remove("InfoTempOutput.txt")
             except OSError:
                 pass
-                
             try:   
-                os.remove("InfoTempOutput.txt")
+                os.remove("FilterTempOutput.txt")
             except OSError:
                 pass
                 
