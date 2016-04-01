@@ -9,7 +9,7 @@
 
 typedef enum { THINK, HUNGRY, EAT } state;
 
-sem_t S[1000];
+sem_t sems[1000];
 sem_t lock;
 
 void *philospher(void *num);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     pthread_t thread_id[numPhil];
     sem_init(&lock, 0, 1);
     for (i = 0; i < numPhil; i++) {
-        sem_init(&S[i], 0, 0);
+        sem_init(&sems[i], 0, 0);
     }
     for (i = 0; i < numPhil; i++) {
         PhilInfo *info = malloc(sizeof(*info));
@@ -64,7 +64,7 @@ int pickup(int num, int total) {
     currState[num] = HUNGRY;
     test(num, total);
     sem_post(&lock);
-    sem_wait(&S[num]);
+    sem_wait(&sems[num]);
     sleep(1);
 }
 
@@ -74,7 +74,7 @@ void test(int num, int total) {
         currState[num] = EAT;
         sleep(1);
         printf("Philosopher %d is Eating\n", num + 1);
-        sem_post(&S[num]);
+        sem_post(&sems[num]);
     }
 }
 
