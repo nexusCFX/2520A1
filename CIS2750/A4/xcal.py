@@ -28,6 +28,28 @@ import random
 
 class XCalGUI:
     def __init__(self): 
+        
+        fails = 0
+        password = getpass.getpass("Password:")
+        while(1):
+            try:
+                cnx = mysql.connector.connect(user=sys.argv[0], password, host='dursley.socs.uoguelph.ca', database='test')
+            except mysql.connector.Error as err:
+                fails = fails + 1
+                if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                    print("Something is wrong with your user name or password")
+                elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                    print("Database does not exist")
+                else:
+                    print(err)  
+                time.sleep(1)    
+            if fails == 0:
+                break
+            elif fails == 3:
+                print("Failure to connect after 3 tries. Exiting")
+                exit()
+        
+        
         self.filename = ""
         self.unsavedChanges = 0
         self.fileList = []
@@ -162,8 +184,7 @@ class XCalGUI:
             noBtn.grid(row = 2, column = 1, columnspan = 1)
             
             
-        #if len(sys.argv) == 2:
-        password = getpass.getpass('Password:')    
+           
             
     def storeAll(self):
         print("ok")
