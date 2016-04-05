@@ -47,27 +47,62 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
 
     for (int i = 0; i < comp->ncomps; i++) {
         CalComp *c = comp->comp[i];
+        
+        char* empty = "";
         char *start_time = NULL;
         char *summary = NULL;
+        char* location = NULL;
+        char* priority = NULL;
+        char* organizer = NULL;
+        char* contact= NULL;
+        
         CalProp *traverseProps = c->prop;
+         
         for (int j = 0; j < c->nprops; j++) {
             if (strcmp(traverseProps->name, "SUMMARY") == 0) {
                 summary = traverseProps->value;
             } else if (strcmp(traverseProps->name, "DTSTART") == 0) {
-                start_time = traverseros->value;
-            }
+                start_time = traverseProps->value;
+            } else if (strcmp(traverseProps->name, "LOCATION") == 0) {
+                location = traverseProps->value;
+            } else if (strcmp(traverseProps->name, "PRIORITY") == 0) {
+                priority = traverseProps->value;
+            } else if (strcmp(traverseProps->name, "ORGANIZER") == 0) {
+                contact = traverseProps->value;
+                CalParam* traverseParams = traverseProps->param;
+                for (int k = 0; k < traverseProps->nparams; k++) {
+                    if (strcmp(traverseParams->name, "CN") == 0) {
+                        organizer = traverseParams->value[0];
+                    }
+                }
+            } 
             traverseProps = traverseProps->next;
         }
-
+        //          0      1       2         3           4        5          6         7
+        //Tuple: compname, nprops, ncomps, summary start_time, location, priority, organizer, contact
         if (summary == NULL) {
-            PyObject *temp =
-                Py_BuildValue("siis", c->name, c->nprops, c->ncomps, "");
-            PyList_SetItem(compList, i, temp);
-        } else {
-            PyObject *temp =
-                Py_BuildValue("siis", c->name, c->nprops, c->ncomps, summary);
-            PyList_SetItem(compList, i, temp);
+            summary = empty;
         }
+        if (location == NULL) {
+            location = empty;
+        }
+        if (start_time == NULL) {
+            start_time = empty;
+        }
+        if (location == NULL) {
+            location = empty;
+        }
+        if (priority == NULL) {
+            priority = empty;
+        }
+        if (organizer == NULL) {
+            organizer = empty;
+        }
+        if (contact == NULL) {
+            contact = empty;
+        }
+        PyObject *temp = Py_BuildValue("siissssss", c->name, c->nprops, c->ncomps, summary, start_time, location, priority, organizer, contact);
+        PyList_SetItem(compList, i, temp);
     }
     PyList_Append(result, compList);
     PyObject *ret = Py_BuildValue("s", "OK");

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import time
 import getpass
-import mysql.connector
+#mport mysql.connector
 import copy
 import os
 import os.path
@@ -33,52 +33,51 @@ class XCalGUI:
         password = getpass.getpass("Password:")
         while(1):
             try:
-                self.cnx = mysql.connector.connect(user=sys.argv[1], password=password, host='dursley.socs.uoguelph.ca', database=sys.argv[1])
-            except mysql.connector.Error as err:
-                fails = fails + 1
-                if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                    print("Something is wrong with your user name or password")
-                elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                    print("Database does not exist")
-                else:
-                    print(err)  
-                time.sleep(1)    
-            if fails == 0:
-                break
-            elif fails == 3:
-                print("Failure to connect after 3 tries. Exiting")
-                exit()
+                 self.cnx = mysql.connector.connect(user=sys.argv[1], password=password, host='dursley.socs.uoguelph.ca', database=sys.argv[1])
+             except mysql.connector.Error as err:
+                 fails = fails + 1
+                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                     print("Something is wrong with your user name or password")
+                 elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                     print("Database does not exist")
+                 else:
+                     print(err)  
+                     time.sleep(1)    
+             if fails == 0:
+                 break
+             elif fails == 3:
+                 print("Failure to connect after 3 tries. Exiting")
+                 exit()  
+        
+         self.cursor = self.cnx.cursor()
+        
+         cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
+         try:
+             self.cursor.execute(cmd)
+             self.cnx.commit()
+         except mysql.connector.Error:
+             pass
+        
+         cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
         
         
-        self.cursor = self.cnx.cursor()
-        
-        cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
-        try:
-            self.cursor.execute(cmd)
-            self.cnx.commit()
-        except mysql.connector.Error:
-            pass
-        
-        cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+         try:
+             self.cursor.execute(cmd)
+             self.cnx.commit()
+         except mysql.connector.Error:
+             pass
         
         
-        try:
-            self.cursor.execute(cmd)
-            self.cnx.commit()
-        except mysql.connector.Error:
-            pass
-        
-        
-        cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-        try:
-            self.cursor.execute(cmd)
-            self.cnx.commit()
-        except mysql.connector.Error:
-            pass
+         cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+         try:
+             self.cursor.execute(cmd)
+             self.cnx.commit()
+         except mysql.connector.Error:
+             pass
         
         
         
-        self.cnx.close()
+        # self.cnx.close()
         self.filename = ""
         self.unsavedChanges = 0
         self.fileList = []
@@ -222,7 +221,13 @@ class XCalGUI:
         print("ok")
         
     def statusDB(self):
-        print("ok")
+        self.cursor.execute("STATUS;")
+        self.log.config(state = NORMAL)
+        for line in cursor:
+            self.log.insert("end", self.cursor + "\n")
+            
+        self.log.see("end")
+        self.log.config(state = DISABLED)
             
     def queryDB(self):
         print("ok")
@@ -487,6 +492,7 @@ class XCalGUI:
             self.CompTable.delete(i)
         for tup in self.fileList:
             self.tableSize = self.tableSize + 1
+            print( str(tup[0]) + " " + str(tup[1]) + " " +  str(tup[2]) +" " +  str(tup[3]) +" " +  str(tup[4]) +" " +  str(tup[5]) +" " +  str(tup[6]) +" " +  str(tup[7]) +" " +  str(tup[8]) )
             self.CompTable.insert('', 'end', iid = self.tableSize, text = str(self.tableSize), values = (tup[0], tup[1], tup[2], tup[3]))
     
     def combineSC(self, event):
