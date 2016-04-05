@@ -33,7 +33,7 @@ class XCalGUI:
         password = getpass.getpass("Password:")
         while(1):
             try:
-                cnx = mysql.connector.connect(user=sys.argv[0], password, host='dursley.socs.uoguelph.ca', database='test')
+                self.cnx = mysql.connector.connect(user=sys.argv[0], password, host='dursley.socs.uoguelph.ca', database='test')
             except mysql.connector.Error as err:
                 fails = fails + 1
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -48,6 +48,21 @@ class XCalGUI:
             elif fails == 3:
                 print("Failure to connect after 3 tries. Exiting")
                 exit()
+        
+        
+        self.cursor = cnx.cursor()
+        
+        cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
+        self.cursor.execute(cmd)
+        self.cnx.commit()
+        
+        cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+        self.cursor.execute(cmd)
+        self.cnx.commit()
+        
+        cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer), REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+        self.cursor.execute(cmd)
+        self.cnx.commit()
         
         
         self.filename = ""
@@ -181,10 +196,7 @@ class XCalGUI:
             yesBtn = Button(top, text = "Yes", command = inputDateMsk)
             yesBtn.grid(row = 2, column = 0, columnspan = 1)
             noBtn = Button(top, text = "Not now", command = top.destroy)
-            noBtn.grid(row = 2, column = 1, columnspan = 1)
-            
-            
-           
+            noBtn.grid(row = 2, column = 1, columnspan = 1)  
             
     def storeAll(self):
         print("ok")
