@@ -27,13 +27,13 @@ import random
 #############################
 
 class XCalGUI:
-    def __init__(self): 
-        
+    def __init__(self):
         fails = 0
+        print(sys.argv[1])
         password = getpass.getpass("Password:")
         while(1):
             try:
-                self.cnx = mysql.connector.connect(user=sys.argv[0], password, host='dursley.socs.uoguelph.ca', database='test')
+                self.cnx = mysql.connector.connect(user=sys.argv[1], password=password, host='dursley.socs.uoguelph.ca', database=sys.argv[1])
             except mysql.connector.Error as err:
                 fails = fails + 1
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -50,21 +50,35 @@ class XCalGUI:
                 exit()
         
         
-        self.cursor = cnx.cursor()
+        self.cursor = self.cnx.cursor()
         
         cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
-        self.cursor.execute(cmd)
-        self.cnx.commit()
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
         
         cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-        self.cursor.execute(cmd)
-        self.cnx.commit()
-        
-        cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer), REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-        self.cursor.execute(cmd)
-        self.cnx.commit()
         
         
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
+        
+        
+        cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
+        
+        
+        
+        self.cnx.close()
         self.filename = ""
         self.unsavedChanges = 0
         self.fileList = []

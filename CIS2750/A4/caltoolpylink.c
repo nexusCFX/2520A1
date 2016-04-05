@@ -47,12 +47,14 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
 
     for (int i = 0; i < comp->ncomps; i++) {
         CalComp *c = comp->comp[i];
+        char *start_time = NULL;
         char *summary = NULL;
         CalProp *traverseProps = c->prop;
         for (int j = 0; j < c->nprops; j++) {
             if (strcmp(traverseProps->name, "SUMMARY") == 0) {
                 summary = traverseProps->value;
-                break;
+            } else if (strcmp(traverseProps->name, "DTSTART") == 0) {
+                start_time = traverseros->value;
             }
             traverseProps = traverseProps->next;
         }
