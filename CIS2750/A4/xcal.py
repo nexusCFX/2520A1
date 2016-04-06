@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import time
 import getpass
-#mport mysql.connector
+import mysql.connector
 import copy
 import os
 import os.path
@@ -29,51 +29,51 @@ import random
 class XCalGUI:
     def __init__(self):
         fails = 0
-        print(sys.argv[1])
+        #print(sys.argv[1])
         password = getpass.getpass("Password:")
         while(1):
             try:
-                 self.cnx = mysql.connector.connect(user=sys.argv[1], password=password, host='dursley.socs.uoguelph.ca', database=sys.argv[1])
-             except mysql.connector.Error as err:
-                 fails = fails + 1
-                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                     print("Something is wrong with your user name or password")
-                 elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                     print("Database does not exist")
-                 else:
-                     print(err)  
-                     time.sleep(1)    
-             if fails == 0:
-                 break
-             elif fails == 3:
-                 print("Failure to connect after 3 tries. Exiting")
-                 exit()  
+                 self.cnx = mysql.connector.connect(user="root", password=password, host='159.203.22.246', database="2750DB")
+            except mysql.connector.Error as err:
+                fails = fails + 1
+                if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                    print("Something is wrong with your user name or password")
+                elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                    print("Database does not exist")
+                else:
+                    print(err)  
+                    time.sleep(1)    
+            if fails == 0:
+                break
+            elif fails == 3:
+                print("Failure to connect after 3 tries. Exiting")
+                exit()  
         
-         self.cursor = self.cnx.cursor()
+        self.cursor = self.cnx.cursor()
         
-         cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
-         try:
-             self.cursor.execute(cmd)
-             self.cnx.commit()
-         except mysql.connector.Error:
-             pass
+        cmd = "CREATE TABLE ORGANIZER( org_id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(60) NOT NULL, contact VARCHAR(60) NOT NULL );"
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
         
-         cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-        
-        
-         try:
-             self.cursor.execute(cmd)
-             self.cnx.commit()
-         except mysql.connector.Error:
-             pass
+        cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
         
         
-         cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-         try:
-             self.cursor.execute(cmd)
-             self.cnx.commit()
-         except mysql.connector.Error:
-             pass
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
+        
+        
+        cmd = "CREATE TABLE TODO( todo_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, priority SMALLINT, organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
+        try:
+            self.cursor.execute(cmd)
+            self.cnx.commit()
+        except mysql.connector.Error:
+            pass
         
         
         
@@ -221,10 +221,11 @@ class XCalGUI:
         print("ok")
         
     def statusDB(self):
-        self.cursor.execute("STATUS;")
+        query = "status;"
+        self.cursor.execute(query)
         self.log.config(state = NORMAL)
         for line in cursor:
-            self.log.insert("end", self.cursor + "\n")
+            self.log.insert("end", line + "\n")
             
         self.log.see("end")
         self.log.config(state = DISABLED)
@@ -751,8 +752,9 @@ class XCalGUI:
         self.quitProg()
 
     def quitProg(self):
-    
+        
         def trueExit():
+            self.cnx.close()
             if (self.pcal != 0):
                 Cal.freeFile(self.pcal)
                 self.pcal = 0
