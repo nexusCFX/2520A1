@@ -2,6 +2,7 @@
 import time
 import getpass
 import mysql.connector
+from mysql.connector import errorcode
 import copy
 import os
 import os.path
@@ -30,11 +31,11 @@ class XCalGUI:
     def __init__(self):
         fails = 0
         #print(sys.argv[1])
-        password = getpass.getpass("Password:")
+        #password = getpass.getpass("Password:")
         while(1):
             try:
-                 self.cnx = mysql.connector.connect(user="root", password=password, host='159.203.22.246', database="2750DB")
-            except mysql.connector.Error as err:
+                 self.cnx = mysql.connector.connect(user=sys.argv[1], password="steamworks", host='159.203.22.246', database="2750DB")
+            except mysql.connector.errors.Error as err:
                 fails = fails + 1
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                     print("Something is wrong with your user name or password")
@@ -59,8 +60,6 @@ class XCalGUI:
             pass
         
         cmd = "CREATE TABLE EVENT( event_id INT AUTO_INCREMENT PRIMARY KEY, summary VARCHAR(60) NOT NULL, start_time DATETIME NOT NULL, location VARCHAR(60), organizer INT, FOREIGN KEY(organizer) REFERENCES ORGANIZER(org_id) ON DELETE CASCADE );"
-        
-        
         try:
             self.cursor.execute(cmd)
             self.cnx.commit()
@@ -74,10 +73,9 @@ class XCalGUI:
             self.cnx.commit()
         except mysql.connector.Error:
             pass
+            
         
         
-        
-        # self.cnx.close()
         self.filename = ""
         self.unsavedChanges = 0
         self.fileList = []
@@ -169,7 +167,11 @@ class XCalGUI:
         self.dbMenu.add_command(label = "Clear", command = self.clearDB)
         self.dbMenu.add_command(label = "Status", command = self.statusDB)
         self.dbMenu.add_command(label = "Query", command = self.queryDB)
-
+        
+        self.dbMenu.entryconfig(0, state=DISABLED)
+        self.dbMenu.entryconfig(1, state=DISABLED)
+        
+        
         self.menuBar.add_cascade( menu = self.fileMenu, label = "File")
         self.menuBar.add_cascade( menu = self.todoMenu, label = "Todo")
         self.menuBar.add_cascade( menu = self.helpMenu, label = "Help")
@@ -185,6 +187,10 @@ class XCalGUI:
         self.root.bind_all("<Control-z>", self.undoSC)
        
         self.root.protocol("WM_DELETE_WINDOW", self.quitProg)
+        
+        self.tableSize = 0
+        
+        self.getTableSize()
 
         if os.getenv("DATEMSK", "-1") == "-1":
             top = Toplevel()
@@ -212,26 +218,379 @@ class XCalGUI:
             noBtn.grid(row = 2, column = 1, columnspan = 1)  
             
     def storeAll(self):
-        print("ok")
+        for i in range(len(self.fileList)):
+            storeItem = self.fileList[i]
+            if storeItem[0] != "VTIMEZONE":
+            
+                for thing in storeItem:
+                    print (thing)
+                
+                
+                query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}';".format(storeItem[7].replace("'","''"))    
+                self.cursor.execute(query)
+                orgid = ""
+                for thing in self.cursor:
+                    orgid = thing[0]
+                
+                if orgid == "" and storeItem[7] != "" and storeItem[8] != "":
+                    query = "INSERT INTO ORGANIZER (name, contact) VALUES('{0}', '{1}');".format(storeItem[7].replace("'","''"), storeItem[8].replace("'","''"))
+                    print(query)
+                    self.cursor.execute(query)
+                    self.cnx.commit()
+
+                query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}';".format(storeItem[7].replace("'","''"))    
+                self.cursor.execute(query)
+                orgid = ""
+                for thing in self.cursor:
+                    orgid = thing[0]
+                
+                if orgid == "":
+                    orgid = "NULL"
+                    
+                    #          0      1       2         3           4        5          6         7         8
+                ####Tuple: compname, nprops, ncomps, summary start_time, location, priority, organizer, contact
+                
+                if (storeItem[0] == "VEVENT"):
+                    structTime = time.strptime(storeItem[4], "%Y%m%dT%H%M%S")
+                
+                    timeStr = time.strftime("%Y-%m-%d %H-%M-%S", structTime)
+                
+                    query = "SELECT event_id FROM EVENT WHERE summary = '{0}' AND start_time = '{1}'".format(storeItem[3].replace("'","''"), timeStr)
+                    self.cursor.execute(query)
+                    eventID = ""
+                    for thing in self.cursor:
+                        eventID = thing[0]
+                    
+                    if eventID == "":
+                        query = "INSERT INTO EVENT (summary, start_time, location, organizer) VALUES('{0}', '{1}', '{2}', {3});".format(storeItem[3].replace("'","''"), timeStr, storeItem[5].replace("'","''"), orgid)
+                        print(query)
+                        self.cursor.execute(query)
+                        self.cnx.commit()
+                else:
+                    query = "SELECT todo_id FROM TODO WHERE summary = '{0}'".format(storeItem[3].replace("'","''"))
+                    self.cursor.execute(query)
+                    todoID = ""
+                    for thing in self.cursor:
+                        todoID = thing[0]
+                    
+                    if todoID == "":
+                        query = "INSERT INTO TODO (summary, priority, organizer) VALUES('{0}', {1}, {2});".format(storeItem[3].replace("'","''"), storeItem[6], orgid)
+                        print(query)
+                        self.cursor.execute(query)
+                        self.cnx.commit()
+                        
+        self.getTableSize()
+        self.statusDB()
         
     def storeSelected(self):
-        print("ok")
-          
+        item = self.CompTable.focus()
+        
+        storeItem = self.fileList[int(item)-1]
+        
+        if storeItem[0] != "VTIMEZONE":
+            query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}'".format(storeItem[7].replace("'","''"))    
+            self.cursor.execute(query)
+            orgid = ""
+            for thing in self.cursor:
+                orgid = thing[0]
+            
+            if orgid == "" and storeItem[7] != "" and storeItem[8] != "":
+                query = "INSERT INTO ORGANIZER (name, contact) VALUES('{0}', '{1}');".format(storeItem[7].replace("'","''"), storeItem[8])
+                print(query)
+                self.cursor.execute(query)
+                self.cnx.commit()
+
+            query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}'".format(storeItem[7].replace("'","''"))    
+            self.cursor.execute(query)
+            orgid = ""
+            for thing in self.cursor:
+                orgid = thing[0]
+            
+            if orgid == "":
+                orgid = "NULL"
+                
+                #          0      1       2         3           4        5          6         7         8
+            ####Tuple: compname, nprops, ncomps, summary start_time, location, priority, organizer, contact
+            
+            if (storeItem[0] == "VEVENT"):
+                structTime = time.strptime(storeItem[4], "%Y%m%dT%H%M%S")
+                
+                timeStr = time.strftime("%Y-%m-%d %H-%M-%S", structTime)
+            
+                query = "SELECT event_id FROM EVENT WHERE summary = '{0}' AND start_time = '{1}'".format(storeItem[3].replace("'","''"), timeStr)
+                self.cursor.execute(query)
+                eventID = ""
+                for thing in self.cursor:
+                    eventID = thing[0]
+                
+                if eventID == "":
+                    query = "INSERT INTO EVENT (summary, start_time, location, organizer) VALUES('{0}', '{1}', '{2}', {3});".format(storeItem[3].replace("'","''"), timeStr, storeItem[5].replace("'","''"), orgid)
+                    print(query)
+                    self.cursor.execute(query)
+                    self.cnx.commit()
+            else:
+                query = "SELECT todo_id FROM TODO WHERE summary = '{0}'".format(storeItem[3].replace("'","''"))
+                self.cursor.execute(query)
+                todoID = ""
+                for thing in self.cursor:
+                    todoID = thing[0]
+                
+                if todoID == "":
+                    query = "INSERT INTO TODO (summary, priority, organizer) VALUES('{0}', {1}, {2});".format(storeItem[3].replace("'","''"), storeItem[6], orgid)
+                    print(query)
+                    self.cursor.execute(query)
+                    self.cnx.commit()
+            
+            self.getTableSize()
+            self.statusDB()
+            
+    
     def clearDB(self):
-        print("ok")
+        self.getTableSize()
+        if self.tableSize > 0:
+            self.cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+            query = "TRUNCATE EVENT;";
+            self.cursor.execute(query)
+            self.cnx.commit()
+            
+            query = "TRUNCATE TODO;";
+            self.cursor.execute(query)
+            self.cnx.commit()
+            
+            query = "TRUNCATE ORGANIZER;";
+            self.cursor.execute(query)
+            self.cnx.commit()
+            self.cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+        self.getTableSize()
+        self.statusDB()
+            
+    def getTableSize(self):
+        query = "SELECT COUNT(*) FROM ORGANIZER;";
+        self.cursor.execute(query)
+        
+        orgNum = ""
+        for thing in self.cursor:
+            orgNum = thing[0]
+            
+        query = "SELECT COUNT(*) FROM EVENT;";
+        self.cursor.execute(query)
+        
+        eventNum = ""
+        for thing in self.cursor:
+            eventNum = thing[0]
+            
+        query = "SELECT COUNT(*) FROM TODO;";
+        self.cursor.execute(query)
+        
+        todoNum = ""
+        for thing in self.cursor:
+            todoNum = thing[0]
+            
+        self.tableSize = orgNum + eventNum + todoNum
+        
+        if self.tableSize < 1:
+            self.dbMenu.entryconfig(2, state=DISABLED)
+        else:
+            self.dbMenu.entryconfig(2, state=NORMAL)
+            
         
     def statusDB(self):
-        query = "status;"
+        query = "SELECT COUNT(*) FROM ORGANIZER;";
         self.cursor.execute(query)
+        
+        orgNum = ""
+        for thing in self.cursor:
+            orgNum = thing[0]
+            
+        query = "SELECT COUNT(*) FROM EVENT;";
+        self.cursor.execute(query)
+        
+        eventNum = ""
+        for thing in self.cursor:
+            eventNum = thing[0]
+            
+        query = "SELECT COUNT(*) FROM TODO;";
+        self.cursor.execute(query)
+        
+        todoNum = ""
+        for thing in self.cursor:
+            todoNum = thing[0]
+        
         self.log.config(state = NORMAL)
-        for line in cursor:
-            self.log.insert("end", line + "\n")
+        
+        line = "Database has " + str(orgNum) + " organizers, " + str(eventNum) + " events, " + str(todoNum) + " to-do items."
+        self.log.insert("end", line + "\n")
             
         self.log.see("end")
         self.log.config(state = DISABLED)
             
     def queryDB(self):
-        print("ok")
+        queryWin = Toplevel()
+        queryWin.title("Query Database")
+        v = IntVar()
+        
+        
+        def Cancel():
+            queryWin.destroy()
+            
+        def Submit():
+            print(str(v.get()))
+            if v.get() == 1:
+                try:
+                    query = "SELECT summary FROM EVENT WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}')".format((Q1E.get()).replace("'","''"))
+                    self.cursor.execute(query)
+                    log.config(state = NORMAL)
+                    for thing in self.cursor:
+                        log.insert(END, thing[0] + "\n")
+                    query = "SELECT summary FROM TODO WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}')".format((Q1E.get()).replace("'","''"))
+                    self.cursor.execute(query)
+                    for thing in self.cursor:
+                        log.insert(END, thing[0] + "\n")
+                    
+                    log.insert(END, "----------------------------\n")
+                    log.config(state = DISABLED)
+                except mysql.connector.Error:
+                    pass
+            elif v.get() == 2:
+                try:
+                    query = "SELECT summary FROM EVENT WHERE location = '{0}'".format((Q2E.get()).replace("'","''"))
+                    self.cursor.execute(query)
+                    log.config(state = NORMAL)
+                    i = 0
+                    for thing in self.cursor:
+                        i = i + 1
+                    log.insert(END, str(i) + "\n----------------------------\n")
+                    log.config(state = DISABLED)
+                except mysql.connector.Error:
+                    pass
+            elif v.get() == 3:
+                try:
+                    query = "kfc"
+                except mysql.connector.Error:
+                    pass
+            elif v.get() == 4:
+                try:
+                    log.config(state = NORMAL)
+                    query = "SELECT summary, priority FROM TODO WHERE priority <= {0} ORDER BY priority".format(Q4E.get())
+                    self.cursor.execute(query)
+                    for thing in self.cursor:
+                        log.insert(END, "Summary: " + str(thing[0]) + " - Priority: " + str(thing[1]) + "\n")
+                    log.config(state = DISABLED)
+                except mysql.connector.Error:
+                    pass
+            elif v.get() == 5:
+                try:
+                    query = "kfc"
+                except mysql.connector.Error:
+                    pass
+        
+        def enablebtn():
+            btn.config(state=NORMAL)
+            return 1
+            
+            
+        def clrLog():
+            return 1
+            
+            
+        def help():
+            helpW = Toplevel()
+            helpW.title("Help")
+            
+            
+            helpLog = Text(helpW, borderwidth = 2)
+            helpLog.config(font = ("consolas", 12), undo = True, wrap = 'word', state = NORMAL)
+            helpLog.pack(fill = "x", side = "left")
+            
+            scrollbH = Scrollbar(helpW, orient = tk.VERTICAL, command = helpLog.yview)
+            scrollbH.pack(fill = "y", side = "right")
+
+            helpLog['yscrollcommand'] = scrollbH.set
+            self.cursor.execute("DESCRIBE ORGANIZER;")
+            helpLog.insert(END, "Table ORGANIZER:\n")
+            for thing in self.cursor:
+                helpLog.insert(END, "Field: " + str(thing[0]) + "\n")
+                helpLog.insert(END, "Type: " + thing[1] + "\n")
+                helpLog.insert(END, "Null: " + thing[2] + "\n")
+                helpLog.insert(END, "Key: " + thing[3] + "\n")
+                helpLog.insert(END, "Default: " + str(thing[4]) + "\n")
+                helpLog.insert(END, "Extra: " + thing[5] + "\n\n")
+                
+            helpLog.insert(END, "--------------------------\n")
+            self.cursor.execute("DESCRIBE EVENT;")
+            helpLog.insert(END, "Table EVENT:\n")
+            for thing in self.cursor:
+                helpLog.insert(END, "Field: " + thing[0] + "\n")
+                helpLog.insert(END, "Type: " + thing[1] + "\n")
+                helpLog.insert(END, "Null: " + thing[2] + "\n")
+                helpLog.insert(END, "Key: " + thing[3] + "\n")
+                helpLog.insert(END, "Default: " + str(thing[4]) + "\n")
+                helpLog.insert(END, "Extra: " + thing[5] + "\n\n")
+            helpLog.insert(END, "--------------------------\n")
+            self.cursor.execute("DESCRIBE TODO;")
+            helpLog.insert(END, "Table TODO:\n")
+            for thing in self.cursor:
+                helpLog.insert(END, "Field: " + thing[0] + "\n")
+                helpLog.insert(END, "Type: " + thing[1] + "\n")
+                helpLog.insert(END, "Null: " + thing[2] + "\n")
+                helpLog.insert(END, "Key: " + thing[3] + "\n")
+                helpLog.insert(END, "Default: " + str(thing[4]) + "\n")
+                helpLog.insert(END, "Extra: " + thing[5] + "\n\n")
+                
+            helpLog.config(state = DISABLED)
+
+        rb1 = Radiobutton(queryWin, text = "Display items of organizer", variable = v, value = 1, command = enablebtn)
+        rb1.grid(row = 0, column = 0, sticky = 'w')
+        Q1E = Entry(queryWin)
+        Q1E.grid(row = 0, column = 1, sticky = 'w')
+        rb2 = Radiobutton(queryWin, text = "How many events take place in", variable = v, value = 2, command = enablebtn)
+        rb2.grid(row = 1, column = 0, sticky = 'w')
+        Q2E = Entry(queryWin)
+        Q2E.grid(row = 1, column = 1, sticky = 'w')
+        rb3 = Radiobutton(queryWin, text = "Events", variable = v, value = 3, command = enablebtn)
+        rb3.grid(row = 2, column = 0, sticky = 'w')
+        rb4 = Radiobutton(queryWin, text = "View sorted list of todo items with a minimum priority of", variable = v, value = 4, command = enablebtn)
+        rb4.grid(row = 3, column = 0, sticky = 'w')
+        Q4E = Entry(queryWin)
+        Q4E.grid(row = 3, column = 1, sticky = 'w')
+        rb5 = Radiobutton(queryWin, text = "Events", variable = v, value = 5, command = enablebtn)
+        rb5.grid(row = 4, column = 0, sticky = 'w')
+        
+        
+        rb6 = Radiobutton(queryWin, text = "Custom Query", variable = v, value = 6, command = enablebtn)
+        rb6.grid(row = 5, column = 0, sticky = 'w')  
+        QueryF = Entry(queryWin)
+        QueryF.grid(row = 5, column = 1, sticky = 'w')
+        QueryF.insert(END, "SELECT ")
+        
+        btn = Button(queryWin, text = "Submit", command = Submit)
+        btn.grid(row = 6, column = 0)
+        btn.config(state = DISABLED)
+        
+        log = Text(queryWin, borderwidth = 2, state = "disabled")
+        log.config(font = ("consolas", 12), undo = True, wrap = 'word', state = DISABLED)
+        log.grid(row = 7, column = 0, padx = 2, pady = 2)
+
+        scrollb = Scrollbar(queryWin, orient = tk.VERTICAL, command = log.yview)
+        scrollb.grid(row = 7, column = 1, sticky = 'nsew')
+
+        log['yscrollcommand'] = scrollb.set
+        clrLogBtn = Button(queryWin, text = "Clear log", command = clrLog)
+        clrLogBtn.grid(row = 8, column = 0)
+        
+        helpBtn = Button(queryWin, text = "Help", command = help)
+        helpBtn.grid(row = 8, column = 1)
+        
+            
+        
+            
+        
+        
+       # btn2.pack(fill = "both")
+       # filter.grab_set()
+        queryWin.minsize(width = 765, height = 600)
+        queryWin.maxsize(width = 765, height = 600)
+        mainloop()
         
        
     def clearLog(self):
@@ -477,6 +836,9 @@ class XCalGUI:
                 self.fileMenu.entryconfig(3, state=NORMAL)
                 self.fileMenu.entryconfig(4, state=NORMAL)
                 self.todoMenu.entryconfig(0, state=NORMAL)
+                
+                self.dbMenu.entryconfig(0, state=NORMAL)
+                
                 self.extrEvntBtn.config(state=NORMAL)
                 self.extrXPropBtn.config(state=NORMAL)
                 
@@ -676,16 +1038,20 @@ class XCalGUI:
                 if self.rowSelected == 0:
                     self.rowSelected = 1
                     self.showSelButn.config(state=NORMAL)
+                    self.dbMenu.entryconfig(1, state=NORMAL)
                 else:
                     self.rowSelected = 0
                     self.showSelButn.config(state=DISABLED)
+                    self.dbMenu.entryconfig(1, state=DISABLED)
             
         else:
             if iid != "":
                 self.rowSelected = 1
                 self.CompTable.selection_remove(item)
                 self.showSelButn.config(state=NORMAL)
+                self.dbMenu.entryconfig(1, state=NORMAL)
                 self.CompTable.selection_toggle(iid)
+                
         self.CompTable.config(selectmode="none")
 
     def extractEvents(self):

@@ -78,7 +78,7 @@ static PyObject *Cal_readFile(PyObject *self, PyObject *args) {
             } 
             traverseProps = traverseProps->next;
         }
-        //          0      1       2         3           4        5          6         7
+        //          0      1       2         3           4        5          6         7         8
         //Tuple: compname, nprops, ncomps, summary start_time, location, priority, organizer, contact
         if (summary == NULL) {
             summary = empty;
