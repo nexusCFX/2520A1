@@ -429,6 +429,11 @@ class XCalGUI:
     def queryDB(self):
         queryWin = Toplevel()
         queryWin.title("Query Database")
+        
+       
+       # queryWin.minsize(width = 270, height = 60)
+      #  queryWin.maxsize(width = 270, height = 60)
+        
         self.dbMenu.entryconfig(4, state=DISABLED)
         
         def destroyWin():
@@ -582,48 +587,48 @@ class XCalGUI:
             helpLog.config(state = DISABLED)
 
         rb1 = Radiobutton(queryWin, text = "Display items of organizer", variable = v, value = 1, command = enablebtn)
-        rb1.grid(row = 0, column = 0, sticky = 'w')
+        rb1.pack()
         Q1E = Entry(queryWin)
-        Q1E.grid(row = 0, column = 1, sticky = 'w')
+        Q1E.pack()
         rb2 = Radiobutton(queryWin, text = "How many events take place in", variable = v, value = 2, command = enablebtn)
-        rb2.grid(row = 1, column = 0, sticky = 'w')
+        rb2.pack()
         Q2E = Entry(queryWin)
-        Q2E.grid(row = 1, column = 1, sticky = 'w')
+        Q2E.pack()
         rb3 = Radiobutton(queryWin, text = "Events taking place in the year", variable = v, value = 3, command = enablebtn)
-        rb3.grid(row = 2, column = 0, sticky = 'w')
+        rb3.pack()
         Q3E = Entry(queryWin)
-        Q3E.grid(row = 2, column = 1, sticky = 'w')
+        Q3E.pack()
         rb4 = Radiobutton(queryWin, text = "Sorted list of todo items with a minimum priority of", variable = v, value = 4, command = enablebtn)
-        rb4.grid(row = 3, column = 0, sticky = 'w')
+        rb4.pack()
         Q4E = Entry(queryWin)
-        Q4E.grid(row = 3, column = 1, sticky = 'w')
+        Q4E.pack()
         rb5 = Radiobutton(queryWin, text = "Display summaries for all events and todos that have organizers, sorted alphabetically", variable = v, value = 5, command = enablebtn)
-        rb5.grid(row = 4, column = 0, sticky = 'w')
+        rb5.pack()
         
         
         rb6 = Radiobutton(queryWin, text = "Custom Query", variable = v, value = 6, command = enablebtn)
-        rb6.grid(row = 5, column = 0, sticky = 'w')  
+        rb6.pack()  
         QueryF = Entry(queryWin)
-        QueryF.grid(row = 5, column = 1, sticky = 'w')
+        QueryF.pack(fill="x")
         QueryF.insert(END, "SELECT ")
         
         btn = Button(queryWin, text = "Submit", command = Submit)
-        btn.grid(row = 6, column = 0)
+        btn.pack()
         btn.config(state = DISABLED)
         
         log = Text(queryWin, borderwidth = 2, state = "disabled")
         log.config(font = ("consolas", 12), undo = True, wrap = 'word', state = DISABLED)
-        log.grid(row = 7, column = 0, padx = 2, pady = 2)
+        log.pack()
 
         scrollb = Scrollbar(queryWin, orient = tk.VERTICAL, command = log.yview)
-        scrollb.grid(row = 7, column = 1, sticky = 'nsew')
+        #scrollb.pack(side="right")
 
         log['yscrollcommand'] = scrollb.set
         clrLogBtn = Button(queryWin, text = "Clear log", command = clrLog)
-        clrLogBtn.grid(row = 8, column = 0)
+        clrLogBtn.pack(fill="x")
         
         helpBtn = Button(queryWin, text = "Help", command = help)
-        helpBtn.grid(row = 8, column = 1)
+        helpBtn.pack(fill="x")
         
             
         
@@ -632,8 +637,8 @@ class XCalGUI:
         
        # btn2.pack(fill = "both")
        # filter.grab_set()
-        queryWin.minsize(width = 765, height = 600)
-        queryWin.maxsize(width = 765, height = 600)
+        queryWin.minsize(width = 600, height = 775)
+        queryWin.maxsize(width = 600, height = 775)
         mainloop()
         
        
