@@ -30,11 +30,16 @@ import random
 class XCalGUI:
     def __init__(self):
         fails = 0
-        #print(sys.argv[1])
-        #password = getpass.getpass("Password:")
+        server = "dursley.socs.uoguelph.ca"
+        
+        if len(sys.argv) == 3:
+            server = sys.argv[2]
+            #print(server)
+        
+        password = getpass.getpass("Password:")
         while(1):
             try:
-                 self.cnx = mysql.connector.connect(user=sys.argv[1], password="steamworks", host='159.203.22.246', database="2750DB")
+                 self.cnx = mysql.connector.connect(user=sys.argv[1], password=password, host=server, database=sys.argv[1])
             except mysql.connector.errors.Error as err:
                 fails = fails + 1
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -223,7 +228,7 @@ class XCalGUI:
             if storeItem[0] != "VTIMEZONE":
             
                 for thing in storeItem:
-                    print (thing)
+                    #print (thing)
                 
                 
                 query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}';".format(storeItem[7].replace("'","''"))    
@@ -234,7 +239,7 @@ class XCalGUI:
                 
                 if orgid == "" and storeItem[7] != "" and storeItem[8] != "":
                     query = "INSERT INTO ORGANIZER (name, contact) VALUES('{0}', '{1}');".format(storeItem[7].replace("'","''"), storeItem[8].replace("'","''"))
-                    print(query)
+                    #print(query)
                     self.cursor.execute(query)
                     self.cnx.commit()
 
@@ -263,7 +268,7 @@ class XCalGUI:
                     
                     if eventID == "":
                         query = "INSERT INTO EVENT (summary, start_time, location, organizer) VALUES('{0}', '{1}', '{2}', {3});".format(storeItem[3].replace("'","''"), timeStr, storeItem[5].replace("'","''"), orgid)
-                        print(query)
+                        #print(query)
                         self.cursor.execute(query)
                         self.cnx.commit()
                 else:
@@ -275,7 +280,7 @@ class XCalGUI:
                     
                     if todoID == "":
                         query = "INSERT INTO TODO (summary, priority, organizer) VALUES('{0}', {1}, {2});".format(storeItem[3].replace("'","''"), storeItem[6], orgid)
-                        print(query)
+                        #print(query)
                         self.cursor.execute(query)
                         self.cnx.commit()
                         
@@ -296,7 +301,7 @@ class XCalGUI:
             
             if orgid == "" and storeItem[7] != "" and storeItem[8] != "":
                 query = "INSERT INTO ORGANIZER (name, contact) VALUES('{0}', '{1}');".format(storeItem[7].replace("'","''"), storeItem[8])
-                print(query)
+                #print(query)
                 self.cursor.execute(query)
                 self.cnx.commit()
 
@@ -325,7 +330,7 @@ class XCalGUI:
                 
                 if eventID == "":
                     query = "INSERT INTO EVENT (summary, start_time, location, organizer) VALUES('{0}', '{1}', '{2}', {3});".format(storeItem[3].replace("'","''"), timeStr, storeItem[5].replace("'","''"), orgid)
-                    print(query)
+                    #print(query)
                     self.cursor.execute(query)
                     self.cnx.commit()
             else:
@@ -337,7 +342,7 @@ class XCalGUI:
                 
                 if todoID == "":
                     query = "INSERT INTO TODO (summary, priority, organizer) VALUES('{0}', {1}, {2});".format(storeItem[3].replace("'","''"), storeItem[6], orgid)
-                    print(query)
+                    #print(query)
                     self.cursor.execute(query)
                     self.cnx.commit()
             
@@ -427,6 +432,13 @@ class XCalGUI:
     def queryDB(self):
         queryWin = Toplevel()
         queryWin.title("Query Database")
+        self.dbMenu.entryconfig(4, state=DISABLED)
+        
+        def destroyWin():
+            self.dbMenu.entryconfig(4, state=NORMAL)
+            queryWin.destroy()
+        
+        queryWin.protocol("WM_DELETE_WINDOW", destroyWin)
         v = IntVar()
         
         
@@ -434,55 +446,85 @@ class XCalGUI:
             queryWin.destroy()
             
         def Submit():
-            print(str(v.get()))
+           # print(str(v.get()))
             if v.get() == 1:
                 try:
-                    query = "SELECT summary FROM EVENT WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}')".format((Q1E.get()).replace("'","''"))
+                    query = "SELECT summary FROM EVENT WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}');".format((Q1E.get()).replace("'","''"))
                     self.cursor.execute(query)
                     log.config(state = NORMAL)
                     for thing in self.cursor:
                         log.insert(END, thing[0] + "\n")
-                    query = "SELECT summary FROM TODO WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}')".format((Q1E.get()).replace("'","''"))
+                    query = "SELECT summary FROM TODO WHERE organizer = (SELECT org_id FROM ORGANIZER where name = '{0}');".format((Q1E.get()).replace("'","''"))
                     self.cursor.execute(query)
                     for thing in self.cursor:
                         log.insert(END, thing[0] + "\n")
-                    
                     log.insert(END, "----------------------------\n")
                     log.config(state = DISABLED)
                 except mysql.connector.Error:
                     pass
             elif v.get() == 2:
                 try:
-                    query = "SELECT summary FROM EVENT WHERE location = '{0}'".format((Q2E.get()).replace("'","''"))
+                    query = "SELECT summary FROM EVENT WHERE location = '{0}';".format((Q2E.get()).replace("'","''"))
                     self.cursor.execute(query)
                     log.config(state = NORMAL)
                     i = 0
                     for thing in self.cursor:
                         i = i + 1
-                    log.insert(END, str(i) + "\n----------------------------\n")
+                    log.insert(END, str(i) + "\n")
+                    log.insert(END, "----------------------------\n")
                     log.config(state = DISABLED)
                 except mysql.connector.Error:
                     pass
             elif v.get() == 3:
                 try:
-                    query = "kfc"
+                    sdate = (Q3E.get()).replace("'","''") + "-01-01 00:00:00"
+                    edate = (Q3E.get()).replace("'","''") + "-12-31 23:59:59"
+                    query = "SELECT summary, start_time FROM EVENT WHERE start_time BETWEEN '{0}' AND '{1}';".format(sdate, edate)
+                    #print (query)
+                    self.cursor.execute(query)
+                    log.config(state = NORMAL)
+                    for thing in self.cursor:
+                        log.insert(END, "Summary: " + str(thing[0]) + " - Start time: " + str(thing[1]) + "\n")
+                    log.insert(END, "----------------------------\n")
+                    log.config(state = DISABLED)
                 except mysql.connector.Error:
                     pass
             elif v.get() == 4:
                 try:
                     log.config(state = NORMAL)
-                    query = "SELECT summary, priority FROM TODO WHERE priority <= {0} ORDER BY priority".format(Q4E.get())
+                    query = "SELECT summary, priority FROM TODO WHERE priority <= {0} ORDER BY priority;".format(Q4E.get())
                     self.cursor.execute(query)
                     for thing in self.cursor:
                         log.insert(END, "Summary: " + str(thing[0]) + " - Priority: " + str(thing[1]) + "\n")
+                    log.insert(END, "----------------------------\n")
                     log.config(state = DISABLED)
                 except mysql.connector.Error:
                     pass
             elif v.get() == 5:
                 try:
-                    query = "kfc"
+                    log.config(state = NORMAL)
+                    query = "SELECT summary, name, contact FROM (SELECT summary, organizer FROM EVENT UNION SELECT summary, organizer FROM TODO) AS FULL, ORGANIZER WHERE (FULL.organizer = ORGANIZER.org_id) ORDER BY summary;"
+                    self.cursor.execute(query)
+                    for thing in self.cursor:
+                        mail = thing[2][7:]
+                        log.insert(END, "Summary: " + str(thing[0]) + " - Organizer: " + str(thing[1]) + " - Email: " + mail + "\n")
+                    log.insert(END, "----------------------------\n")
+                    log.config(state = DISABLED)
                 except mysql.connector.Error:
                     pass
+            elif v.get() == 6:
+                try:
+                    query = (QueryF.get()).replace("'","''")
+                    self.cursor.execute(query)
+                    log.config(state = NORMAL)
+                    for thing in self.cursor:
+                        for item in thing:
+                            log.insert(END, str(item) + "\n")
+                    log.insert(END, "----------------------------\n")
+                    log.config(state = DISABLED)
+                except mysql.connector.Error:
+                    pass
+            log.see("end")
         
         def enablebtn():
             btn.config(state=NORMAL)
@@ -490,7 +532,10 @@ class XCalGUI:
             
             
         def clrLog():
-            return 1
+            log.config(state = NORMAL)
+        
+            log.delete('1.0', END)
+            log.config(state = DISABLED)
             
             
         def help():
@@ -509,7 +554,7 @@ class XCalGUI:
             self.cursor.execute("DESCRIBE ORGANIZER;")
             helpLog.insert(END, "Table ORGANIZER:\n")
             for thing in self.cursor:
-                helpLog.insert(END, "Field: " + str(thing[0]) + "\n")
+                helpLog.insert(END, "Column: " + str(thing[0]) + "\n")
                 helpLog.insert(END, "Type: " + thing[1] + "\n")
                 helpLog.insert(END, "Null: " + thing[2] + "\n")
                 helpLog.insert(END, "Key: " + thing[3] + "\n")
@@ -520,7 +565,7 @@ class XCalGUI:
             self.cursor.execute("DESCRIBE EVENT;")
             helpLog.insert(END, "Table EVENT:\n")
             for thing in self.cursor:
-                helpLog.insert(END, "Field: " + thing[0] + "\n")
+                helpLog.insert(END, "Column: " + thing[0] + "\n")
                 helpLog.insert(END, "Type: " + thing[1] + "\n")
                 helpLog.insert(END, "Null: " + thing[2] + "\n")
                 helpLog.insert(END, "Key: " + thing[3] + "\n")
@@ -530,7 +575,7 @@ class XCalGUI:
             self.cursor.execute("DESCRIBE TODO;")
             helpLog.insert(END, "Table TODO:\n")
             for thing in self.cursor:
-                helpLog.insert(END, "Field: " + thing[0] + "\n")
+                helpLog.insert(END, "Column: " + thing[0] + "\n")
                 helpLog.insert(END, "Type: " + thing[1] + "\n")
                 helpLog.insert(END, "Null: " + thing[2] + "\n")
                 helpLog.insert(END, "Key: " + thing[3] + "\n")
@@ -555,7 +600,7 @@ class XCalGUI:
         rb4.grid(row = 3, column = 0, sticky = 'w')
         Q4E = Entry(queryWin)
         Q4E.grid(row = 3, column = 1, sticky = 'w')
-        rb5 = Radiobutton(queryWin, text = "Events", variable = v, value = 5, command = enablebtn)
+        rb5 = Radiobutton(queryWin, text = "Display summaries for all events and todos that have organizers, sorted alphabetically", variable = v, value = 5, command = enablebtn)
         rb5.grid(row = 4, column = 0, sticky = 'w')
         
         
@@ -857,7 +902,7 @@ class XCalGUI:
             self.CompTable.delete(i)
         for tup in self.fileList:
             self.tableSize = self.tableSize + 1
-            print( str(tup[0]) + " " + str(tup[1]) + " " +  str(tup[2]) +" " +  str(tup[3]) +" " +  str(tup[4]) +" " +  str(tup[5]) +" " +  str(tup[6]) +" " +  str(tup[7]) +" " +  str(tup[8]) )
+            #print( str(tup[0]) + " " + str(tup[1]) + " " +  str(tup[2]) +" " +  str(tup[3]) +" " +  str(tup[4]) +" " +  str(tup[5]) +" " +  str(tup[6]) +" " +  str(tup[7]) +" " +  str(tup[8]) )
             self.CompTable.insert('', 'end', iid = self.tableSize, text = str(self.tableSize), values = (tup[0], tup[1], tup[2], tup[3]))
     
     def combineSC(self, event):
