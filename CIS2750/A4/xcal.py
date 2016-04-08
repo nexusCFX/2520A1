@@ -226,9 +226,6 @@ class XCalGUI:
         for i in range(len(self.fileList)):
             storeItem = self.fileList[i]
             if storeItem[0] != "VTIMEZONE":
-            
-                for thing in storeItem:
-                    #print (thing)
                 
                 
                 query = "SELECT org_id FROM ORGANIZER WHERE name = '{0}';".format(storeItem[7].replace("'","''"))    
