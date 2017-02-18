@@ -38,9 +38,13 @@ procedure mazeSolve is
 
     NSStack: Stack;
     newPos: PositionPtr;
-    Scan_Ptr: NodePtr;
+    Scan_Ptr: PositionPtr;
     In_Int: Integer;
 begin
+    Put("> ");
+    Get(In_Int);
+    newPos := new Position'(In_int, 0, null);
+    push(NSStack, newPos);
     loop
         -- Read and integer, stopping at -1.
         Put("> ");
@@ -48,18 +52,17 @@ begin
         exit when In_Int = -1;
         newPos := new Position'(In_int, 0, NSStack.top.pos);
         push(NSStack, newPos);
-
     end loop;
 
     -- Now print out the integers (backwards.)
-    Scan_Ptr := NSStack.top;
+    Scan_Ptr := NSStack.top.pos;
     loop
         -- If the list is entirely empty, bail out now.
         exit when Scan_Ptr = null;
 
         -- Print, go to next.
-        Put(Scan_Ptr.pos.x);
-        Scan_Ptr := Scan_Ptr.next;
+        Put(Scan_Ptr.x);
+        Scan_Ptr := Scan_Ptr.p;
 
         -- If there is no next, we are done.
         exit when Scan_Ptr = null;
