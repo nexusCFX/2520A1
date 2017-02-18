@@ -14,7 +14,7 @@ procedure mazeSolve is
     end record;
 
     type Node is record
-        pos: Position;
+        pos: PositionPtr;
         next: NodePtr;
     end record;
 
@@ -22,7 +22,7 @@ procedure mazeSolve is
         top: NodePtr;
     end record;
 
-    procedure push(s:in out Stack; pos: in Position) is
+    procedure push(s:in out Stack; pos: in PositionPtr) is
         newNode: NodePtr;
     begin
         newNode := new Node'(pos, null);
@@ -30,14 +30,14 @@ procedure mazeSolve is
         s.top := newNode;
     end push;
 
-    procedure pop(s:in out Stack; pos: out Position) is
+    procedure pop(s:in out Stack; pos: out PositionPtr) is
     begin
         pos := s.top.pos;
         s.top := s.top.next;
     end pop;
 
     NSStack: Stack;
-    newPos: Position;
+    newPos: PositionPtr;
     Scan_Ptr: NodePtr;
     In_Int: Integer;
 begin
@@ -46,7 +46,7 @@ begin
         Put("> ");
         Get(In_Int);
         exit when In_Int = -1;
-        newPos.x := In_Int;
+        newPos = new Position'(In_int, 0, null);
         push(NSStack, newPos);
 
     end loop;
