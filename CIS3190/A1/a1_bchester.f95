@@ -5,38 +5,23 @@
         ! Main program
         program DiceGame
         implicit none
-
-        integer :: gamesToPlay = 0
-        integer :: firstSeed = 0
-        integer :: secondSeed = 0
+        integer :: gamesToPlay, firstSeed, secondSeed
 
         ! Grab two seed values and number of games to play
-        write(*,*) "Enter stuff."
-
-        read 100, firstSeed, secondSeed, gamesToPlay
-100     format(I5, I5, I10)
-
+        write(*,*) "Enter two seed values and the number of games to play."
+        read (*,*) firstSeed, secondSeed, gamesToPlay
         call playDiceGame(firstSeed, secondSeed, gamesToPlay)
-
         end program DiceGame
-
 
         ! Play the game until we reach the user's desired number of games
         subroutine playDiceGame(firstSeed, secondSeed, gamesToPlay)
             implicit none
+            integer :: gamesToPlay, firstSeed, secondSeed
+            integer :: repeats, point, diceSum
+            integer, dimension(2) :: randomValues, dice
             integer :: numberOfWins = 0
             integer :: numberOfLosses = 0
             integer :: gamesPlayed = 0
-            integer :: repeats = 0
-
-            integer :: firstSeed
-            integer :: secondSeed
-            integer :: gamesToPlay
-
-            integer :: point = 0
-            integer :: diceSum = 0
-            integer, dimension(2) :: randomValues
-            integer, dimension(2) :: dice
 
             do while(gamesPlayed < gamesToPlay)
                 call diceRoll(firstSeed, secondSeed, randomValues, dice)
@@ -88,11 +73,8 @@
             integer :: firstLimit = 947
             integer :: secondLimit = 941
 
-            integer, intent(inout) :: firstSeed
-            integer, intent(inout) :: secondSeed
-
-            integer, dimension(2), intent(inout) :: randomValues
-            integer, dimension(2), intent(inout) :: dice
+            integer, intent(inout) :: firstSeed, secondSeed
+            integer, dimension(2), intent(inout) :: randomValues, dice
 
             do i = 1,2
                 firstSeed = firstSeed + firstSeed
@@ -124,5 +106,5 @@
             integer :: numberOfWins, numberOfLosses, firstSeed, secondSeed
 
             write(*,200) numberOfWins,numberOfLosses,firstSeed,secondSeed
-200         format('WINS = ',I8, ' LOSSES = ',I8, ' I = ', I4, ' J = ',I4)
+200         format('Wins = ',I5, ' Losses = ',I5, ' First seed = ', I4, ' Second seed = ',I4)
         end subroutine
