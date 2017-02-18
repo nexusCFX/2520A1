@@ -46,7 +46,7 @@ begin
         Put("> ");
         Get(In_Int);
         exit when In_Int = -1;
-        newPos = new Position'(In_int, 0, null);
+        newPos := new Position'(In_int, 0, NSStack.top.pos);
         push(NSStack, newPos);
 
     end loop;
