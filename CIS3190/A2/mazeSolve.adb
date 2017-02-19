@@ -37,9 +37,9 @@ procedure mazeSolve is
         s.top := s.top.next;
     end pop;
 
-    maze: array(0..49, 0..49) of character
-    solvedMaze: array(0..49, 0..49) of character
-    inputChar: character
+    maze: array(0..49, 0..49) of character;
+    solvedMaze: array(0..49, 0..49) of character;
+    inputChar: character;
     NSStack: Stack;
     newPos: PositionPtr;
     Scan_Ptr: PositionPtr;
@@ -48,14 +48,14 @@ procedure mazeSolve is
     infp:file_type;
 begin
     open(infp,in_file,"maze.txt");
-    get(infp,numberOfRows)
-    get(infp,numberOfColumns)
-    numberOfRows := numberOfRows - 1
-    numberOfColumns := numberOfColumns - 1
+    get(infp,numberOfRows);
+    get(infp,numberOfColumns);
+    numberOfRows := numberOfRows - 1;
+    numberOfColumns := numberOfColumns - 1;
     loop
         exit when end_of_file(infp);
         for row in 0..numberOfRows loop
-            for column in 0..numberOfColums loop
+            for column in 0..numberOfColumns loop
                 get(infp,inputChar);
                 maze(row, column) := inputChar;
                 solvedMaze(row, column) := inputChar;
@@ -64,8 +64,8 @@ begin
     end loop;
 
     for row in 0..numberOfRows loop
-        for column in 0..numberOfColums loop
-            put(maze(row, column),1);
+        for column in 0..numberOfColumns loop
+            Ada.Text_IO.Put(maze(row, column));
         end loop;
     end loop;
     close(infp);
