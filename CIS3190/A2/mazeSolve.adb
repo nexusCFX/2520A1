@@ -77,11 +77,11 @@ begin
     end loop;
 
     push(NSStack, curr);
-    while (stack.count /= 0) loop
+    while (NSStack.count /= 0) loop
         pop(NSStack, curr);
         if (maze(curr.x, curr.y) = 'e') then
             put_line("Found the path!");
-            stack.count := 0;
+            NSStack.count := 0;
             prev := curr.p;
             while (prev /= null) loop
                 solvedMaze(prev.x, prev.y) := '@';
