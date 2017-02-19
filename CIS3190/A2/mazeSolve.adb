@@ -1,4 +1,5 @@
-with Gnat.Io; use Gnat.Io;
+with ada.Text_IO; use Ada.Text_IO;
+with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
 
 procedure mazeSolve is
     type Position;
@@ -36,40 +37,36 @@ procedure mazeSolve is
         s.top := s.top.next;
     end pop;
 
+    maze: array(0..49, 0..49) of character
+    solvedMaze: array(0..49, 0..49) of character
+    inputChar: character
     NSStack: Stack;
     newPos: PositionPtr;
     Scan_Ptr: PositionPtr;
-    In_Int: Integer;
+    numberOfRows: integer;
+    numberOfColumns: integer;
+    infp:file_type;
 begin
-    Put("> ");
-    Get(In_Int);
-    newPos := new Position'(In_int, 0, null);
-    push(NSStack, newPos);
+    open(infp,in_file,"maze.txt");
+    get(infp,numberOfRows)
+    get(infp,numberOfColumns)
+    numberOfRows := numberOfRows - 1
+    numberOfColumns := numberOfColumns - 1
     loop
-        -- Read and integer, stopping at -1.
-        Put("> ");
-        Get(In_Int);
-        exit when In_Int = -1;
-        newPos := new Position'(In_int, 0, NSStack.top.pos);
-        push(NSStack, newPos);
+        exit when end_of_file(infp);
+        for row in 0..numberOfRows loop
+            for column in 0..numberOfColums loop
+                get(infp,inputChar);
+                maze(row, column) := inputChar;
+                solvedMaze(row, column) := inputChar;
+            end loop;
+        end loop;
     end loop;
 
-    -- Now print out the integers (backwards.)
-    Scan_Ptr := NSStack.top.pos;
-    loop
-        -- If the list is entirely empty, bail out now.
-        exit when Scan_Ptr = null;
-
-        -- Print, go to next.
-        Put(Scan_Ptr.x);
-        Scan_Ptr := Scan_Ptr.p;
-
-        -- If there is no next, we are done.
-        exit when Scan_Ptr = null;
-
-        -- Since there is a next, print a space to separate the items.
-        Put(" ");
+    for row in 0..numberOfRows loop
+        for column in 0..numberOfColums loop
+            put(maze(row, column),1);
+        end loop;
     end loop;
-
-    New_Line;
+    close(infp);
 end mazeSolve;
