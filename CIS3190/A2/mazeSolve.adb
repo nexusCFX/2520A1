@@ -48,22 +48,23 @@ procedure mazeSolve is
     infp:file_type;
 begin
     open(infp,in_file,"maze.txt");
-    --get(infp,numberOfRows);
-    --get(infp,inputChar);
-    --get(infp,numberOfColumns);
-    numberOfRows := 49;
-    numberOfColumns := 49;
+    get(infp,numberOfRows, 2);
+    get(infp,inputChar);
+    get(infp,numberOfColumns, 2);
+    numberOfRows := numberOfRows - 1;
+    numberOfColumns := numberOfColumns - 1;
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
-            maze(row, column) := inputChar;
-            solvedMaze(row, column) := inputChar;
+            maze(column, row) := inputChar;
+            solvedMaze(column, row) := inputChar;
         end loop;
     end loop;
     close(infp);
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
-            Ada.Text_IO.Put(maze(row, column));
+            Ada.Text_IO.Put(maze(column, row));
         end loop;
+        new_line;
     end loop;
 end mazeSolve;
