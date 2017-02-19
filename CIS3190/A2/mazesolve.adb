@@ -54,15 +54,15 @@ begin
                 end loop;
                 new_line;
             end loop;
-        elsif(maze(curr.x, curr.y) /= '*') then
-            maze(curr.x, curr.y) := '*';
-            newPosition := new Position'(curr.x, curr.y + 1, curr);
+        elsif(maze(currentPosition.x, currentPosition.y) /= '*') then
+            maze(currentPosition.x, currentPosition.y) := '*';
+            newPosition := new Position'(currentPosition.x, currentPosition.y + 1, currentPosition);
             push(stack,newPosition);
-            newPosition := new Position'(curr.x, curr.y - 1, curr);
+            newPosition := new Position'(currentPosition.x, currentPosition.y - 1, currentPosition);
             push(stack,newPosition);
-            newPosition := new Position'(curr.x - 1, curr.y, curr);
+            newPosition := new Position'(currentPosition.x - 1, currentPosition.y, currentPosition);
             push(stack,newPosition);
-            newPosition := new Position'(curr.x + 1, curr.y, curr);
+            newPosition := new Position'(currentPosition.x + 1, currentPosition.y, currentPosition);
             push(stack,newPosition);
         end if;
     end loop;
