@@ -49,6 +49,7 @@ procedure mazeSolve is
 begin
     open(infp,in_file,"maze.txt");
     get(infp,numberOfRows);
+    get(infp,inputChar);
     get(infp,numberOfColumns);
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
@@ -62,11 +63,10 @@ begin
             end loop;
         end loop;
     end loop;
-
+    close(infp);
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             Ada.Text_IO.Put(maze(row, column));
         end loop;
     end loop;
-    close(infp);
 end mazeSolve;
