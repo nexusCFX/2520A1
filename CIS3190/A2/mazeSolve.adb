@@ -77,13 +77,13 @@ begin
     end loop;
 
     push(NSStack, curr);
-    while (stack.count != 0) loop
+    while (stack.count /= 0) loop
         pop(NSStack, curr);
         if (maze(curr.x, curr.y) = 'e') then
             put_line("Found the path!");
             stack.count := 0;
             prev := curr.p;
-            while (prev != null) loop
+            while (prev /= null) loop
                 solvedMaze(prev.x, prev.y) := '@';
                 prev := prev.p;
             end loop;
@@ -94,16 +94,16 @@ begin
                 end loop;
                 new_line;
             end loop;
-        elsif(maze(curr.x, curr.y) != '*') then
+        elsif(maze(curr.x, curr.y) /= '*') then
             temp := new Position'(curr.x, curr.y + 1, curr);
-            push(NSStack,temp)
+            push(NSStack,temp);
             temp := new Position'(curr.x, curr.y - 1, curr);
-            push(NSStack,temp)
+            push(NSStack,temp);
             temp := new Position'(curr.x - 1, curr.y, curr);
-            push(NSStack,temp)
+            push(NSStack,temp);
             temp := new Position'(curr.x + 1, curr.y, curr);
-            push(NSStack,temp)
-        endif;
+            push(NSStack,temp);
+        end if;
     end loop;
 
 end mazeSolve;
