@@ -62,39 +62,45 @@ begin
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
             if (inputChar = 'o') then
-                curr := new Position'(column, row, null);
+                put_line("Found start! " & integer'image(row) & " " & integer'image(column));
+                curr := new Position'(row, column, null);
             end if;
-            maze(column, row) := inputChar;
-            solvedMaze(column, row) := inputChar;
+            maze(row, column) := inputChar;
+            solvedMaze(row, column) := inputChar;
         end loop;
     end loop;
     close(infp);
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
-            Ada.Text_IO.Put(maze(column, row));
+            Ada.Text_IO.Put(maze(row, column));
         end loop;
         new_line;
     end loop;
 
     push(NSStack, curr);
+    put_line("Count " & integer'image(NSStack.count));
     while (NSStack.count /= 0) loop
         pop(NSStack, curr);
+       -- put_line("Pop. Count " & integer'image(NSStack.count));
+        put_line("Pos. X: " & integer'image(curr.x) & " Y: " & integer'image(curr.y));
         if (maze(curr.x, curr.y) = 'e') then
             put_line("Found the path!");
             NSStack.count := 0;
             prev := curr.p;
-            while (prev /= null) loop
+            while (prev.p /= null) loop
                 solvedMaze(prev.x, prev.y) := '@';
                 prev := prev.p;
             end loop;
 
             for row in 0..numberOfRows loop
                 for column in 0..numberOfColumns loop
-                    Ada.Text_IO.Put(solvedMaze(column, row));
+                    Ada.Text_IO.Put(solvedMaze(row, column));
                 end loop;
                 new_line;
             end loop;
         elsif(maze(curr.x, curr.y) /= '*') then
+            maze(curr.x, curr.y) := '*';
+            put_line("Pushing new elements " & integer'image(NSStack.count));
             temp := new Position'(curr.x, curr.y + 1, curr);
             push(NSStack,temp);
             temp := new Position'(curr.x, curr.y - 1, curr);
