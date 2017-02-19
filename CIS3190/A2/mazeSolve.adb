@@ -1,5 +1,7 @@
 with ada.Text_IO; use Ada.Text_IO;
 with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with ada.strings.unbounded; use ada.strings.unbounded;
+with ada.strings.unbounded.Text_IO; use ada.strings.unbounded.Text_IO;
 
 procedure mazeSolve is
     type Position;
@@ -49,13 +51,17 @@ procedure mazeSolve is
     prev: PositionPtr;
     numberOfRows: integer;
     numberOfColumns: integer;
+    fileName : string(1..100);
+    fileNameLength : integer;
     infp:file_type;
 begin
     NSStack.count := 0;
-    open(infp,in_file,"maze.txt");
-    get(infp,numberOfRows, 2);
+    put_line("Enter the name of the file containing your maze.");
+    get_line(fileName, fileNameLength);
+    open(infp,in_file,fileName);
+    get(infp,numberOfRows);
     get(infp,inputChar);
-    get(infp,numberOfColumns, 2);
+    get(infp,numberOfColumns);
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
     for row in 0..numberOfRows loop
@@ -70,19 +76,13 @@ begin
         end loop;
     end loop;
     close(infp);
-    for row in 0..numberOfRows loop
-        for column in 0..numberOfColumns loop
-            Ada.Text_IO.Put(maze(row, column));
-        end loop;
-        new_line;
-    end loop;
 
     push(NSStack, curr);
     put_line("Count " & integer'image(NSStack.count));
     while (NSStack.count /= 0) loop
         pop(NSStack, curr);
        -- put_line("Pop. Count " & integer'image(NSStack.count));
-        put_line("Pos. X: " & integer'image(curr.x) & " Y: " & integer'image(curr.y));
+       -- put_line("Pos. X: " & integer'image(curr.x) & " Y: " & integer'image(curr.y));
         if (maze(curr.x, curr.y) = 'e') then
             put_line("Found the path!");
             NSStack.count := 0;
@@ -100,7 +100,7 @@ begin
             end loop;
         elsif(maze(curr.x, curr.y) /= '*') then
             maze(curr.x, curr.y) := '*';
-            put_line("Pushing new elements " & integer'image(NSStack.count));
+          --  put_line("Pushing new elements " & integer'image(NSStack.count));
             temp := new Position'(curr.x, curr.y + 1, curr);
             push(NSStack,temp);
             temp := new Position'(curr.x, curr.y - 1, curr);
