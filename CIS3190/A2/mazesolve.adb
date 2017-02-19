@@ -7,9 +7,9 @@ procedure mazeSolve is
     solvedMaze: array(0..49, 0..49) of character;
     inputChar: character;
     stack: PositionStack;
-    curr: PositionPtr;
-    temp: PositionPtr;
-    prev: PositionPtr;
+    currentPosition: PositionPtr;
+    newPosition: PositionPtr;
+    tempPosition: PositionPtr;
     numberOfRows: integer;
     numberOfColumns: integer;
     fileName : string(1..100);
@@ -29,7 +29,7 @@ begin
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
             if (inputChar = 'o') then
-                curr := new Position'(row, column, null);
+                currentPosition := new Position'(row, column, null);
             end if;
             maze(row, column) := inputChar;
             solvedMaze(row, column) := inputChar;
@@ -37,15 +37,15 @@ begin
     end loop;
     close(infp);
 
-    push(stack, curr);
+    push(stack, currentPosition);
     while (stack.count /= 0) loop
-        pop(stack, curr);
-        if (maze(curr.x, curr.y) = 'e') then
+        pop(stack, currentPosition);
+        if (maze(currentPosition.x, currentPosition.y) = 'e') then
             stack.count := 0;
-            prev := curr.p;
-            while (prev.p /= null) loop
-                solvedMaze(prev.x, prev.y) := '@';
-                prev := prev.p;
+            tempPosition := currentPosition.previous;
+            while (tempPosition.previous /= null) loop
+                solvedMaze(tempPosition.x, tempPosition.y) := '@';
+                tempPosition := tempPosition.previous;
             end loop;
 
             for row in 0..numberOfRows loop
@@ -56,14 +56,14 @@ begin
             end loop;
         elsif(maze(curr.x, curr.y) /= '*') then
             maze(curr.x, curr.y) := '*';
-            temp := new Position'(curr.x, curr.y + 1, curr);
-            push(stack,temp);
-            temp := new Position'(curr.x, curr.y - 1, curr);
-            push(stack,temp);
-            temp := new Position'(curr.x - 1, curr.y, curr);
-            push(stack,temp);
-            temp := new Position'(curr.x + 1, curr.y, curr);
-            push(stack,temp);
+            newPosition := new Position'(curr.x, curr.y + 1, curr);
+            push(stack,newPosition);
+            newPosition := new Position'(curr.x, curr.y - 1, curr);
+            push(stack,newPosition);
+            newPosition := new Position'(curr.x - 1, curr.y, curr);
+            push(stack,newPosition);
+            newPosition := new Position'(curr.x + 1, curr.y, curr);
+            push(stack,newPosition);
         end if;
     end loop;
 end mazeSolve;

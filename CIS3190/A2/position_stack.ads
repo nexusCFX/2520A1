@@ -8,7 +8,7 @@ package Position_Stack is
     type Position is record
         x: Integer;
         y: Integer;
-        p: PositionPtr;
+        previous: PositionPtr;
     end record;
 
     type Node is record
