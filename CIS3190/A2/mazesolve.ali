@@ -1,0 +1,100 @@
+V "GNAT Lib v4.9"
+M P AB W=b
+A -gnatwa
+P ZX
+
+RN
+RV NO_ALLOCATORS
+RV NO_IO
+RV NO_LOCAL_ALLOCATORS
+RV NO_DEFAULT_INITIALIZATION
+RV SPARK_05
+
+U mazesolve%b		mazesolve.adb		c5edc119 NE OO SU
+W ada%s			ada.ads			ada.ali
+W ada.integer_text_io%s	a-inteio.ads		a-inteio.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W position_stack%s	position_stack.adb	position_stack.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-except.ads		20140129161953 f86a4103
+D a-finali.ads		20111121113555 52ecdc1b
+D a-inteio.ads		20070406091342 f64b89a4
+D a-ioexce.ads		20140225151544 e4a01f64
+D a-stream.ads		20140122164720 1a984740
+D a-tags.ads		20111212115430 6c0509d0
+D a-textio.ads		20140129155348 386df5d4
+D a-tiinio.ads		20090409150019 aa04e5d6
+D a-unccon.ads		20070406091342 f9eb8f06
+D interfac.ads		20140225151838 69adb1b9
+D i-cstrea.ads		20130412125801 8128536b
+D mazesolve.adb		20170219063544 80b2c8d1
+D position_stack.ads	20170219063147 8b7975b8
+D system.ads		20141119215827 90249111
+D s-crtl.ads		20140225151544 840e6817
+D s-exctab.ads		20140225151139 54135002
+D s-ficobl.ads		20120709130952 55a71d43
+D s-finmas.ads		20140225151139 814daec4
+D s-finroo.ads		20120426095924 4ff27390
+D s-parame.ads		20140225151139 ab8cb46a
+D s-pooglo.ads		20110804083314 542f33d0
+D s-soflin.ads		20140225151139 aa763b52
+D s-stache.ads		20140225151139 a37c21ec
+D s-stalib.ads		20140225151139 a891183f
+D s-stoele.ads		20140225151139 2dc34a04
+D s-stoele.adb		20140225151139 ed88f8fb
+D s-stopoo.ads		20131010103753 b16154c2
+D s-traent.ads		20140225151139 b5116092
+D s-unstyp.ads		20140225151139 510692af
+D s-wchcon.ads		20140225151139 1b7d22d2
+X 1 ada.ads
+16K9*Ada 19e8 13|1r6 1r23 2r6 2r31 53r21
+X 4 a-inteio.ads
+18K13*Integer_Text_IO[9|45] 13|2w10 2r35
+X 8 a-textio.ads
+49K13*Text_IO 471e16 13|1w10 1r27 53r25
+52P9*File_Type 13|17r10
+53n23*In_File{53E9} 13|22r15
+92U14*Open 13|22s5
+98U14*Close 13|38s5
+166U14*New_Line 13|55s17
+205U14*Get 13|24s5 30s13
+208U14*Put 13|53s33
+249U14*Get_Line 13|21s5
+263U14*Put_Line 13|20s5
+X 9 a-tiinio.ads
+50U14*Get 13|23s5[4|18] 25s5[4|18]
+X 13 mazesolve.adb
+5U11*mazeSolve 5b11 69l5 69t14
+6a5 maze(character) 34m13 43r13 57r15 58m13
+7a5 solvedMaze(character) 35m13 47m17 53r37
+8e5 inputChar{character} 24m14 30m22 31r17 34r34 35r40
+9r5 stack{14|19R10} 19m5 40m10 40r10 41r12 42m13 42r13 44m13 60m18 60r18
+. 62m18 62r18 64m18 64r18 66m18 66r18
+10p5 curr{14|6P10} 32m17 40r17 42m20 42r20 43r18 43r26 45r21 57r20 57r28
+. 58r18 58r26 59r35 59r43 59r55 61r35 61r43 61r55 63r35 63r47 63r55 65r35
+. 65r47 65r55
+11p5 temp{14|6P10} 59m13 60r24 61m13 62r24 63m13 64r24 65m13 66r24
+12p5 prev{14|6P10} 45m13 46r20 47r28 47r36 48m17 48r25
+13i5 numberOfRows{integer} 23m14 26m5 26r21 28r19 51r27
+14i5 numberOfColumns{integer} 25m14 27m5 27r24 29r26 52r34
+15a5 fileName{string} 21m14 22r23
+16i5 fileNameLength{integer} 21m24
+17p5 infp{8|52P9} 22m10 22r10 23r9 24r9 25r9 30r17 38m11 38r11
+28i9 row{integer} 32r39 34r18 35r24
+29i13 column{integer} 32r44 34r23 35r29
+51i17 row{integer} 53r48
+52i21 column{integer} 53r53
+X 14 position_stack.ads
+1K9*Position_Stack 13|3w6 3r26 14|26e19
+2R10*Position 13|32r29 59r25 61r25 63r25 65r25 14|12e15
+6P10*PositionPtr(2R10) 13|10r11 11r11 12r11
+9i9*x{integer} 13|43r23 47r33 57r25 58r23 59r40 61r40 63r40 65r40
+10i9*y{integer} 13|43r31 47r41 57r33 58r31 59r48 61r48 63r52 65r52
+11p9*p{6P10} 13|45r26 46r25 48r30
+19R10*PositionStack 13|9r12 14|22e15
+21i9*count{integer} 13|19m11 41r18 44m19
+24U15*push 13|40s5 60s13 62s13 64s13 66s13
+25U15*pop 13|42s9
+
