@@ -48,19 +48,16 @@ procedure mazeSolve is
     infp:file_type;
 begin
     open(infp,in_file,"maze.txt");
-    get(infp,numberOfRows);
-    get(infp,inputChar);
-    get(infp,numberOfColumns);
-    numberOfRows := numberOfRows - 1;
-    numberOfColumns := numberOfColumns - 1;
-    loop
-        exit when end_of_file(infp);
-        for row in 0..numberOfRows loop
-            for column in 0..numberOfColumns loop
-                get(infp,inputChar);
-                maze(row, column) := inputChar;
-                solvedMaze(row, column) := inputChar;
-            end loop;
+    --get(infp,numberOfRows);
+    --get(infp,inputChar);
+    --get(infp,numberOfColumns);
+    numberOfRows := 49;
+    numberOfColumns := 49;
+    for row in 0..numberOfRows loop
+        for column in 0..numberOfColumns loop
+            get(infp,inputChar);
+            maze(row, column) := inputChar;
+            solvedMaze(row, column) := inputChar;
         end loop;
     end loop;
     close(infp);
