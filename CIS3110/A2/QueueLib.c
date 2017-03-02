@@ -54,7 +54,6 @@ void QueueIDInsert(Queue *q, Thread *t) {
 }
 
 void QueueRemoval(Queue *q) {
-
     for (int i = 0; i < q->size; i++) {
         q->queue[i] = q->queue[i + 1];
     }
