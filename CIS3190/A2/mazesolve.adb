@@ -17,30 +17,52 @@ procedure mazeSolve is
     infp:file_type;
 begin
     stack.count := 0;
-    put_line("Enter the name of the file containing your maze.");
+    put_line("Enter file name:");
     get_line(fileName, fileNameLength);
     open(infp,in_file,fileName);
     get(infp,numberOfRows);
     get(infp,inputChar);
     get(infp,numberOfColumns);
+
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
+            -- Output the original maze as it is read
+            Ada.Text_IO.Put(inputChar);
+            Ada.Text_IO.Put(' ');
+
+            -- Note the position of the start when it's encountered
             if (inputChar = 'o') then
                 currentPosition := new Position'(row, column, null);
             end if;
+
+            -- Add chars to arrays, keep two copies
             maze(row, column) := inputChar;
             solvedMaze(row, column) := inputChar;
         end loop;
     end loop;
     close(infp);
 
+    -- Maze solving portion using Stack
     push(stack, currentPosition);
     while (stack.count /= 0) loop
         pop(stack, currentPosition);
         if (maze(currentPosition.x, currentPosition.y) = 'e') then
+            Ada.Text_IO.Put("Maze traversed ok");
+            Ada.Text_IO.Put("End of maze found at location" & integer'image(currentPosition.x)
+                                                            & integer'image(currentPosition.y));
+
+            Ada.Text_IO.Put("Path through maze (with dead ends):");
+            for row in 0..numberOfRows loop
+                for column in 0..numberOfColumns loop
+                    Ada.Text_IO.Put(maze(row, column));
+                    Ada.Text_IO.Put(' ');
+                end loop;
+                new_line;
+            end loop;
+
             stack.count := 0;
             tempPosition := currentPosition.previous;
             while (tempPosition.previous /= null) loop
@@ -48,9 +70,11 @@ begin
                 tempPosition := tempPosition.previous;
             end loop;
 
+            Ada.Text_IO.Put("Path through maze (de-limbed):");
             for row in 0..numberOfRows loop
                 for column in 0..numberOfColumns loop
                     Ada.Text_IO.Put(solvedMaze(row, column));
+                    Ada.Text_IO.Put(' ');
                 end loop;
                 new_line;
             end loop;
