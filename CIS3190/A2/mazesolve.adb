@@ -26,6 +26,8 @@ begin
 
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
+    Ada.Text_IO.Put("Original maze:");
+    new_line;
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
@@ -42,7 +44,9 @@ begin
             maze(row, column) := inputChar;
             solvedMaze(row, column) := inputChar;
         end loop;
+        new_line;
     end loop;
+    new_line;
     close(infp);
 
     -- Maze solving portion using Stack
@@ -51,10 +55,13 @@ begin
         pop(stack, currentPosition);
         if (maze(currentPosition.x, currentPosition.y) = 'e') then
             Ada.Text_IO.Put("Maze traversed ok");
+            new_line;
             Ada.Text_IO.Put("End of maze found at location" & integer'image(currentPosition.x)
                                                             & integer'image(currentPosition.y));
 
+            new_line;
             Ada.Text_IO.Put("Path through maze (with dead ends):");
+            new_line;
             for row in 0..numberOfRows loop
                 for column in 0..numberOfColumns loop
                     Ada.Text_IO.Put(maze(row, column));
@@ -62,15 +69,17 @@ begin
                 end loop;
                 new_line;
             end loop;
+            new_line;
 
             stack.count := 0;
             tempPosition := currentPosition.previous;
             while (tempPosition.previous /= null) loop
-                solvedMaze(tempPosition.x, tempPosition.y) := '@';
+                solvedMaze(tempPosition.x, tempPosition.y) := 'v';
                 tempPosition := tempPosition.previous;
             end loop;
 
             Ada.Text_IO.Put("Path through maze (de-limbed):");
+            new_line;
             for row in 0..numberOfRows loop
                 for column in 0..numberOfColumns loop
                     Ada.Text_IO.Put(solvedMaze(row, column));
@@ -78,8 +87,8 @@ begin
                 end loop;
                 new_line;
             end loop;
-        elsif(maze(currentPosition.x, currentPosition.y) /= '*') then
-            maze(currentPosition.x, currentPosition.y) := '*';
+        elsif(maze(currentPosition.x, currentPosition.y) /= '*' and maze(currentPosition.x, currentPosition.y) /= 'v') then
+            maze(currentPosition.x, currentPosition.y) := 'v';
             newPosition := new Position'(currentPosition.x, currentPosition.y + 1, currentPosition);
             push(stack,newPosition);
             newPosition := new Position'(currentPosition.x, currentPosition.y - 1, currentPosition);
