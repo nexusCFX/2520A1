@@ -33,7 +33,14 @@ begin
     stack.count := 0;
     put_line("Enter file name:");
     get_line(fileName, fileNameLength);
+
+    begin
     open(infp,in_file,fileName);
+    exception
+        when name_error =>
+            put_line("File does not exist. Exiting.");
+            return;
+    end;
     get(infp,numberOfColumns);
     get(infp,inputChar);
     get(infp,numberOfRows);
