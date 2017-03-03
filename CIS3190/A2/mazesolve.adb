@@ -17,7 +17,7 @@ procedure mazeSolve is
     fileNameLength : integer;
     infp:file_type;
 
-procedure printMaze(maze: in CharMaze, rows: in integer, cols: in integer) is
+procedure printMaze(maze: in CharMaze; rows: in integer; cols: in integer) is
 begin
     for row in 0..rows loop
         for column in 0..cols loop
@@ -53,9 +53,7 @@ begin
             maze(row, column) := inputChar;
             solvedMaze(row, column) := inputChar;
         end loop;
-        new_line;
     end loop;
-    new_line;
     close(infp);
 
     -- Output original unsolved maze
@@ -67,8 +65,8 @@ begin
         pop(stack, currentPosition);
         if (maze(currentPosition.x, currentPosition.y) = 'e') then
             put_line("Maze traversed ok");
-            put_line("End of maze found at location" & integer'image(currentPosition.x)
-                                                            & integer'image(currentPosition.y));
+            put_line("End of maze found at location" & integer'image(currentPosition.x + 1)
+                                                            & integer'image(currentPosition.y + 1));
             put_line("Path through maze (with dead ends):");
             printMaze(maze, numberOfRows, numberOfColumns);
 
