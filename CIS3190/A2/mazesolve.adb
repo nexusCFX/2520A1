@@ -3,8 +3,9 @@ with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
 with Position_Stack; use Position_Stack;
 
 procedure mazeSolve is
-    maze: array(0..49, 0..49) of character;
-    solvedMaze: array(0..49, 0..49) of character;
+    type CharMaze is array(0..49, 0..49) of character;
+    maze: CharMaze;
+    solvedMaze: CharMaze;
     inputChar: character;
     stack: PositionStack;
     currentPosition: PositionPtr;
@@ -15,6 +16,19 @@ procedure mazeSolve is
     fileName : string(1..100);
     fileNameLength : integer;
     infp:file_type;
+
+procedure printMaze(maze: in CharMaze, rows: in integer, cols: in integer) is
+begin
+    for row in 0..rows loop
+        for column in 0..cols loop
+            put(maze(row, column));
+            put(' ');
+        end loop;
+        new_line;
+    end loop;
+    new_line;
+end printMaze;
+
 begin
     stack.count := 0;
     put_line("Enter file name:");
@@ -26,15 +40,10 @@ begin
 
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
-    Ada.Text_IO.Put("Original maze:");
-    new_line;
+    put_line("Original maze:");
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
-            -- Output the original maze as it is read
-            Ada.Text_IO.Put(inputChar);
-            Ada.Text_IO.Put(' ');
-
             -- Note the position of the start when it's encountered
             if (inputChar = 'o') then
                 currentPosition := new Position'(row, column, null);
@@ -49,27 +58,19 @@ begin
     new_line;
     close(infp);
 
+    -- Output original unsolved maze
+    printMaze(maze, numberOfRows, numberOfColumns);
+
     -- Maze solving portion using Stack
     push(stack, currentPosition);
     while (stack.count /= 0) loop
         pop(stack, currentPosition);
         if (maze(currentPosition.x, currentPosition.y) = 'e') then
-            Ada.Text_IO.Put("Maze traversed ok");
-            new_line;
-            Ada.Text_IO.Put("End of maze found at location" & integer'image(currentPosition.x)
+            put_line("Maze traversed ok");
+            put_line("End of maze found at location" & integer'image(currentPosition.x)
                                                             & integer'image(currentPosition.y));
-
-            new_line;
-            Ada.Text_IO.Put("Path through maze (with dead ends):");
-            new_line;
-            for row in 0..numberOfRows loop
-                for column in 0..numberOfColumns loop
-                    Ada.Text_IO.Put(maze(row, column));
-                    Ada.Text_IO.Put(' ');
-                end loop;
-                new_line;
-            end loop;
-            new_line;
+            put_line("Path through maze (with dead ends):");
+            printMaze(maze, numberOfRows, numberOfColumns);
 
             stack.count := 0;
             tempPosition := currentPosition.previous;
@@ -78,15 +79,8 @@ begin
                 tempPosition := tempPosition.previous;
             end loop;
 
-            Ada.Text_IO.Put("Path through maze (de-limbed):");
-            new_line;
-            for row in 0..numberOfRows loop
-                for column in 0..numberOfColumns loop
-                    Ada.Text_IO.Put(solvedMaze(row, column));
-                    Ada.Text_IO.Put(' ');
-                end loop;
-                new_line;
-            end loop;
+            put_line("Path through maze (de-limbed):");
+            printMaze(solvedMaze, numberOfRows, numberOfColumns);
         elsif(maze(currentPosition.x, currentPosition.y) /= '*' and maze(currentPosition.x, currentPosition.y) /= 'v') then
             maze(currentPosition.x, currentPosition.y) := 'v';
             newPosition := new Position'(currentPosition.x, currentPosition.y + 1, currentPosition);
