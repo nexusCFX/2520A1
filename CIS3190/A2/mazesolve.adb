@@ -6,16 +6,12 @@ procedure mazeSolve is
     type CharMaze is array(0..49, 0..49) of character;
     maze: CharMaze;
     solvedMaze: CharMaze;
-    inputChar: character;
     stack: PositionStack;
     currentPosition: PositionPtr;
     newPosition: PositionPtr;
     tempPosition: PositionPtr;
     numberOfRows: integer;
     numberOfColumns: integer;
-    fileName : string(1..100);
-    fileNameLength : integer;
-    infp:file_type;
 
 procedure printMaze(maze: in CharMaze; rows: in integer; cols: in integer) is
 begin
@@ -29,18 +25,18 @@ begin
     new_line;
 end printMaze;
 
+-- Get file and data within file
+procedure readInput(maze, solvedMaze: out CharMaze; rows, cols: out integer, start: out PositionPtr) is
+    inputChar: character;
+    fileName : string(1..100);
+    fileNameLength : integer;
+    infp:file_type;
 begin
-    stack.count := 0;
+    -- Read in initial info like file name. Get rows and columns.
     put_line("Enter file name:");
     get_line(fileName, fileNameLength);
 
-    begin
     open(infp,in_file,fileName);
-    exception
-        when name_error =>
-            put_line("File does not exist. Exiting.");
-            return;
-    end;
     get(infp,numberOfColumns);
     get(infp,inputChar);
     get(infp,numberOfRows);
@@ -52,7 +48,7 @@ begin
             get(infp,inputChar);
             -- Note the position of the start when it's encountered
             if (inputChar = 'o') then
-                currentPosition := new Position'(row, column, null);
+                start := new Position'(row, column, null);
             end if;
 
             -- Add chars to arrays, keep two copies
@@ -61,13 +57,33 @@ begin
         end loop;
     end loop;
     close(infp);
+
+-- Handle missing files, bad file data
+exception
+    when name_error =>
+        put_line("File does not exist. Exiting.");
+        return;
+    when data_error =>
+        put_line("File data is not in expected format. Exiting.");
+        return;
+
+end readInput;
+
+begin
+    stack.count := 0;
+
+    getInput(maze, solvedMaze, numberOfRows, numberOfColumns, currentPosition);
+
+    -- Check currentPosition. If null, no 'o' was found, maze is invalid.
     if (currentPosition = null) then
         put_line("Maze has no start. Exiting");
         return;
     end if;
+
     -- Output original unsolved maze
     put_line("Original maze:");
     printMaze(maze, numberOfRows, numberOfColumns);
+
     -- Maze solving portion using Stack
     push(stack, currentPosition);
     while (stack.count /= 0) loop
@@ -79,7 +95,6 @@ begin
             put_line("Path through maze (with dead ends):");
             printMaze(maze, numberOfRows, numberOfColumns);
 
-            stack.count := 0;
             tempPosition := currentPosition.previous;
             while (tempPosition.previous /= null) loop
                 solvedMaze(tempPosition.x, tempPosition.y) := 'v';
