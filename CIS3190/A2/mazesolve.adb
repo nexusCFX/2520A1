@@ -34,13 +34,12 @@ begin
     put_line("Enter file name:");
     get_line(fileName, fileNameLength);
     open(infp,in_file,fileName);
-    get(infp,numberOfRows);
-    get(infp,inputChar);
     get(infp,numberOfColumns);
+    get(infp,inputChar);
+    get(infp,numberOfRows);
 
     numberOfRows := numberOfRows - 1;
     numberOfColumns := numberOfColumns - 1;
-    put_line("Original maze:");
     for row in 0..numberOfRows loop
         for column in 0..numberOfColumns loop
             get(infp,inputChar);
@@ -55,10 +54,13 @@ begin
         end loop;
     end loop;
     close(infp);
-
+    if (currentPosition = null) then
+        put_line("Maze has no start. Exiting");
+        return;
+    end if;
     -- Output original unsolved maze
+    put_line("Original maze:");
     printMaze(maze, numberOfRows, numberOfColumns);
-
     -- Maze solving portion using Stack
     push(stack, currentPosition);
     while (stack.count /= 0) loop
@@ -79,6 +81,7 @@ begin
 
             put_line("Path through maze (de-limbed):");
             printMaze(solvedMaze, numberOfRows, numberOfColumns);
+            return;
         elsif(maze(currentPosition.x, currentPosition.y) /= '*' and maze(currentPosition.x, currentPosition.y) /= 'v') then
             maze(currentPosition.x, currentPosition.y) := 'v';
             newPosition := new Position'(currentPosition.x, currentPosition.y + 1, currentPosition);
@@ -91,4 +94,5 @@ begin
             push(stack,newPosition);
         end if;
     end loop;
+    put_line("Maze is not connected! Exiting,");
 end mazeSolve;
