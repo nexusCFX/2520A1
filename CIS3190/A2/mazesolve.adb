@@ -12,6 +12,7 @@ procedure mazeSolve is
     tempPosition: PositionPtr;
     numberOfRows: integer;
     numberOfColumns: integer;
+    fileReadSuccess: Boolean;
 
 procedure printMaze(maze: in CharMaze; rows: in integer; cols: in integer) is
 begin
@@ -26,7 +27,7 @@ begin
 end printMaze;
 
 -- Get file and data within file
-procedure readInput(maze, solvedMaze: out CharMaze; rows, cols: out integer, start: out PositionPtr) is
+procedure readInput(maze, solvedMaze: out CharMaze; rows, cols: out integer; start: out PositionPtr; success: out Boolean) is
     inputChar: character;
     fileName : string(1..100);
     fileNameLength : integer;
@@ -37,14 +38,14 @@ begin
     get_line(fileName, fileNameLength);
 
     open(infp,in_file,fileName);
-    get(infp,numberOfColumns);
+    get(infp,cols);
     get(infp,inputChar);
-    get(infp,numberOfRows);
+    get(infp,rows);
 
-    numberOfRows := numberOfRows - 1;
-    numberOfColumns := numberOfColumns - 1;
-    for row in 0..numberOfRows loop
-        for column in 0..numberOfColumns loop
+    rows := rows - 1;
+    cols := cols - 1;
+    for row in 0..rows loop
+        for column in 0..cols loop
             get(infp,inputChar);
             -- Note the position of the start when it's encountered
             if (inputChar = 'o') then
@@ -57,22 +58,25 @@ begin
         end loop;
     end loop;
     close(infp);
-
+    success := true;
 -- Handle missing files, bad file data
 exception
     when name_error =>
         put_line("File does not exist. Exiting.");
-        return;
+        success := false;
     when data_error =>
         put_line("File data is not in expected format. Exiting.");
-        return;
+        success := false;
 
 end readInput;
 
 begin
     stack.count := 0;
 
-    getInput(maze, solvedMaze, numberOfRows, numberOfColumns, currentPosition);
+    readInput(maze, solvedMaze, numberOfRows, numberOfColumns, currentPosition, fileReadSuccess);
+    if (fileReadSuccess = false) then
+        return;
+    end if;
 
     -- Check currentPosition. If null, no 'o' was found, maze is invalid.
     if (currentPosition = null) then
