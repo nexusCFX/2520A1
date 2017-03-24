@@ -23,8 +23,8 @@ int main(int argc, const char * argv[]) {
     sieve[3] = true;
     
     int sqrtOfLimit = (int)(sqrt((double)limit));
-    for (int i = 0; i < sqrtOfLimit; i++) {
-        for (int j = 0; j < sqrtOfLimit; j++) {
+    for (int i = 0; i <= sqrtOfLimit; i++) {
+        for (int j = 0; j <= sqrtOfLimit; j++) {
             int quadratic = (4*i*i) + (j*j);
             if ((quadratic % 12 == 1 || quadratic % 12 == 5) && quadratic <= limit) {
                 sieve[quadratic] = !sieve[quadratic];
