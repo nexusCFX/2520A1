@@ -12,7 +12,8 @@ input-output section.
 file-control.
 
 select inputFile assign to dynamic inputFilename
-    organization is line sequential.
+    organization is line sequential
+    file status is inputFileStatus.
 
 select outputFile assign to "TextAnalysis.txt"
     organization is line sequential.
@@ -27,6 +28,7 @@ fd outputFile.
 01 outputLine pic x(80).
 
 working-storage section.
+77 inputFileStatus pic x(2).
 77 endOfFileFlag pic 9.
 77 inputFilename pic x(30).
 
@@ -87,8 +89,15 @@ procedure division.
     display "Enter the name of the file to be analyzed:".
     accept inputFilename.
 
-    open input inputFile, output outputFile.
+    open input inputFile.
     *> Put the header in the output file
+    if inputFileStatus not = "00"
+        display "Please enter a valid input file name."
+        close inputFile
+        stop run
+    end-if.
+
+    open output outputFile.
     write outputLine from outputFileTitleLine after advancing 0 lines.
     write outputLine from outputUnderline after advancing 1 line.
 
