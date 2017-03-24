@@ -57,16 +57,17 @@ begin
         for k in 5..sqrtOfLimit loop
             if (sieve(k) = true) then
                 a := k*k;
-                for l in a..limit loop
+                l := a
+                while l <= limit loop
                     sieve(l) := false;
-                    l := l - 1 + a;
+                    l := l + a;
                 end loop;
             end if;
         end loop;
 
         for i in 2..limit loop
             if (sieve(i) = true) then
-                put_line(i);
+                put_line(integer'image(i));
             end if;
         end loop;
     end;
