@@ -4,7 +4,6 @@
 
 with ada.Text_IO; use Ada.Text_IO;
 with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
-with Position_Stack; use Position_Stack;
 
 -- Core program
 procedure mazeSolve is
@@ -58,9 +57,9 @@ begin
         for k in 5..sqrtOfLimit loop
             if (sieve(k) = true) then
                 a := k*k;
-                for l in a..limit
+                for l in a..limit loop
                     sieve(l) := false;
-                    l := l - 1 + a
+                    l := l - 1 + a;
                 end loop;
             end if;
         end loop;
