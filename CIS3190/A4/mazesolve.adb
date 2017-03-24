@@ -4,22 +4,25 @@
 
 with ada.Text_IO; use Ada.Text_IO;
 with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 
 -- Core program
 procedure mazeSolve is
 
     type SieveArray is array(Integer range <>) of Boolean;
-    limit, a, i, j, k, l, sqrtOfLimit, quadratic: integer;
+    limit, a, l, sqrtOfLimit, quadratic: integer;
 
 begin
     put_line("Enter the limit of the prime numbers you wish to find.");
     get(limit);
-
+    sqrtOfLimit := Integer(sqrt(Float(limit)));
+    put_line("SQRT" & integer'image(sqrtOfLimit));
     declare
         sieve : SieveArray(0..limit);
     begin
-        sieve(0) := false;
-        sieve(1) := false;
+        for i in 0..limit loop
+            sieve(i) := false;
+        end loop;
         sieve(2) := true;
         sieve(3) := true;
 
@@ -44,7 +47,7 @@ begin
                 end if;
 
                 quadratic := (3*i*i) - (j*j);
-                if (quadratic rem 12 = 1 and i > j and quadratic <= limit) then
+                if (quadratic rem 12 = 11 and i > j and quadratic <= limit) then
                     if (sieve(quadratic) = false) then
                         sieve(quadratic) := true;
                     else
@@ -54,10 +57,10 @@ begin
             end loop;
         end loop;
 
-        for k in 5..sqrtOfLimit loop
+        for k in 5..sqrtOfLimit-1 loop
             if (sieve(k) = true) then
                 a := k*k;
-                l := a
+                l := a;
                 while l <= limit loop
                     sieve(l) := false;
                     l := l + a;
