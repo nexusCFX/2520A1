@@ -5,17 +5,18 @@
 
 with ada.Text_IO; use Ada.Text_IO;
 with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
-
+with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
 -- Core program
 procedure SieveOfAtkin is
 
     type SieveArray is array(Integer range <>) of Boolean;
-    limit, a, i, j, k, l, sqrtOfLimit, quadratic: integer;
+    limit, a, l, sqrtOfLimit, quadratic: integer;
     outFile:file_type;
 
 begin
     put_line("Enter the limit of the prime numbers you wish to find.");
     get(limit);
+    sqrtOfLimit := Integer(sqrt(Float(limit)));
 
     declare
         sieve : SieveArray(0..limit);
@@ -24,6 +25,10 @@ begin
         sieve(1) := false;
         sieve(2) := true;
         sieve(3) := true;
+
+        for i in 0..limit loop
+            sieve(i) := false;
+        end loop;
 
         -- Wheel factorization
         for i in 0..sqrtOfLimit loop
@@ -64,7 +69,7 @@ begin
         for k in 5..sqrtOfLimit loop
             if (sieve(k) = true) then
                 a := k*k;
-                l := a
+                l := a;
                 while l <= limit loop
                     sieve(l) := false;
                     l := l + a;
