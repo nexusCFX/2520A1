@@ -21,14 +21,14 @@ begin
     declare
         sieve : SieveArray(0..limit);
     begin
+        for i in 0..limit loop
+            sieve(i) := false;
+        end loop;
+
         sieve(0) := false;
         sieve(1) := false;
         sieve(2) := true;
         sieve(3) := true;
-
-        for i in 0..limit loop
-            sieve(i) := false;
-        end loop;
 
         -- Wheel factorization
         for i in 0..sqrtOfLimit loop
