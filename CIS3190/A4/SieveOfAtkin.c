@@ -49,7 +49,7 @@ int main(int argc, const char * argv[]) {
     }
     
     // Sieve occurences marked as possibly prime on the wheel
-    for (int k = 5; k < sqrtOfLimit; k++) {
+    for (int k = 5; k <= sqrtOfLimit; k++) {
         if (sieve[k]) {
             int a = k*k;
             for (int i = a; i <= limit; i = i + a) {

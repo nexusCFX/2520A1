@@ -55,7 +55,7 @@ begin
 
                 quadratic := (3*i*i) - (j*j);
                 -- Simplified form of Atkins' if quadratic mod 60 E {11,23,47,59} and x > y
-                if (quadratic rem 12 = 1 and i > j and quadratic <= limit) then
+                if (quadratic rem 12 = 11 and i > j and quadratic <= limit) then
                     if (sieve(quadratic) = false) then
                         sieve(quadratic) := true;
                     else
@@ -78,7 +78,7 @@ begin
         end loop;
 
         create(outFile, out_file, "AdaPrimes.txt");
-
+        put_line(outFile, "All primes up to " & integer'image(limit));
         -- Ignore 0 and 1 since primes are natural numbers > 1
         for i in 2..limit loop
             if (sieve(i) = true) then

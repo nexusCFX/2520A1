@@ -45,7 +45,7 @@
 
                 quadratic = (3*i*i) - (j*j)
                 ! Simplified form of Atkins' if quadratic mod 60 E {11,23,47,59} and x > y
-                if (mod(quadratic,12) == 1 .and. i > j .and. quadratic <= limit) then
+                if (mod(quadratic,12) == 11 .and. i > j .and. quadratic <= limit) then
                     if (sieve(quadratic) .eqv. .false.) then
                         sieve(quadratic) = .true.
                     else
@@ -67,12 +67,15 @@
 
         open(unit = 1,file = "FortranPrimes.txt",form = "formatted",status = "replace",action = "write")
 
+        write(1,200) limit
+200     format("All primes up to ",I10)
         ! Ignore 0 and 1 since primes are natural numbers > 1
         do i = 2,limit
             if (sieve(i) .eqv. .true.) then
                 write(1,*) i
             end if
         end do
+
         close(unit = 1)
 
         end program SieveOfAtkin
