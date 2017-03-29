@@ -6,12 +6,16 @@
 with ada.Text_IO; use Ada.Text_IO;
 with ada.Integer_Text_IO; use Ada.Integer_Text_IO;
 with Ada.Numerics.Elementary_Functions; use Ada.Numerics.Elementary_Functions;
+with Ada.Calendar; use Ada.Calendar;
+
 -- Core program
 procedure SieveOfAtkin is
 
     type SieveArray is array(Integer range <>) of Boolean;
     limit, a, l, sqrtOfLimit, quadratic: integer;
     outFile:file_type;
+    start : Time;
+    finish : Time;
 
 begin
     put_line("Enter the limit of the prime numbers you wish to find.");
@@ -21,6 +25,7 @@ begin
     declare
         sieve : SieveArray(0..limit);
     begin
+        start := clock;
         for i in 0..limit loop
             sieve(i) := false;
         end loop;
@@ -76,6 +81,8 @@ begin
                 end loop;
             end if;
         end loop;
+        finish := clock;
+        put_line("CPU execution time: " & duration'image(finish-start));
 
         create(outFile, out_file, "AdaPrimes.txt");
         put_line(outFile, "All primes up to " & integer'image(limit));

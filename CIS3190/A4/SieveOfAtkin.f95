@@ -8,10 +8,13 @@
         implicit none
         integer :: limit, a, i, j, k, l, sqrtOfLimit, quadratic
         logical, allocatable, dimension(:) :: sieve
+        real :: start, finish
 
         write(*,*) "Enter the limit of the prime numbers you wish to find."
         read (*,*) limit
 
+        ! CPU time measurement
+        call cpu_time(start)
         allocate(sieve(0:limit+1))
 
         sieve(0) = .false.
@@ -64,6 +67,11 @@
                 end do
             end if
         end do
+
+        ! CPU time measurement
+        call cpu_time(finish)
+        write(*,199) finish-start
+199     format("CPU execution time: ",f6.3)
 
         open(unit = 1,file = "FortranPrimes.txt",form = "formatted",status = "replace",action = "write")
 

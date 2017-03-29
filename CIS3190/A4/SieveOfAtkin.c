@@ -15,7 +15,7 @@ int main(int argc, const char * argv[]) {
     scanf("%d",&limit);
     
     //CPU Time Measurement Code
-    //clock_t start = clock();
+    clock_t start = clock();
     bool* sieve = calloc(limit + 1, sizeof(bool));
     
     sieve[0] = false;
@@ -57,11 +57,10 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
-    /* //CPU Time Measurement Code
-     clock_t end = clock();
-     double executionTime = (double)(end - start) / CLOCKS_PER_SEC;
-     printf("CPU execution time: %lf seconds\n", executionTime);
-     */
+    //CPU Time Measurement Code
+    clock_t end = clock();
+    double executionTime = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("CPU execution time: %lf seconds\n", executionTime);
     
     FILE* outputFile = fopen("CPrimes.txt", "w");
     fprintf(outputFile, "All primes up to %d\n",limit);
