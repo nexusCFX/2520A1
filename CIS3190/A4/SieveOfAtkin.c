@@ -71,4 +71,5 @@ int main(int argc, const char * argv[]) {
         }
     }
     fclose(outputFile);
+    puts("Your primes have been deposited in the file CPrimes.txt");
 }

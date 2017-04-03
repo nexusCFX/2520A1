@@ -71,7 +71,7 @@
         ! CPU time measurement
         call cpu_time(finish)
         write(*,199) finish-start
-199     format("CPU execution time: ",f6.3)
+199     format("CPU execution time: ",f8.6," seconds")
 
         open(unit = 1,file = "FortranPrimes.txt",form = "formatted",status = "replace",action = "write")
 
@@ -85,5 +85,6 @@
         end do
 
         close(unit = 1)
+        write(*,199) "Your primes have been deposited in the file FortranPrimes.txt"
 
         end program SieveOfAtkin

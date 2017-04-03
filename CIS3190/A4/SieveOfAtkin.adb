@@ -82,7 +82,7 @@ begin
             end if;
         end loop;
         finish := clock;
-        put_line("CPU execution time: " & duration'image(finish-start));
+        put_line("CPU execution time: " & duration'image(finish-start) & " seconds");
 
         create(outFile, out_file, "AdaPrimes.txt");
         put_line(outFile, "All primes up to " & integer'image(limit));
@@ -92,5 +92,6 @@ begin
                 put_line(outFile, integer'image(i));
             end if;
         end loop;
+        put_line("Your primes have been deposited in the file AdaPrimes.txt");
     end;
 end SieveOfAtkin;
