@@ -85,6 +85,6 @@
         end do
 
         close(unit = 1)
-        write(*,199) "Your primes have been deposited in the file FortranPrimes.txt"
+        write(*,*) "Your primes have been deposited in the file FortranPrimes.txt"
 
         end program SieveOfAtkin
