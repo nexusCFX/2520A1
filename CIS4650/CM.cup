@@ -241,7 +241,7 @@ expression_stmt  ::= expression:e SEMI
 
 selection_stmt   ::= IF LPAREN expression:e RPAREN statement:s
                      {:
-                        RESULT = new IfExp(eleft, eright, e, s, null);
+                        RESULT = new IfExp(eleft, eright, e, s, new NilExp(eleft, eright));
                      :}
                    | IF LPAREN expression:e RPAREN statement:s ELSE statement:s2
                      {:

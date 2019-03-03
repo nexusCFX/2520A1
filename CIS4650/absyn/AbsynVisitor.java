@@ -4,6 +4,22 @@ public interface AbsynVisitor {
 
   public void visit(Object obj, int level);
 
+  public void visit(ArrayDec arrayDec, int level);
+
+  public void visit(AssignExp assignExp, int level);
+
+  public void visit(CallExp callExp, int level);
+
+  public void visit(CompoundExp compoundExp, int level);
+
+  public void visit(DecList decList, int level);
+
+  public void visit(ExpList expList, int level);
+
+  public void visit(FunctionDec functionDec, int level);
+
+  public void visit(IfExp ifExp, int level);
+
  /*public void visit( ExpList exp, int level );
 
   public void visit( AssignExp exp, int level );
