@@ -11,11 +11,11 @@ Main.class: absyn/*.java parser.java sym.java Lexer.java ShowTreeVisitor.java Sc
 %.class: %.java
 	$(JAVAC) $(CLASSPATH)  $^
 
-Lexer.java: tiny.flex
-	$(JFLEX) tiny.flex
+Lexer.java: CM.flex
+	$(JFLEX) CM.flex
 
-parser.java: tiny.cup
-	$(CUP) -expect 3 tiny.cup
+parser.java: CM.cup
+	$(CUP) -expect 3 CM.cup
 
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~

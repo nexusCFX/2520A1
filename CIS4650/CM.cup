@@ -1,0 +1,273 @@
+/*
+  Created by: Brandon Chester
+  Based on: tiny.cup by Dr. Fei Song
+  File Name: CM.cup
+  To Build: java java_cup.Main < tiny.cup
+*/
+   
+   
+/* ----------------------Preliminary Declarations Section--------------------*/
+   
+/* Import the class java_cup.runtime.*  */
+//import java_cup.runtime.*;
+import absyn.*;
+   
+/* Parser code to change the way the parser reports errors (include
+   line and column number of the error). */
+parser code {:
+    
+    /* Change the method report_error so it will display the line and
+       column of where the error occurred in the input as well as the
+       reason for the error which is passed into the method in the
+       String 'message'. */
+    public void report_error(String message, Object info) {
+   
+        /* Create a StringBuffer called 'm' with the string 'Error' in it. */
+        StringBuffer m = new StringBuffer("Error");
+   
+        /* Check if the information passed to the method is the same
+           type as the type java_cup.runtime.Symbol. */
+        if (info instanceof java_cup.runtime.Symbol) {
+            /* Declare a java_cup.runtime.Symbol object 's' with the
+               information in the object info that is being typecasted
+               as a java_cup.runtime.Symbol object. */
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            /* Check if the line number in the input is greater or
+               equal to zero. */
+            if (s.left >= 0) {                
+                /* Add to the end of the StringBuffer error message
+                   the line number of the error in the input. */
+                m.append(" in line "+(s.left+1));   
+                /* Check if the column number in the input is greater
+                   or equal to zero. */
+                if (s.right >= 0)                    
+                    /* Add to the end of the StringBuffer error message
+                       the column number of the error in the input. */
+                    m.append(", column "+(s.right+1));
+            }
+        }
+   
+        /* Add to the end of the StringBuffer error message created in
+           this method the message that was passed into this method. */
+        m.append(" : "+message);
+   
+        /* Print the contents of the StringBuffer 'm', which contains
+           an error message, out on a line. */
+        System.err.println(m);
+    }
+   
+    /* Change the method report_fatal_error so when it reports a fatal
+       error it will display the line and column number of where the
+       fatal error occurred in the input as well as the reason for the
+       fatal error which is passed into the method in the object
+       'message' and then exit.*/
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        System.exit(1);
+    }
+
+:};
+   
+   
+/* ------------Declaration of Terminals and Non Terminals Section----------- */
+   
+terminal IF, ELSE, WHILE;
+terminal INT, VOID, RETURN;
+terminal ASSIGN, EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, LBRACE, RBRACE, LSQUARE, RSQUARE, COMMA, SEMI;
+terminal String NE, LE, GE;
+terminal String ID, NUM;
+terminal ERROR;
+
+// A lot of these are subclass types but we have them here as the abstract superclasses.
+non terminal DecList program, declaration_list;
+non terminal Dec declaration, fun_declaration;
+
+non terminal VarDecList param_list, local_declarations, params;
+non terminal VarDec var_declaration, param;
+non terminal Var var;
+
+non terminal ExpList statement_list, arg_list, args;
+non terminal Exp statement, expression_stmt, selection_stmt, iteration_stmt, return_stmt, compound_stmt;
+non terminal Exp expression, simple_expression, additive_expression, term, factor, call;
+
+non terminal NameTy type_specifier;
+non terminal int relop, mulop, addop;
+
+
+/* ----------------------------Grammar Section-------------------- */
+   
+start with program;
+
+program	     ::= declaration_list:d
+                 {: RESULT = d; :}
+               ;
+
+
+declaration_list ::= declaration_list:dl declaration:d
+                     {:
+                     :}
+                   | declaration:d
+                     {:
+                     :}
+                   ;
+
+declaration      ::= var_declaration:v
+                     {:
+                     :}
+                   | fun_declaration:f
+                     {:
+                     :}
+                   ;
+
+var_declaration  ::= type_specifier:t ID:i SEMI
+                     {:
+                     :}
+                   | type_specifier:t ID:i LSQUARE NUM:n RSQUARE SEMI
+                     {:
+                     :}
+                   ;
+
+type_specifier   ::= INT:i
+                     {:
+                     :}
+                   | VOID:v
+                     {:
+                     :}
+                   ;
+
+fun_declaration  ::= type_specifier:t ID:i LPAREN params:pl RPAREN compound_stmt:cs
+                     {:
+                     :}
+                   ;
+
+params           ::= param_list:pl
+                     {:
+                     :}
+                   | VOID
+                     {:
+                     :}
+                   ;
+
+param_list       ::= param_list:pl COMMA param:p
+                     {:
+                     :}
+                   | param:p
+                     {:
+                     :}
+                   ;
+
+param            ::= type_specifier:t ID:i
+                     {:
+                     :}
+                   | type_specifier:t ID:i LSQUARE RSQUARE
+                     {:
+                     :}
+                   ;
+
+compound_stmt    ::= LBRACE local_declarations:ld statement_list:sl RBRACE
+                     {:
+                     :}
+                   ;
+
+local_declarations ::= local_declarations:ld var_declaration:vd
+                       {:
+                       :}
+                     |
+                     ;
+
+statement_list   ::= statement_list:sl statement:vd
+                     {:
+                     :}
+                   |
+                   ;
+
+statement        ::= expression_stmt:e
+                     {:
+                     :}
+                   | compound_stmt:c
+                     {:
+                     :}
+                   | selection_stmt:s
+                     {:
+                     :}
+                   | iteration_stmt:i
+                     {:
+                     :}
+                   | return_stmt:r
+                     {:
+                     :}
+                   ;
+
+expression_stmt  ::= expression SEMI
+                     {:
+                     :}
+                   | SEMI
+                   ;
+
+selection_stmt   ::= IF LPAREN expression:e RPAREN statement:s
+                     {:
+                     :}
+                   | IF LPAREN expression:e RPAREN statement:s ELSE statement:s2
+                     {:
+                     :}
+                   ;
+
+iteration_stmt   ::= WHILE LPAREN expression:e RPAREN statement:s
+                     {:
+                     :}
+                   ;
+
+return_stmt      ::= RETURN expression:e SEMI
+                     {:
+                     :}
+                   | RETURN SEMI
+                     {:
+                     :}
+                   ;
+
+expression       ::= var:v ASSIGN expression:e
+                     {:
+                     :}
+                   | simple_expression:se
+                     {:
+                     :}
+                   ;
+
+var              ::= ID:i
+                     {:
+                     :}
+                   | ID LSQUARE expression:e RSQUARE
+                     {:
+                     :}
+                   ;
+
+simple_expression ::= additive_expression:a1 relop:r additive_expression:a2
+                      {:
+                      :}
+                    | additive_expression:a
+                      {:
+                      :}
+                    ;
+
+relop            ::= LE:r
+                     {:
+                     :}
+                   | LT:r
+                     {:
+                     :}
+                   | GT:r
+                     {:
+                     :}
+                   | GE:r
+                     {:
+                     :}
+                   | EQ:r
+                     {:
+                     :}
+                   | NE:r
+                     {:
+                     :}
+                   ;
+
+additive_expression ::= additive_expression:ae
