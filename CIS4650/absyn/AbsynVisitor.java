@@ -2,8 +2,6 @@ package absyn;
 
 public interface AbsynVisitor {
 
-  public void visit(Object obj, int level);
-
   public void visit(ArrayDec arrayDec, int level);
 
   public void visit(AssignExp assignExp, int level);
@@ -20,7 +18,7 @@ public interface AbsynVisitor {
 
   public void visit(IfExp ifExp, int level);
 
-  public void visit(IndexExp indexExp, int level);
+  public void visit(IndexVar indexVar, int level);
 
   public void visit(IntExp intExp, int level);
 

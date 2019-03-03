@@ -10,13 +10,17 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(ArrayDec arrayDec, int level) {
     indent(level);
-    System.out.print("ArrayDec: ", arrayDec.name, "[",arrayDec.size.value,"] - ");
-    arrayDec.accept.typ(this, level);
+    if (arrayDec.size != null) {
+      System.out.print("ArrayDec: " + arrayDec.name + "[" + arrayDec.size.value + "] - ");
+    } else {
+      System.out.print("ArrayDec: " + arrayDec.name + "[] - ");
+    }
+    arrayDec.typ.accept(this, level);
   }
 
   public void visit(AssignExp assignExp, int level) {
-    ident(level);
-    System.out.println("AssignExp:");
+    indent(level);
+    System.out.println("AssignExp: ");
     level++;
     assignExp.lhs.accept(this, level);
     assignExp.rhs.accept(this, level);
@@ -26,15 +30,21 @@ public class ShowTreeVisitor implements AbsynVisitor {
     indent(level);
     System.out.println("CallExp: " + callExp.func);
     level++;
-    callExp.args.accept(this, level);
+    if (callExp.args != null) {
+      callExp.args.accept(this, level);
+    }
   }
 
   public void visit(CompoundExp compoundExp, int level) {
     indent(level);
-    System.out.println("CompoundExp:");
+    System.out.println("CompoundExp: ");
     level++;
-    compoundExp.decs.accept(this, level);
-    compoundExp.exps.accept(this, level);
+    if (compoundExp.decs != null) {
+      compoundExp.decs.accept(this, level);
+    }
+    if (compoundExp.exps != null) {
+      compoundExp.exps.accept(this, level);
+    }
   }
 
   public void visit(DecList decList, int level) {
@@ -56,13 +66,15 @@ public class ShowTreeVisitor implements AbsynVisitor {
     System.out.print("FunctionDec: " + functionDec.func + " - ");
     functionDec.result.accept(this, level);
     level++;
-    functionDec.params.accept(this, level);
+    if (functionDec.params != null) {
+        functionDec.params.accept(this, level);
+    }
     functionDec.body.accept(this, level);
   }
 
   public void visit(IfExp ifExp, int level) {
     indent(level);
-    System.out.println("IfExp:");
+    System.out.println("IfExp: ");
     level++;
     ifExp.test.accept(this, level);
     ifExp.thenpart.accept(this, level);
@@ -96,7 +108,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit( OpExp opExp, int level ) {
     indent(level);
-    System.out.print("OpExp:");
+    System.out.print("OpExp: ");
 
     switch(opExp.op) {
       case OpExp.PLUS:
@@ -112,7 +124,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
         System.out.println( " / " );
         break;
       case OpExp.EQ:
-        System.out.println( " = " );
+        System.out.println( " == " );
         break;
       case OpExp.LT:
         System.out.println( " < " );
@@ -139,6 +151,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(ReturnExp returnExp, int level) {
     indent(level);
+    System.out.println("ReturnExp: ");
     level++;
     returnExp.exp.accept(this, level);
   }
@@ -146,7 +159,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
   public void visit(SimpleDec simpleDec, int level) {
     indent(level);
     System.out.print("SimpleDec: " + simpleDec.name + " - ");
-    simpleDec.accept.typ(this, level);
+    simpleDec.typ.accept(this, level);
   }
 
   public void visit(SimpleVar simpleVar, int level) {
@@ -163,14 +176,14 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit(VarExp varExp, int level) {
     indent(level);
-    System.out.println("VarExp:");
+    System.out.println("VarExp: ");
     level++;
-    varExp.exp.accept(this, level);
+    varExp.variable.accept(this, level);
   }
 
   public void visit(WhileExp whileExp, int level) {
     indent(level);
-    System.out.println("WhileExp:");
+    System.out.println("WhileExp: ");
     level++;
     whileExp.test.accept(this, level);
     whileExp.body.accept(this, level);
@@ -180,7 +193,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
     while( expList != null ) {
       expList.head.accept( this, level );
       expList = expList.tail;
-    } 
+    }
   }
 
   public void visit( AssignExp exp, int level ) {
@@ -203,12 +216,12 @@ public class ShowTreeVisitor implements AbsynVisitor {
 
   public void visit( IntExp exp, int level ) {
     indent( level );
-    System.out.println( "IntExp: " + exp.value ); 
+    System.out.println( "IntExp: " + exp.value );
   }
 
   public void visit( OpExp exp, int level ) {
     indent( level );
-    System.out.print( "OpExp:" ); 
+    System.out.print( "OpExp:" );
     switch( exp.op ) {
       case OpExp.PLUS:
         System.out.println( " + " );
@@ -250,7 +263,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
     System.out.println( "RepeatExp:" );
     level++;
     exp.exps.accept( this, level );
-    exp.test.accept( this, level ); 
+    exp.test.accept( this, level );
   }
 
   public void visit( VarExp exp, int level ) {

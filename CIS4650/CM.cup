@@ -196,14 +196,14 @@ compound_stmt    ::= LBRACE local_declarations:ld statement_list:sl RBRACE
                      :}
                    ;
 
-local_declarations ::= local_declarations:ld var_declaration:vd
+local_declarations ::= var_declaration:vd local_declarations:ld
                        {:
                             RESULT = new VarDecList(vd, ld);
                        :}
                      |
                      ;
 
-statement_list   ::= statement_list:sl statement:vd
+statement_list   ::= statement:vd statement_list:sl
                      {:
                         RESULT = new ExpList(vd, sl);
                      :}

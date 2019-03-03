@@ -79,6 +79,7 @@ WhiteSpace     = {LineTerminator} | [ \t\f]
 NUM = [0-9]+
 
 ID = [_a-zA-Z][_a-zA-Z0-9]*
+
    
 %%
 /* ------------------------Lexical Rules Section---------------------- */
@@ -116,5 +117,5 @@ ID = [_a-zA-Z][_a-zA-Z0-9]*
 {NUM}              { return symbol(sym.NUM, yytext()); }
 {ID}               { return symbol(sym.ID, yytext()); }
 {WhiteSpace}+      { /* skip whitespace */ }   
-"/*".*"*/"         { /* skip comments */ }
+"/*"~"*/"         { /* skip comments */ }
 .                  { return symbol(sym.ERROR); }
