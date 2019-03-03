@@ -4,7 +4,7 @@ public class IndexVar extends Var {
     public String name;
     public Exp index;
 
-    public SimpleVar(int row, int col, String name, Exp index) {
+    public IndexVar(int row, int col, String name, Exp index) {
         this.row = row;
         this.col = col;
         this.name = name;

@@ -4,7 +4,7 @@ public class SimpleDec extends VarDec {
     public String name;
     public NameTy typ;
 
-    public SimpleVar(int row, int col, NameTy typ, String name) {
+    public SimpleDec(int row, int col, NameTy typ, String name) {
         this.row = row;
         this.col = col;
         this.name = name;

@@ -5,7 +5,7 @@ public class ArrayDec extends VarDec {
     public NameTy typ;
     public IntExp size;
 
-    public SimpleVar(int row, int col, NameTy typ, String name, IntExp size) {
+    public ArrayDec(int row, int col, NameTy typ, String name, IntExp size) {
         this.row = row;
         this.col = col;
         this.name = name;

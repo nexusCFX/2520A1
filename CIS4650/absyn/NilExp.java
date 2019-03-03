@@ -2,7 +2,7 @@ package absyn;
 
 public class NilExp extends Exp {
 
-    public VarExp( int row, int col) {
+    public NilExp( int row, int col) {
         this.row = row;
         this.col = col;
     }

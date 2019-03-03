@@ -88,11 +88,12 @@ non terminal VarDec var_declaration, param;
 non terminal Var var;
 
 non terminal ExpList statement_list, arg_list, args;
-non terminal Exp statement, expression_stmt, selection_stmt, iteration_stmt, return_stmt, compound_stmt;
+non terminal Exp statement, expression_stmt, selection_stmt, iteration_stmt, return_stmt;
 non terminal Exp expression, simple_expression, additive_expression, term, factor, call;
+non terminal CompoundExp compound_stmt;
 
 non terminal NameTy type_specifier;
-non terminal int relop, mulop, addop;
+non terminal Integer relop, mulop, addop;
 
 
 /* ----------------------------Grammar Section-------------------- */
@@ -111,7 +112,7 @@ declaration_list ::= declaration_list:dl declaration:d
                             t = t.tail;
                         }
                         t.tail = new DecList(d, null);
-                        RESULT = d1;
+                        RESULT = dl;
                      :}
                    | declaration:d
                      {:
@@ -135,24 +136,24 @@ var_declaration  ::= type_specifier:t ID:i SEMI
                      :}
                    | type_specifier:t ID:i LSQUARE NUM:n RSQUARE SEMI
                      {:
-                        IntExp ie = new IntExp(ileft, n);
+                        IntExp ie = new IntExp(ileft, iright, n);
                         RESULT = new ArrayDec(tleft, tright, t, i, ie);
                      :}
                    ;
 
-type_specifier   ::= INT
+type_specifier   ::= INT:i
                      {:
                         RESULT = new NameTy(ileft, iright, NameTy.INT);
                      :}
-                   | VOID
+                   | VOID:v
                      {:
-                        RESULT = new NameTy(ileft, iright, NameTy.VOID);
+                        RESULT = new NameTy(vleft, vright, NameTy.VOID);
                      :}
                    ;
 
 fun_declaration  ::= type_specifier:t ID:i LPAREN params:pl RPAREN compound_stmt:cs
                      {:
-                        RESULT = new FunctionDec(tleft, tright, t, i, p, c);
+                        RESULT = new FunctionDec(tleft, tright, t, i, pl, cs);
                      :}
                    ;
 
@@ -161,12 +162,16 @@ params           ::= param_list:pl
                         RESULT = pl;
                      :}
                    | VOID
-                     {:
-                     :}
                    ;
 
 param_list       ::= param_list:pl COMMA param:p
                      {:
+                         VarDecList t = pl;
+                         while( t.tail != null ) {
+                            t = t.tail;
+                         }
+                         t.tail = new VarDecList(p, null);
+                         RESULT = pl;
                      :}
                    | param:p
                      {:
@@ -250,11 +255,11 @@ iteration_stmt   ::= WHILE LPAREN expression:e RPAREN statement:s
                      :}
                    ;
 
-return_stmt      ::= RETURN expression:e SEMI
+return_stmt      ::= RETURN:r expression:e SEMI
                      {:
                         RESULT = new ReturnExp(rleft, rright, e);
                      :}
-                   | RETURN SEMI
+                   | RETURN:r SEMI
                      {:
                         RESULT = new ReturnExp(rleft, rright, null);
                      :}
@@ -262,13 +267,12 @@ return_stmt      ::= RETURN expression:e SEMI
 
 expression       ::= var:v ASSIGN expression:e
                      {:
-                        VarExp ve = new VarExp(vleft, vright, v);
-                        RESULT = new AssignExp(vleft, vright, ve, e);
+                        RESULT = new AssignExp(vleft, vright, v, e);
 
                      :}
                    | simple_expression:se
                      {:
-                        RESULT = s;
+                        RESULT = se;
                      :}
                    ;
 
@@ -350,11 +354,11 @@ term           ::= term:t mulop:m factor:f
 
 mulop          ::= TIMES
                    {:
-                        RESULT = OpExp.MUL;
+                        RESULT = OpExp.TIMES;
                    :}
                  | OVER
                    {:
-                        RESULT = OpExp.DIV;
+                        RESULT = OpExp.OVER;
                    :}
                  ;
 
@@ -391,8 +395,15 @@ args           ::= arg_list:a
 
 arg_list       ::= arg_list:a COMMA expression:e
                    {:
+                        ExpList t = a;
+                        while(t.tail != null) {
+                            t = t.tail;
+                        }
+                        t.tail = new ExpList(e, null);
+                        RESULT = a;
                    :}
                  | expression:e
                    {:
+                        RESULT = new ExpList(e, null);
                    :}
                  ;

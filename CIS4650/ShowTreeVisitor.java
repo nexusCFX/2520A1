@@ -8,7 +8,11 @@ public class ShowTreeVisitor implements AbsynVisitor {
     for( int i = 0; i < level * SPACES; i++ ) System.out.print( " " );
   }
 
-  public void visit( ExpList expList, int level ) {
+  public void visit(Object obj, int level) {
+
+  }
+
+ /* public void visit( ExpList expList, int level ) {
     while( expList != null ) {
       expList.head.accept( this, level );
       expList = expList.tail;
@@ -95,5 +99,5 @@ public class ShowTreeVisitor implements AbsynVisitor {
     System.out.println( "WriteExp:" );
     exp.output.accept( this, ++level );
   }
-
+*/
 }

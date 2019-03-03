@@ -6,7 +6,7 @@ public class FunctionDec extends Dec {
     public VarDecList params;
     public CompoundExp body;
 
-    public SimpleVar(int row, int col, NameTy result, String func, VarDecList params, CompoundExp body) {
+    public FunctionDec(int row, int col, NameTy result, String func, VarDecList params, CompoundExp body) {
         this.row = row;
         this.col = col;
         this.result = result;
