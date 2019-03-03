@@ -2,8 +2,6 @@ package absyn;
 
 public interface AbsynVisitor {
 
-  public void visit(Object obj, int level);
-
   public void visit(ArrayDec arrayDec, int level);
 
   public void visit(AssignExp assignExp, int level);
