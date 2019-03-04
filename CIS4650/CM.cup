@@ -104,7 +104,6 @@ program	     ::= declaration_list:d
                  {: RESULT = d; :}
                ;
 
-
 declaration_list ::= declaration_list:dl declaration:d
                      {:
                         DecList t = dl;
@@ -117,6 +116,11 @@ declaration_list ::= declaration_list:dl declaration:d
                    | declaration:d
                      {:
                         RESULT = new DecList(d, null);
+                     :}
+                   | error:e
+                     {:
+                        parser.report_error("Invalid syntax in program declaration list.", e);
+                        RESULT = new DecList(new ErrorDec(eleft, eright), null);
                      :}
                    ;
 
@@ -139,6 +143,11 @@ var_declaration  ::= type_specifier:t ID:i SEMI
                         IntExp ie = new IntExp(ileft, iright, n);
                         RESULT = new ArrayDec(tleft, tright, t, i, ie);
                      :}
+                   | type_specifier:t ID:i LSQUARE error:e RSQUARE SEMI
+                     {:
+                        parser.report_error("Invalid size in array declaration.", e);
+                        RESULT = new ErrorVarDec(eleft, eright);
+                     :}
                    ;
 
 type_specifier   ::= INT:i
@@ -149,11 +158,26 @@ type_specifier   ::= INT:i
                      {:
                         RESULT = new NameTy(vleft, vright, NameTy.VOID);
                      :}
+                   | error:e
+                     {:
+                        parser.report_error("Unrecognized type specifier.", e);
+                        RESULT = new NameTy(eleft, eright, -1);
+                     :}
                    ;
 
 fun_declaration  ::= type_specifier:t ID:i LPAREN params:pl RPAREN compound_stmt:cs
                      {:
                         RESULT = new FunctionDec(tleft, tright, t, i, pl, cs);
+                     :}
+                   | type_specifier:t ID:i error:e params:pl RPAREN compound_stmt:cs
+                     {:
+                        parser.report_error("Missing left parentheses in function declaration.", e);
+                        RESULT = new ErrorDec(eleft, eright);
+                     :}
+                   | type_specifier:t ID:i LPAREN params:pl error:e compound_stmt:cs
+                     {:
+                        parser.report_error("Missing right parentheses in function declaration.", e);
+                        RESULT = new ErrorDec(eleft, eright);
                      :}
                    ;
 
@@ -176,6 +200,11 @@ param_list       ::= param_list:pl COMMA param:p
                    | param:p
                      {:
                         RESULT = new VarDecList(p, null);
+                     :}
+                   | error:e
+                     {:
+                        parser.report_error("Error in function parameters.", e);
+                        RESULT = new VarDecList(new ErrorVarDec(eleft, eright), null);
                      :}
                    ;
 
@@ -405,5 +434,10 @@ arg_list       ::= arg_list:a COMMA expression:e
                  | expression:e
                    {:
                         RESULT = new ExpList(e, null);
+                   :}
+                 | error:e
+                   {:
+                        parser.report_error("Invalid function arguments.", e);
+                        RESULT = new ExpList(new ErrorExp(eleft, eright), null);
                    :}
                  ;

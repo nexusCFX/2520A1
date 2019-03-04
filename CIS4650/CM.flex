@@ -117,5 +117,8 @@ ID = [_a-zA-Z][_a-zA-Z0-9]*
 {NUM}              { return symbol(sym.NUM, yytext()); }
 {ID}               { return symbol(sym.ID, yytext()); }
 {WhiteSpace}+      { /* skip whitespace */ }   
-"/*"~"*/"         { /* skip comments */ }
-.                  { return symbol(sym.ERROR); }
+"/*"~"*/"          { /* skip comments */ }
+.                  {
+                        System.out.println("Syntax error. Encountered unexpected " + yytext() + " at " + yyline + ":" + yycolumn + ".");
+                        return symbol(sym.ERROR);
+                   }
