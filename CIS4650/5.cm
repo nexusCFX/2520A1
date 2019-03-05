@@ -1,17 +1,26 @@
 /* 5.cm */
 
-/* A C- program that is used to test C- compilers against
-   a breadth of errors */
+/*
+A C- program that is used to test C- compilers against
+a breadth of errors
+
+Line 15 has an invalid array size.
+Line 22 is missing a right bracket on a function call.
+Line 39 has an extraneous comma in a function call.
+Line 40 has an extraneous semicolon in a function call.
+Line 45 has extranous semicolons in function arguments.
+Line 52 has an invalid type of char.
+*/
 
 /* A program to animate some frames */
-int frames[100];
+int frames[KFC];
 
 int animate(int frames[], int duration) {
     int timeElapsed; int i;
     timeElapsed = 0;
     i = 0;
     while (timeElapsed <= duration) {
-        projectFrame(frames[i]);
+        projectFrame(frames[i];
         i = i + 1;
     }
 }
@@ -28,7 +37,7 @@ void main(void) {
         }
     }
     i = 0;
-    animate(frames, duration);
+    animate(frames,);
     animate(frames, 100;);
 
     return 8;
@@ -38,4 +47,8 @@ int animate(int frames; int duration;) {
     while(frames > duration) {
 
     }
+}
+
+char print() {
+
 }
