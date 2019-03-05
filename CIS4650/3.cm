@@ -1,0 +1,19 @@
+/* 3.cm */
+/*
+A C- program that is used to test C- compilers against unknown data types.
+
+Line 10 uses an unknown data type, char.
+Line 17 uses an unknown data type, bool.
+*/
+
+void main(void) {
+    char i;
+    while (i <= 12) {
+        printf(h[i]);
+        i = i + 1;
+    }
+}
+
+void getIntValue(bool isChar) {
+    return isChar;
+}

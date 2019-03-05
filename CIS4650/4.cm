@@ -1,20 +1,25 @@
 /* 4.cm */
 
-/* A C- program that is used to test C- compilers against
-   a variety of malformed functions calls */
+/*
+A C- program that is used to test C- compilers function
+declarations with missing parentheses, and malformed call arguments.
+
+Line 22 has a function call with an extraneous comma,
+Line 35 defines a function with no left parentheses
+*/
 
 /* A program to encode ASCII values w/ a traditional caesar shift */
 int word[100];
 
 void main(void) {
-    populateWord();
     int i;
     i = 0;
+    populateWord();
 
     while (i < 100) {
         int shifted;
         shifted = shift(3, word[i]);
-        output(shifted;
+        output(shifted,);
     }
 }
 
@@ -22,7 +27,7 @@ void populateWord(void) {
     int i;
     i = 0;
     while (i < 100) {
-        word[i] = input(num,);=
+        word[i] = input(num);
         i = i + 1;
     }
 }

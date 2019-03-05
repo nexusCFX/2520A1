@@ -171,12 +171,12 @@ fun_declaration  ::= type_specifier:t ID:i LPAREN params:pl RPAREN compound_stmt
                      :}
                    | type_specifier:t ID:i error:e params:pl RPAREN compound_stmt:cs
                      {:
-                        parser.report_error("Missing left parentheses in function declaration.", e);
+                        parser.report_error("Error in function declaration.", e);
                         RESULT = new ErrorDec(eleft, eright);
                      :}
                    | type_specifier:t ID:i LPAREN params:pl error:e compound_stmt:cs
                      {:
-                        parser.report_error("Missing right parentheses in function declaration.", e);
+                        parser.report_error("Error in function declaration.", e);
                         RESULT = new ErrorDec(eleft, eright);
                      :}
                    ;
