@@ -78,7 +78,9 @@ public class ShowTreeVisitor implements AbsynVisitor {
     level++;
     ifExp.test.accept(this, level);
     ifExp.thenpart.accept(this, level);
-    ifExp.elsepart.accept(this, level);
+    if (ifExp.elsepart != null) {
+      ifExp.elsepart.accept(this, level);
+    }
   }
 
   public void visit(IndexVar indexVar, int level) {
