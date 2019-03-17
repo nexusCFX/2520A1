@@ -1,38 +1,22 @@
 /* 1.cm */
-/* A C- Program 
-   which computes the nth fibonacci number recursively */
+/* A C- program that is used that will compile and exercise the symbol table */
 
-/* An alternate program may look like: 
-    int fib(int n) {
-        int fib[n+1];
-        if (n > 0) {
-            fib[0] = 0;
-        }
-        if (n > 1) {
-            fib[1] = 1;
-        }
-        int i;
-        i = 2;
-        while (i <= n) {
-            fib[i] = fib[i-1] + fib[i-2];
-        }
-        return fib[n];
-    }
-*/
+int counter;
 
-int fib(int n) {
-    if (n == 0) {
-        return 0;
-    }
+int printFabulous(int n) {
+    int counter;
+
     if (n == 1) {
-        return 1;
+        int counter;
+        counter = 1;
     }
-    return fib(n-1) + fib(n-2);
+
+    counter = 8;
+    return counter;
 }
 
-void main (void) {
-    int n;
-    n = input();
-
-    output(fib(n));
+void main(void) {
+    int counter;
+    counter = printFabulous(1);
+    output(counter);
 }

@@ -1,19 +1,27 @@
 /* 3.cm */
-/*
-A C- program that is used to test C- compilers against unknown data types.
 
-Line 10 uses an unknown data type, char.
-Line 17 uses an unknown data type, bool.
-*/
+/* A C- program that tests against int returns in void functions and void returns in int functions. */
 
 void main(void) {
-    char i;
+    int helloWorld[12];
+    int i;
+    i = 0;
+
     while (i <= 12) {
-        printf(h[i]);
+        output(i);
         i = i + 1;
     }
 }
 
-void getIntValue(bool isChar) {
+int populateStringWithHelloWorld(int h) {
+    h = 72;
+    return;
+}
+
+void getIntValue(int isChar) {
     return isChar;
+}
+
+int returnAnInt(int isChar) {
+    return getIntValue(isChar);
 }

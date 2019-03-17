@@ -1,29 +1,42 @@
 /* 2.cm */
-/*
-A C- program that is used to test C- compilers against a double comment close
-and unmatched opening or closing comments.
 
-Line 11 has a double comment close.
-Line 19 has an unmatched comment close.
-Line 29 has an unmatched comment open.
-*/
+/* A C- program that tests against undefined and redefined variables and undefined functions */
 
-/* This is a hello world program /* /****/*/
+int word[100];
+int shiftWord[100];
 
-void main(void) {
-    /* ASCII decimal encoding for "HELLO WORLD" */
-    int helloWorld[12];
-    h[0] = 72; h[1] = 69; h[2] = 76; h[3] = 76; h[4] = 79;
-    h[5] = 32;
-    h[6] = 87; h[7] = 79; h[8] = 82; h[9] = 76; h[10] = 68; h[11] = 0;
-    */
+void populateWord(void) {
     int i;
     i = 0;
-
-
-    while (i <= 12) {
-        printf(h[i]);
+    while (i < 100) {
+        word[i] = input();
         i = i + 1;
     }
 }
-/*
+
+int main(void) {
+    int shiftWord[100];
+    int i;
+    int i;
+    i = 0;
+    populateWord();
+    while (i < 100) {
+        int shiftedAscii;
+        shiftedAscii = shift(3, word[i]);
+        shiftWord[i] = shiftedAscii;
+        i = i + 1;
+    }
+
+    /* Output encrypted text */
+    j = 0;
+    while (i < 100) {
+        output(shiftWord[i]);
+        i = i + 1;
+    }
+}
+
+int shift(int i, int ascii) {
+    int shiftedAscii;
+    shiftedAscii = ascii;
+    return shiftedAscii + i;
+}

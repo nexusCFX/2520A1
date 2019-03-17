@@ -1,54 +1,23 @@
 /* 5.cm */
+/* abc */
 
-/*
-A C- program that is used to test C- compilers against
-a breadth of errors
+int counter[8];
 
-Line 15 has an invalid array size.
-Line 22 is missing a right bracket on a function call.
-Line 39 has an extraneous comma in a function call.
-Line 40 has an extraneous semicolon in a function call.
-Line 45 has extranous semicolons in function arguments.
-Line 52 has an invalid type of char.
-*/
+void printFabulous(int size, int arr[]) {
+    output(1);
+    return;
+}
 
-/* A program to animate some frames */
-int frames[KFC];
-
-int animate(int frames[], int duration) {
-    int timeElapsed; int i;
-    timeElapsed = 0;
-    i = 0;
-    while (timeElapsed <= duration) {
-        projectFrame(frames[i];
-        i = i + 1;
-    }
+void voidFab(void) {
+    output(counter[1]);
 }
 
 void main(void) {
-    int duration; int i;
-    i = 0;
+    int gk; int arr[8];
+    gk = 8;
 
-    while (i < 100) {
-        frames[i] = populateFrames(i);
-        i = i + 1;
-        if (frames[i] >= frames[i] - i + 8 * 8) {
-            frames[i] = frames[i*8];
-        }
-    }
-    i = 0;
-    animate(frames,);
-    animate(frames, 100;);
-
-    return 8;
-}
-
-int animate(int frames; int duration;) {
-    while(frames > duration) {
-
-    }
-}
-
-char print() {
-
+    printFabulous(gk, arr);
+    printFabulous(gk);
+    printFabulous(gk, gk, arr);
+    printFabulous(arr, gk);
 }

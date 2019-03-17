@@ -209,7 +209,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             if (returnExp.exp == null) {
                 System.err.println("Error " + returnExp.row + ":" + returnExp.col + ". Function of type int must return a value.");
             } else {
-                returnExp.exp.accept(this, typeRequirement);
+                returnExp.exp.accept(this, REQUIRE_INT_TYPE);
             }
         } else if (currentFunction.result.typ == NameTy.VOID) {
             if (returnExp.exp != null) {

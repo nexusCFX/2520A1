@@ -1,43 +1,39 @@
 /* 4.cm */
 
-/*
-A C- program that is used to test C- compilers function
-declarations with missing parentheses, and malformed call arguments.
+/* A C- program that is used to test against non-int types in if/while expressions and array indices. */
 
-Line 22 has a function call with an extraneous comma,
-Line 35 defines a function with no left parentheses
-*/
+int counter[8];
 
-/* A program to encode ASCII values w/ a traditional caesar shift */
-int word[100];
+void voidFab(void) {
+    output(1);
+}
+
+int printFabulous(int n) {
+    int counter;
+
+    if (n == 1) {
+        int counter;
+        counter = 1;
+    }
+
+    if (voidFab()) {
+        output(1);
+    }
+
+    counter = 8;
+    return counter;
+}
 
 void main(void) {
+    int counter[8];
     int i;
-    i = 0;
-    populateWord();
-
-    while (i < 100) {
-        int shifted;
-        shifted = shift(3, word[i]);
-        output(shifted,);
+    counter[printFabulous(1)] = 5;
+    i = input();
+    counter[voidFab()] = 3;
+    if (i > 5) {
+        output(i);
     }
-}
-
-void populateWord(void) {
-    int i;
-    i = 0;
-    while (i < 100) {
-        word[i] = input(num);
-        i = i + 1;
+    while (voidFab()) {
+        output(1);
     }
-}
-
-int isVowel int n) {
-    if (n == 8) {
-        return 1;
-    } else return 0;
-}
-
-int shift(int n, int c) {
-    return n + c;
 }
