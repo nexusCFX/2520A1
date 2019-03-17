@@ -45,7 +45,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
         Symbol symbol = table.get(name);
         if (symbol == null) {
             // Undefined function
-            System.err.println("Error " + callExp.row + ":" + callExp.col + ". Function" + callExp.func + " is not defined.");
+            System.err.println("Error " + callExp.row + ":" + callExp.col + ". Function " + callExp.func + " is not defined.");
             return;
         }
 
@@ -241,12 +241,9 @@ public class SemanticAnalyzer implements AbsynVisitor {
         if (symbol == null) {
             // Undefined error
             System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Undefined variable \'" + name + "\' referenced.");
-        } else if (symbol.type == Symbol.ARRAY) {
-            System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Expected type int but found type int[].");
-            // Error, array type used instead of int
-        } else if (symbol.type == Symbol.VOID) {
-            // Error, void type used instead of int
-            System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Expected type int but found type void.");
+        } else if (symbol.type != Symbol.INT) {
+            // Type error
+            System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Expected type int but found type " + symbol.type() + ".");
         }
     }
 
