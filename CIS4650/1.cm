@@ -1,5 +1,5 @@
 /* 1.cm */
-/* A C- program that is used that will compile and exercise the symbol table */
+/* An error free C- program used to test the compiler's AST and symbol table functions */
 
 int counter;
 

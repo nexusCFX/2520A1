@@ -1,6 +1,11 @@
 /* 3.cm */
 
-/* A C- program that tests against int returns in void functions and void returns in int functions. */
+/* A C- program that tests against int returns in void functions and void returns in int functions.
+Errors:
+Line 22: int function 'populateStringWithHelloWorld' tries to return without a value.
+Line 26: void function 'getIntValue' tries to return a value.
+Line 30: int function 'returnAnInt' tries to return the return value of a void function.
+*/
 
 void main(void) {
     int helloWorld[12];

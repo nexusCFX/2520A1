@@ -241,6 +241,9 @@ public class SemanticAnalyzer implements AbsynVisitor {
         if (symbol == null) {
             // Undefined error
             System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Undefined variable \'" + name + "\' referenced.");
+        } else if (symbol instanceof FunctionSymbol) {
+            // Assigning value to function
+            System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Cannot assign value to function.");
         } else if (symbol.type != Symbol.INT) {
             // Type error
             System.err.println("Error " + simpleVar.row + ":" + simpleVar.col + ". Expected type int but found type " + symbol.type() + ".");

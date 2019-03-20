@@ -1,6 +1,11 @@
 /* 4.cm */
 
-/* A C- program that is used to test against non-int types in if/while expressions and array indices. */
+/* A C- program that is used to test against non-int types in if/while expressions and array indices. 
+Errors:
+Line 23: Attempting to use void function 'voidFab' as condition for if-expression.
+Line 36: Attempting to use void function 'voidFab' as array index.
+Line 40: Attempting to use void function 'voidFab' as condition for while-expression.
+*/
 
 int counter[8];
 

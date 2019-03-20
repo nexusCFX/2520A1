@@ -1,6 +1,11 @@
 /* 2.cm */
 
-/* A C- program that tests against undefined and redefined variables and undefined functions */
+/* A C- program that tests against undefined and redefined variables and undefined functions
+Errors:
+Line 24: Invalid redeclaration of the variable 'i'. 
+Line 29: Trying to use a function 'shift' which is not defined at this point as it is declared after main.
+Line 35: Reference to an undefined variable 'j'.
+*/
 
 int word[100];
 int shiftWord[100];

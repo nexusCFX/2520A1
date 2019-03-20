@@ -1,5 +1,10 @@
 /* 5.cm */
-/* abc */
+/* A C- program that tests against errors with incorrect function parameters. 
+Errors:
+Line 24: 1 parameter passe dto function that takes two arguments.
+Line 25: 3 parameters passed to function that takes two arguments.
+Line 26: Array and int passed in wrong order, so int passed to int[] and int[] passed to int.
+*/
 
 int counter[8];
 
