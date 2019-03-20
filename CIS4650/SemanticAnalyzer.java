@@ -36,7 +36,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit(AssignExp assignExp, int typeRequirement) {
         assignExp.lhs.accept(this, typeRequirement);
-        assignExp.rhs.accept(this, typeRequirement);
+        assignExp.rhs.accept(this, REQUIRE_INT_TYPE);
     }
 
     public void visit(CallExp callExp, int typeRequirement) {
