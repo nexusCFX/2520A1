@@ -7,6 +7,8 @@ public class Symbol {
 
     public String name;
     public int type;
+    public int offset = 0;
+    public int nestLevel = 0;
 
     public Symbol(String name, int type) {
         this.name = name;

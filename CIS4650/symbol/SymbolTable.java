@@ -110,6 +110,10 @@ public class SymbolTable {
         return null;
     }
 
+    public boolean isInGlobalScope() {
+        return depth == 0;
+    }
+
     public boolean contains(String name) {
         return get(name) == null;
     }

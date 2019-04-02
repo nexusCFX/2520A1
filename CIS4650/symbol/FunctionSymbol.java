@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class FunctionSymbol extends Symbol {
     public ArrayList<Symbol> parameters;
+    public int funaddr = 0;
 
     public FunctionSymbol(String name, int returnType, ArrayList<Symbol> parameters) {
         super(name, returnType);

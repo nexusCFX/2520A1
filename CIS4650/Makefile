@@ -6,7 +6,7 @@ CUP=$(JAVA) -jar java-cup-11b.jar
 
 all: Main.class
 
-Main.class: absyn/*.java symbol/*.java parser.java sym.java Lexer.java SemanticAnalyzer.java ShowTreeVisitor.java Scanner.java Main.java
+Main.class: absyn/*.java symbol/*.java parser.java sym.java Lexer.java SemanticAnalyzer.java CodeGenerator.java ShowTreeVisitor.java Scanner.java Main.java
 
 %.class: %.java
 	$(JAVAC) $(CLASSPATH)  $^

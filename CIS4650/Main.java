@@ -17,6 +17,7 @@ import absyn.*;
 class Main {
     public static boolean SHOW_TREE = false;
     public static boolean SHOW_TABLE = false;
+    public static boolean GENERATE_CODE = false;
     public static String filename = "";
     static public void main(String argv[]) {
         for (String arg : argv) {
@@ -24,6 +25,8 @@ class Main {
                 SHOW_TREE = true;
             } else if (arg.equals("-s")) {
                 SHOW_TABLE = true;
+            } else if (arg.equals("-c")) {
+                GENERATE_CODE = true;
             } else {
                 filename = arg;
             }
@@ -39,6 +42,11 @@ class Main {
             }
             SemanticAnalyzer analyzer = new SemanticAnalyzer(SHOW_TABLE);
             result.accept(analyzer, 0);
+            if (GENERATE_CODE) {
+                CodeGenerator codeGenerator = new CodeGenerator();
+                result.accept(codeGenerator, 0);
+                System.out.println(codeGenerator.code);
+            }
         } catch (Exception e) {
             /* do cleanup here -- possibly rethrow e */
             e.printStackTrace();
