@@ -1,14 +1,14 @@
 A JFlex+Cup implementation for the C- language, based on the parser for the Tiny programming language written by Dr. Fei Song.
 
-To build all the code required to parse and produce an abstract syntax tree, type "make" in the current directory.
+To build all the code required to parse and produce an abstract syntax tree and generate TM assembly code, type "make" in the current directory.
 
 To run the program using a source code file like "fac.cm" type:
 
-    ./compiler fac.cm [-a] [-s]
+    ./compiler fac.cm [-a] [-s] [-c]
 
 To output the AST use the following flag: -a
 To display the table use the following flag: -s
-
+To display the generated assembly code use the following flag: -c
 Semantic errors are sent to stderr and may conflict with symbol table display on stdout if not redirected.
 
 To rebuild the project, type "make clean" and then "make" again.

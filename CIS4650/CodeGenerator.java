@@ -15,6 +15,9 @@ public class CodeGenerator implements AbsynVisitor {
     private static final int ac = 0;
     private static final int ac1 = 1;
 
+    private static final int inFunAddr = 4;
+    private static final int outFunAddr = 7;
+
     private int emitLoc = 0;
     private int highEmitLoc = 0;
     private int globalOffset = 0;
@@ -115,6 +118,13 @@ public class CodeGenerator implements AbsynVisitor {
         emitRM("LD", 0, -2, fp, "load output value");
         emitRO("OUT", 0, 0, 0, "output");
         emitRM("LD", 7, retFO, fp, "return to caller");
+
+        FunctionSymbol inputSymbol = new FunctionSymbol("input", Symbol.VOID, new ArrayList<>());
+        inputSymbol.funaddr = inFunAddr;
+        FunctionSymbol outputSymbol = new FunctionSymbol("output", Symbol.INT, new ArrayList<>());
+        inputSymbol.funaddr = outFunAddr;
+        table.insert(inputSymbol);
+        table.insert(outputSymbol);
 
         int savedLoc2 = emitSkip(0);
         emitBackup(savedLoc);
@@ -283,7 +293,7 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(SimpleDec simpleDec, int offset) {
-        emitComment("processing local var: " + simpleDec.name + "with offset " + offset);
+        emitComment("processing local var: " + simpleDec.name);
 
         Symbol s = new Symbol(simpleDec.name, Symbol.INT);
         if (table.isInGlobalScope()) {

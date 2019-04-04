@@ -1,22 +1,11 @@
 /* 1.cm */
-/* An error free C- program used to test the compiler's AST and symbol table functions */
 
-int counter;
+/* A trivial C- program which should compile without errors. */
 
-int printFabulous(int n) {
-    int counter;
-
-    if (n == 1) {
-        int counter;
-        counter = 1;
-    }
-
-    counter = 8;
-    return counter;
-}
+int year;
 
 void main(void) {
-    int counter;
-    counter = printFabulous(1);
-    output(counter);
+    int age;
+    age = input();
+    output(year - age);
 }

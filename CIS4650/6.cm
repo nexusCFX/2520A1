@@ -1,0 +1,35 @@
+/* 6.cm */
+
+/* A trivial C- program which contains the following:
+   -> Incorrect operand
+   -> Incorrect block format {}}
+*/
+
+int pizza;
+int pepperoni;
+int cheese;
+
+void createPizza() {
+    int ingredients;
+    ingredients = 20;
+    pizza = 0;
+
+    while (ingredients >= 0) {
+        pizza = pizza + pepperoni;
+        pizza = pizza + cheese;
+        ingredients = ingredients - (pepperoni + cheese);
+    }
+}
+
+void main(void) {
+    int wantsPepperoni;
+    wantsPepperoni = input();
+    cheese == 1;
+    if (wantsPepperoni == 1) {}
+        pepperoni = 1;
+    } else {
+        cheese = cheese + 1;
+    }
+    createPizza();
+    output(pizza);
+}

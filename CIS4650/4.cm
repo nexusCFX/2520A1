@@ -1,44 +1,42 @@
 /* 4.cm */
 
-/* A C- program that is used to test against non-int types in if/while expressions and array indices. 
-Errors:
-Line 23: Attempting to use void function 'voidFab' as condition for if-expression.
-Line 36: Attempting to use void function 'voidFab' as array index.
-Line 40: Attempting to use void function 'voidFab' as condition for while-expression.
-*/
+/* A trivial C- program which should compile without errors. */
 
-int counter[8];
+void hearSentence(int sentence[]) {
+    int i;
+    i = 0;
 
-void voidFab(void) {
-    output(1);
+    while (i < 10) {
+        sentence[i] = input();
+    }
 }
 
-int printFabulous(int n) {
-    int counter;
+void readSentence(int sentence[]) {
+    int i;
+    i = 0;
 
-    if (n == 1) {
-        int counter;
-        counter = 1;
+    while (i < 10) {
+        output(sentence[i]);
     }
+}
 
-    if (voidFab()) {
-        output(1);
+void shiftSentence(int sentence[]) {
+    int i;
+    i = 0;
+
+    while (i < 10) {
+        sentence[i] = sentence[i] + 3;
+        if (sentence[i] > 25) {
+            sentence[i] = sentence[i] - 25;
+        }
     }
-
-    counter = 8;
-    return counter;
 }
 
 void main(void) {
-    int counter[8];
-    int i;
-    counter[printFabulous(1)] = 5;
-    i = input();
-    counter[voidFab()] = 3;
-    if (i > 5) {
-        output(i);
-    }
-    while (voidFab()) {
-        output(1);
-    }
+    int sentence[10];
+
+    hearSentence(sentence);
+    readSentence(sentence);
+    shiftSentence(sentence);
+    readSentence(sentence);
 }

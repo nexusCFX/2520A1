@@ -1,0 +1,92 @@
+/* 9.cm */
+/* Wrong programming language error */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+void printResults(int win, int loss, int i, int j);
+int diceRoll(int *i, int *j, int N[], int NN[], int NO[]);
+
+int main() {
+    int win = 0, loss = 0, totalGames = 0;
+    int nGames, sum, point, index;
+    int *i, *j;
+    int *N, *NN, *NO;
+    
+    i = malloc(sizeof(int));
+    j = malloc(sizeof(int));
+    N = malloc(sizeof(int) * 2);
+    NN = malloc(sizeof(int) * 2);
+    NO = malloc(sizeof(int) * 2);
+
+    scanf("%d,%d,%d", i, j, &nGames);
+
+    //Main Game Loop
+    do {
+        sum = diceRoll(i,j,N,NN,NO);
+        if (sum == 7 || sum == 11) {
+            win ++;
+        } else if (sum == 2 || sum == 3 || sum == 12) {
+            loss ++;
+        } else {
+            point = sum;
+            index = 0;
+
+            //Point-Toss-Up Loop
+            do {
+                sum = diceRoll(i,j,N,NN,NO);
+                if (sum == 7) {
+                    loss ++;
+                    break;
+                } else if (sum == point) {
+                    win ++;
+                    break;
+                } else {
+                    index ++;
+                    if (index >= 100) {
+                        //Game stops if we reach an index > 100.
+                        printResults(win, loss, *i, *j);
+                        exit(0);
+                    }
+                }
+
+            } while (index <= 100);
+        }
+
+        totalGames = win + loss;
+    } while (totalGames < nGames);
+
+    printResults(win, loss, *i, *j);
+    
+    free(i);
+    free(j);
+    free(N);
+    free(NN);
+    free(NO);
+    return (0);
+}
+
+void printResults(int win, int loss, int i, int j) {
+    printf("WINS = %d    LOSSES = %d    I = %d    J = %d\n", win, loss, i, j);
+}
+
+/*Generates a random # between 1 and 12 to simulate a dice roll pairing.*/
+int diceRoll(int *i, int *j, int N[], int NN[], int NO[]) {
+    int L = 947, M = 941;
+
+    for (int k = 0; k < 2; k ++) {
+        *i = (*i)+(*i);
+        *j = (*j)+(*j);
+
+        if (*i >= L) *i = *i - L;
+        if (*j >= M) *j = *j - M;
+        N[k] = *i + *j;
+
+        if (N[k] >= 1000) N[k] = N[k] - 1000;
+        
+        NN[k] = N[k]/6;
+        NO[k] = N[k]-6*NN[k]+1;
+    }
+    return (NO[0] + NO[1]);
+}
+

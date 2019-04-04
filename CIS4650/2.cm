@@ -1,47 +1,19 @@
 /* 2.cm */
 
-/* A C- program that tests against undefined and redefined variables and undefined functions
-Errors:
-Line 24: Invalid redeclaration of the variable 'i'. 
-Line 29: Trying to use a function 'shift' which is not defined at this point as it is declared after main.
-Line 35: Reference to an undefined variable 'j'.
-*/
+/* A trivial C- program which should compile without errors. */
 
-int word[100];
-int shiftWord[100];
+int daysLeftInYear = 365;
 
-void populateWord(void) {
-    int i;
-    i = 0;
-    while (i < 100) {
-        word[i] = input();
-        i = i + 1;
+void countDownToNewYearsFrom(int daysToDate) {
+    daysLeftInYear = daysLeftInYear - daysToDate;
+    while (daysLeftInYear >= 0) {
+        output(daysLeftInYear);
+        daysLeftInYear = daysLeftInYear - 1;
     }
 }
 
-int main(void) {
-    int shiftWord[100];
-    int i;
-    int i;
-    i = 0;
-    populateWord();
-    while (i < 100) {
-        int shiftedAscii;
-        shiftedAscii = shift(3, word[i]);
-        shiftWord[i] = shiftedAscii;
-        i = i + 1;
-    }
-
-    /* Output encrypted text */
-    j = 0;
-    while (i < 100) {
-        output(shiftWord[i]);
-        i = i + 1;
-    }
-}
-
-int shift(int i, int ascii) {
-    int shiftedAscii;
-    shiftedAscii = ascii;
-    return shiftedAscii + i;
+void main(void) {
+    int daysToDate;
+    daysToDate = input();
+    countDownToNewYearsFrom(daysToDate);
 }

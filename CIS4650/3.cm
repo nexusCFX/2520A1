@@ -1,32 +1,58 @@
 /* 3.cm */
 
-/* A C- program that tests against int returns in void functions and void returns in int functions.
-Errors:
-Line 22: int function 'populateStringWithHelloWorld' tries to return without a value.
-Line 26: void function 'getIntValue' tries to return a value.
-Line 30: int function 'returnAnInt' tries to return the return value of a void function.
-*/
+/* A trivial C- program which should compile without errors. */
 
-void main(void) {
-    int helloWorld[12];
+int currentYear = 2019;
+int asciiHBday[10];
+
+void populateASCIIHBday() {
+    /*ascii encoding for "happy bday"*/
+    asciiHBday[0] = 72;
+    asciiHBday[1] = 65;
+    asciiHBday[2] = 80;
+    asciiHBday[3] = 80;
+    asciiHBday[4] = 89;
+
+    asciiHBday[5] = 32;
+    
+    asciiHBday[6] = 66;
+    asciiHBday[7] = 68;
+    asciiHBday[8] = 65;
+    asciiHBday[9] = 89; 
+}
+
+void outputHBday() {
     int i;
     i = 0;
 
-    while (i <= 12) {
-        output(i);
+    populateASCIIHBday();
+    while (i < 10) {
+        output(asciiHBday[i]);
         i = i + 1;
     }
 }
 
-int populateStringWithHelloWorld(int h) {
-    h = 72;
-    return;
+int determineAge(int year, int day) {
+    int currentDay; int age;
+    currentDay = input();
+
+    age = currentYear - year;
+
+    if (day > currentDay) {
+        age = age - 1;
+    }
+    if (day == currentYear) {
+        outputHBday();
+    }
+
+    return age;
 }
 
-void getIntValue(int isChar) {
-    return isChar;
-}
+void main(void) {
+    int birthYear; int birthDay; int age;
 
-int returnAnInt(int isChar) {
-    return getIntValue(isChar);
+    birthYear = input();
+    birthDay = input();
+
+    age = determineAge(birthyear, birthday);
 }

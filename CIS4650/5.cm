@@ -1,28 +1,31 @@
 /* 5.cm */
-/* A C- program that tests against errors with incorrect function parameters. 
-Errors:
-Line 24: 1 parameter passe dto function that takes two arguments.
-Line 25: 3 parameters passed to function that takes two arguments.
-Line 26: Array and int passed in wrong order, so int passed to int[] and int[] passed to int.
+
+/* A trivial C- program which contains the following:
+   -> Comment syntax error
+   -> No semi-colon error
 */
+int balance;
 
-int counter[8];
-
-void printFabulous(int size, int arr[]) {
-    output(1);
-    return;
+/* Increments global balance variable by 100 * /
+void increaseBalance() {
+    int n
+    
+    while (n <= 100) {
+        balance = balance + 1;
+        n = n + 1;
+    }
 }
 
-void voidFab(void) {
-    output(counter[1]);
-}
+int main(void) {
+    balance = input();
 
-void main(void) {
-    int gk; int arr[8];
-    gk = 8;
+    if (balance < 0) {
+        return -1;
+    }
+    if (balance == 0) {
+        increaseBalance();
+        return 1;
+    }
 
-    printFabulous(gk, arr);
-    printFabulous(gk);
-    printFabulous(gk, gk, arr);
-    printFabulous(arr, gk);
+    return 1;
 }

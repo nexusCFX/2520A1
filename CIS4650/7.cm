@@ -1,0 +1,22 @@
+/* 7.cm */
+
+/* A trivial C- program which contains the following:
+   -> no return type
+   -> bad func call
+*/
+
+int walkToJapan(int speed) {
+    int time; int distance;
+    distance = 8000 * 1000;
+
+    time = distance / speed;
+    return time;
+}
+
+void main(void) {
+    int walkSpeed;
+    walkSpeed = input(1);
+    output(walkToJapan(walkSpeed));
+
+    return walkToJapan;
+}

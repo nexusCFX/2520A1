@@ -1,0 +1,52 @@
+/* 0.cm */
+
+int currentGrade;
+int grades[6];
+int weights[6];
+
+/* A func that populates the weight array with the
+   following weight and order:
+   Warmup, midterm, CP1, CP2, CP3, and the final */
+void populateWeight() {
+    weight[0] = 10;
+    weight[1] = 20;
+    weight[2] = 15;
+    weight[3] = 15;
+    weight[4] = 15;
+    weight[5] = 25;
+
+    return currentGrade;
+}
+
+int getWeightGrade(int grade, int weight) {
+    return (grade / 100) * weight;
+}
+
+int determineCurrentGrade() {
+    int i = 0, int grade;
+
+    while (i < 6) {
+        grade = input();
+        grades[i] = getWeightGrade(grade, weight[i]);
+    }
+}
+
+int getMarkNeededFor(int grade) {
+    int gradeNeeded;
+
+    /* Not posible */
+    if ((currentGrade + 25) < grade) {
+        return -1;
+    }
+
+    gradeNeeded = ((grade - currentGrade) / 25) * 100;
+
+    return gradeNeeded;
+}
+
+int main(void) {
+    populateWeight();
+    int currentGrade;
+    currentGrade = determineCurrentGrade();
+    output(getMarkNeededFor(90));
+}

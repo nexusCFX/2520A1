@@ -1,0 +1,23 @@
+/* 8.cm */
+
+/* A trivial C- program which contains the following:
+   -> Undefined variables
+   -> Typecheck
+*/
+
+void generateEssay(int words[]) {
+    int n;
+    n = 0;
+
+    while (1+n >= 0) {
+        word[n] = input();
+    }
+}
+
+int main(void) {
+    char words[1000];
+    void words[1000];
+    int words[1000];
+
+    generateEssay(words);
+}
