@@ -111,7 +111,7 @@ public class SymbolTable {
     }
 
     public boolean isInGlobalScope() {
-        return depth == 0;
+        return table.size() == 1;
     }
 
     public boolean contains(String name) {
@@ -121,5 +121,7 @@ public class SymbolTable {
     public boolean containsInScope(String name) {
         return table.getFirst().map.containsKey(name);
     }
+
+    public boolean containsInGlobalScope(String name) { return table.getLast().map.containsKey(name); }
 }
 

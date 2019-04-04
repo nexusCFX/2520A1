@@ -5,7 +5,7 @@ import java.util.ArrayList;
 // This is basically the same as the other visitors
 public class CodeGenerator implements AbsynVisitor {
 
-    public String code;
+    public String code = "";
 
     private SymbolTable table;
 
@@ -19,6 +19,8 @@ public class CodeGenerator implements AbsynVisitor {
     private int highEmitLoc = 0;
     private int globalOffset = 0;
     private int entry = 0;
+
+    private boolean shouldGetAddressOfVar = false;
 
     public CodeGenerator() {
         this.table = new SymbolTable(false);
@@ -38,18 +40,26 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(AssignExp assignExp, int offset) {
-        // Standard variable on left hand side
+        emitComment("-> op");
+        // Standard variable on left hand side. Look up address.
         if (assignExp.lhs instanceof SimpleVar) {
+            shouldGetAddressOfVar = true;
+            assignExp.lhs.accept(this, offset);
+            shouldGetAddressOfVar = false;
             emitRM("ST", ac, offset, fp, "");
+        } else {
+            assignExp.lhs.accept(this, offset);
         }
 
         assignExp.rhs.accept(this, offset - 1);
 
-        emitRM("LD", ac1, offset, fp, "");
-        emitRM("ST", ac, 0, ac1, "");
+        emitRM("LD", ac1, offset, fp, "op: load left");
+        emitRM("ST", ac, 0, ac1, "assign: store value");
+        emitComment("<- op");
     }
 
     public void visit(CallExp callExp, int offset) {
+        emitComment("-> call of function: " + callExp.func);
         int ofpFO = 0;
         int initFO = -2;
         FunctionSymbol f = (FunctionSymbol)table.get(callExp.func);
@@ -64,14 +74,21 @@ public class CodeGenerator implements AbsynVisitor {
         emitRM("ST", fp, offset + ofpFO, fp, "store current fp");
         emitRM("LDA", fp, offset, fp, "push new frame");
         emitRM("LDA", ac, 1, pc, "save return in ac");
-        emitRM_Abs("LDA", pc, f.funaddr, "relative jump to function entry");
+        emitRM_Abs("LDA", pc, f.funaddr, "jump to fun loc");
         emitRM("LD", fp, ofpFO, fp, "pop current frame");
+        emitComment("<- call");
     }
 
     public void visit(CompoundExp compoundExp, int offset) {
-        compoundExp.decs.accept(this, offset);
-        offset -= sizeInMemory(compoundExp.decs);
-        compoundExp.exps.accept(this, offset);
+        emitComment("-> compound statement");
+        if (compoundExp.decs != null) {
+            compoundExp.decs.accept(this, offset);
+            offset -= sizeInMemory(compoundExp.decs);
+        }
+        if (compoundExp.exps != null) {
+            compoundExp.exps.accept(this, offset);
+        }
+        emitComment("<- compound statement");
     }
 
     public void visit(DecList decList, int offset) {
@@ -79,17 +96,21 @@ public class CodeGenerator implements AbsynVisitor {
         table.enterScope();
 
         // Prelude
+        emitComment("Standard prelude:");
         emitRM("LD", gp, 0, ac, "load gp with maxaddr");
         emitRM("LDA", fp, 0, gp, "copy gp to fp");
         emitRM("ST", 0, 0, 0, "clear content at loc 0");
+        emitComment("Jump around i/o routines here");
         int savedLoc = emitSkip(1);
 
         // Input
+        emitComment("code for input routine");
         emitRM("ST", ac, retFO, fp, "store return");
         emitRO("IN", ac, 0, 0, "input");
         emitRM("LD", pc, retFO, fp, "return to caller");
 
         // Output
+        emitComment("code for output routine");
         emitRM("ST", ac, retFO, fp, "store return");
         emitRM("LD", 0, -2, fp, "load output value");
         emitRO("OUT", 0, 0, 0, "output");
@@ -97,8 +118,9 @@ public class CodeGenerator implements AbsynVisitor {
 
         int savedLoc2 = emitSkip(0);
         emitBackup(savedLoc);
-        emitRM_Abs("LDA", pc, savedLoc2, "");
+        emitRM_Abs("LDA", pc, savedLoc2, "jump around i/o code");
         emitRestore();
+        emitComment("End of standard prelude.");
 
         while(decList != null) {
             decList.head.accept(this, offset);
@@ -128,15 +150,21 @@ public class CodeGenerator implements AbsynVisitor {
     public void visit(FunctionDec functionDec, int offset) {
         int initFO = -2;
         int retFO = -1;
+        emitComment("-> fundecl");
+        emitComment("processing function: " + functionDec.func);
+        emitComment("jump around function body here");
+
         int savedLoc = emitSkip(1);
-        FunctionSymbol symbol = new FunctionSymbol(functionDec.func, Symbol.VOID, null);
+        FunctionSymbol symbol = new FunctionSymbol(functionDec.func, Symbol.VOID, new ArrayList<>());
         symbol.funaddr = emitLoc;
         table.insert(symbol);
         table.enterScope();
         emitRM("ST", ac, retFO, fp, "store return");
 
-        functionDec.params.accept(this, offset + initFO);
-        initFO -= sizeInMemory(functionDec.params);
+        if (functionDec.params != null) {
+            functionDec.params.accept(this, offset + initFO);
+            initFO -= sizeInMemory(functionDec.params);
+        }
         functionDec.body.accept(this, offset + initFO);
 
         emitRM("LD", pc, retFO, fp, "return to caller");
@@ -144,6 +172,7 @@ public class CodeGenerator implements AbsynVisitor {
         emitBackup(savedLoc);
         emitRM_Abs("LDA", pc, savedLoc2, "jump around function body");
         emitRestore();
+        emitComment("<- fundecl");
         table.exitScope();
     }
 
@@ -175,7 +204,9 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(IntExp intExp, int offset) {
-        emitRM("LDC", ac, Integer.valueOf(intExp.value), 0, "copy int");
+        emitComment("-> constant");
+        emitRM("LDC", ac, Integer.valueOf(intExp.value), 0, "load const");
+        emitComment("<- constant");
     }
 
     public void visit(NameTy nameTy, int offset) {
@@ -187,15 +218,16 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(OpExp opExp, int offset) {
+        emitComment("-> op");
         opExp.left.accept(this, offset);
         // Might need to break down multiple chained expressions
         if((opExp.left instanceof IntExp) ||
                 (opExp.left instanceof OpExp) ||
                 (opExp.left instanceof VarExp && ((VarExp) opExp.left).variable instanceof SimpleVar)) {
-            emitRM("ST", ac, offset, fp, "");
+            emitRM("ST", ac, offset, fp, "op: push left");
         }
         opExp.right.accept(this, offset - 1);
-        emitRM("LD", ac1, offset, fp, "");
+        emitRM("LD", ac1, offset, fp, "op: load left");
 
         // Setting up for comparison expressions
         if (opExp.op != OpExp.PLUS && opExp.op != OpExp.MINUS && opExp.op != OpExp.TIMES && opExp.op != OpExp.OVER && opExp.op != OpExp.EQ) {
@@ -204,43 +236,44 @@ public class CodeGenerator implements AbsynVisitor {
 
         switch(opExp.op){
             case OpExp.PLUS:
-                emitRO("ADD", ac, ac1, ac, "PLUS");
+                emitRO("ADD", ac, ac1, ac, "op +");
                 break;
             case OpExp.MINUS:
-                emitRO("SUB", ac, ac1, ac, "MINUS");
+                emitRO("SUB", ac, ac1, ac, "op -");
                 break;
             case OpExp.TIMES:
-                emitRO("MUL", ac, ac1, ac, "MULTIPLY");
+                emitRO("MUL", ac, ac1, ac, "op *");
                 break;
             case OpExp.OVER:
-                emitRO("DIV", ac, ac1, ac, "DIVIDE");
+                emitRO("DIV", ac, ac1, ac, "op /");
                 break;
             case OpExp.EQ:
-                emitRO("EQU", ac, ac1, ac, "EQUALITY");
+                emitRO("EQU", ac, ac1, ac, "op ==");
                 break;
             case OpExp.LT:
-                emitRM("JLT", ac, 2, pc, "LESS THAN");
+                emitRM("JLT", ac, 2, pc, "op <");
                 break;
             case OpExp.GT:
-                emitRM("JGT", ac, 2, ac, "GREATER THAN");
+                emitRM("JGT", ac, 2, pc, "op >");
                 break;
             case OpExp.NE:
-                emitRM("JNE", ac, 2, pc, "NOT EQUAL");
+                emitRM("JNE", ac, 2, pc, "op !=");
                 break;
             case OpExp.LE:
-                emitRM("JLE", ac, 2, pc, "LESS OR EQUAL");
+                emitRM("JLE", ac, 2, pc, "op <=");
                 break;
             case OpExp.GE:
-                emitRM("JGE", ac, 2, pc, "GREATER OR EQUAL");
+                emitRM("JGE", ac, 2, pc, "op >=");
                 break;
         }
 
         // Moving PC for comparison expressions
         if (opExp.op != OpExp.PLUS && opExp.op != OpExp.MINUS && opExp.op != OpExp.TIMES && opExp.op != OpExp.OVER && opExp.op != OpExp.EQ) {
-            emitRM("LDC", ac, 0, ac, "");
-            emitRM("LDA", pc, 1, pc, "");
-            emitRM("LDC", ac, 1, ac, "");
+            emitRM("LDC", ac, 0, ac, "false case");
+            emitRM("LDA", pc, 1, pc, "unconditional jump");
+            emitRM("LDC", ac, 1, ac, "true case");
         }
+        emitComment("<- op");
     }
 
     public void visit(ReturnExp returnExp, int offset) {
@@ -250,6 +283,8 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(SimpleDec simpleDec, int offset) {
+        emitComment("processing local var: " + simpleDec.name + "with offset " + offset);
+
         Symbol s = new Symbol(simpleDec.name, Symbol.INT);
         if (table.isInGlobalScope()) {
             // This is a global variable
@@ -263,14 +298,25 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void visit(SimpleVar simpleVar, int offset) {
+        emitComment("-> id");
+        emitComment("looking up id: " + simpleVar.name);
         Symbol s = table.get(simpleVar.name);
-        if (table.containsInScope(simpleVar.name) && table.isInGlobalScope()) {
+        if (table.containsInGlobalScope(simpleVar.name)) {
             // Global var
-            emitRM("LD", 0, s.offset, gp, "");
+            if (shouldGetAddressOfVar) {
+                emitRM("LDA", 0, s.offset, gp, "load id address");
+            } else {
+                emitRM("LD", 0, s.offset, gp, "load id value");
+            }
         } else {
             // Local var
-            emitRM("LD", ac, s.offset, fp, "");
+            if (shouldGetAddressOfVar) {
+                emitRM("LDA", ac, s.offset, fp, "load id address");
+            } else {
+                emitRM("LD", ac, s.offset, fp, "load id value");
+            }
         }
+        emitComment("<- id");
     }
 
     public void visit(VarDecList varDecList, int offset) {
@@ -336,7 +382,12 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void emitRO(String op, int r, int s, int t, String c){
-        String instruction = emitLoc + ":  " + op + " " + r + "," + s + "," + t + "\t" + c + "\n";
+        String instruction;
+        if (op.length() == 2) {
+            instruction = "  " + emitLoc + ":     " + op + "  " + r + "," + s + "," + t + "\t" + c + "\n";
+        } else {
+            instruction = "  " + emitLoc + ":    " + op + "  " + r + "," + s + "," + t + "\t" + c + "\n";
+        }
         emitLoc++;
         output(instruction);
         if (highEmitLoc < emitLoc) {
@@ -345,7 +396,12 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void emitRM(String op, int r, int d, int s, String c) {
-        String instruction = emitLoc + ":  " + op + "  " + r + "," + d + "(" + s + ")" + "\t" + c + "\n";
+        String instruction;
+        if (op.length() == 2) {
+            instruction = "  " + emitLoc + ":     " + op + "  " + r + "," + d + "(" + s + ")" + "    " + c + "\n";
+        } else {
+            instruction = "  " + emitLoc + ":    " + op + "  " + r + "," + d + "(" + s + ")" + "    " + c + "\n";
+        }
         emitLoc++;
         output(instruction);
         if (highEmitLoc < emitLoc) {
@@ -354,7 +410,12 @@ public class CodeGenerator implements AbsynVisitor {
     }
 
     public void emitRM_Abs(String op, int r, int a, String c) {
-        String instruction = emitLoc + ":  " + op + "  " + r + "," + (a - emitLoc + 1) + "(" + pc + ")" + "\t" + c + "\n";
+        String instruction;
+        if (op.length() == 2) {
+            instruction = "  " + emitLoc + ":     " + op + "  " + r + "," + (a - emitLoc - 1) + "(" + pc + ")" + "    " + c + "\n";
+        } else {
+            instruction = "  " + emitLoc + ":    " + op + "  " + r + "," + (a - emitLoc - 1) + "(" + pc + ")" + "    " + c + "\n";
+        }
         emitLoc++;
         output(instruction);
         if (highEmitLoc < emitLoc) {
